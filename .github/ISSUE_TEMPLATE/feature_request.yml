@@ -1,0 +1,39 @@
+name: Özellik önerisi
+description: Yeni bir kategori, davranış veya iyileştirme önerin
+labels: [enhancement]
+body:
+  - type: textarea
+    id: sorun
+    attributes:
+      label: Hangi sorunu çözüyor?
+      description: Öneriyi değil, önce sorunu anlatın.
+    validations:
+      required: true
+
+  - type: textarea
+    id: oneri
+    attributes:
+      label: Önerilen çözüm
+    validations:
+      required: true
+
+  - type: dropdown
+    id: risk
+    attributes:
+      label: Bu öneri dosya siliyor mu?
+      description: >
+        Dosya silen bir değişiklikse, silinebilir köklerin yalnızca
+        `src/engine/config.js` içinde tanımlı olabileceğini unutmayın.
+      options:
+        - Hayır, yalnızca arayüz veya bilgi
+        - Evet, yeni bir tarama kategorisi
+        - Evet, temizlik davranışını değiştiriyor
+
+  - type: checkboxes
+    id: kurallar
+    attributes:
+      label: Onay
+      options:
+        - label: >
+            Bu önerinin kişisel dosyalara (Belgeler, Masaüstü, Resimler)
+            dokunmadığını kontrol ettim.

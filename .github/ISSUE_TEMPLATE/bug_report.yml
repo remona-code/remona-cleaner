@@ -1,0 +1,76 @@
+name: Hata bildirimi
+description: Uygulama beklenmedik davranıyor
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Güvenlik açıkları için bu formu kullanmayın.** Lütfen
+        [SECURITY.md](../SECURITY.md) dosyasındaki özel bildirim yolunu izleyin.
+
+        Bildirime API anahtarı, kişisel dosya yolu veya karantina içeriği
+        yapıştırmayın.
+
+  - type: input
+    id: surum
+    attributes:
+      label: reMona sürümü
+      description: Uygulama içinde Ayarlar ekranında yazar.
+      placeholder: 1.0.0
+    validations:
+      required: true
+
+  - type: input
+    id: windows
+    attributes:
+      label: Windows sürümü
+      placeholder: Windows 11 24H2 (26100)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: kategori
+    attributes:
+      label: Hangi bölümde oldu?
+      options:
+        - Tarama
+        - Temizlik / karantina
+        - Yapay zeka paneli
+        - Ayarlar / OpenAI bağlantısı
+        - Arayüz / görünüm
+        - Uygulama açılmıyor
+        - Diğer
+
+  - type: textarea
+    id: adimlar
+    attributes:
+      label: Yeniden üretme adımları
+      placeholder: |
+        1. Uygulamayı aç
+        2. ...
+        3. ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: beklenen
+    attributes:
+      label: Beklenen davranış
+    validations:
+      required: true
+
+  - type: textarea
+    id: gerceklesen
+    attributes:
+      label: Gerçekleşen davranış
+      description: Hata mesajı varsa aynen yapıştırın.
+    validations:
+      required: true
+
+  - type: textarea
+    id: gunluk
+    attributes:
+      label: Günlük çıktısı (isteğe bağlı)
+      description: >
+        `npm start` çıktısı. Kişisel bilgileri ve anahtarları ayıklayın.
+      render: shell

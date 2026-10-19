@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'none'; form-action 'none'; base-uri 'none'">
+  <title>reMona — AICleaner · Yapay Zeka Destekli Disk Temizleyici</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- ============================================================ ikon sprite -->
+<svg class="sprite" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="2"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="2"/></symbol>
+    <symbol id="i-layers" viewBox="0 0 24 24"><path d="M12 3 3 8l9 5 9-5-9-5Z"/><path d="m3 13 9 5 9-5"/><path d="m3 17.5 9 5 9-5"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5.5L12 2.5 4 5.5V12c0 6 8 10 8 10Z"/><path d="m9 12 2.2 2.2L15.5 10"/></symbol>
+    <symbol id="i-history" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 2.6-6.4"/><path d="M3 4.5V10h5.5"/><path d="M12 7.5V12l3.2 2"/></symbol>
+    <symbol id="i-sparkles" viewBox="0 0 24 24"><path d="M11.5 3.2 13.3 8 18 9.8 13.3 11.6 11.5 16.4 9.7 11.6 5 9.8 9.7 8l1.8-4.8Z"/><path d="m18.4 15.2.9 2.3 2.3.9-2.3.9-.9 2.3-.9-2.3-2.3-.9 2.3-.9.9-2.3Z"/></symbol>
+    <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h9"/><path d="M18.5 7H20"/><circle cx="15.75" cy="7" r="2.25"/><path d="M4 17h4"/><path d="M13.5 17H20"/><circle cx="10.75" cy="17" r="2.25"/></symbol>
+    <symbol id="i-flask" viewBox="0 0 24 24"><path d="M9.5 3h5"/><path d="M10.5 3v6.2L5.2 18.4A2 2 0 0 0 7 21.5h10a2 2 0 0 0 1.8-3.1L13.5 9.2V3"/><path d="M7.4 15.5h9.2"/></symbol>
+    <symbol id="i-windows" viewBox="0 0 24 24"><path d="M3.5 6 10.5 5v6.5h-7V6Z"/><path d="M13.5 4.6 21 3.6v7.9h-7.5V4.6Z"/><path d="M3.5 12.5h7V19l-7-1V12.5Z"/><path d="M13.5 12.5H21V21l-7.5-1v-7.5Z"/></symbol>
+    <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a15 15 0 0 1 0 18 15 15 0 0 1 0-18Z"/></symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20.5 12a8.5 8.5 0 1 1-2.5-6"/><path d="M20.8 4.2v5.3h-5.3"/></symbol>
+    <symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2.5"/><circle cx="8.6" cy="9.6" r="1.6"/><path d="m3.5 16.5 4.6-3.8 3.6 2.8 3-2.3 5.8 4.6"/></symbol>
+    <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13.2 2.5 4.8 13.4h6.1l-.9 8.1 8.4-10.9h-6.1l.9-8.1Z"/></symbol>
+    <symbol id="i-burst" viewBox="0 0 24 24"><path d="M12 2.5v3"/><path d="M12 18.5v3"/><path d="M2.5 12h3"/><path d="M18.5 12h3"/><path d="m5.3 5.3 2.1 2.1"/><path d="m16.6 16.6 2.1 2.1"/><path d="m18.7 5.3-2.1 2.1"/><path d="m7.4 16.6-2.1 2.1"/><circle cx="12" cy="12" r="4"/></symbol>
+    <symbol id="i-scroll" viewBox="0 0 24 24"><path d="M14 3.2V8h4.8"/><path d="M19 8.6V19a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5.6Z"/><path d="M9 13h6"/><path d="M9 17h4"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M6.4 7l.9 12.2A2 2 0 0 0 9.3 21h5.4a2 2 0 0 0 2-1.8L17.6 7"/><path d="M9.2 7V4.4h5.6V7"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v11.5"/><path d="m7.2 10.2 4.8 4.8 4.8-4.8"/><path d="M4 20.2h16"/></symbol>
+    <symbol id="i-box" viewBox="0 0 24 24"><path d="M3.2 7.6 12 3.2l8.8 4.4v8.8L12 20.8 3.2 16.4V7.6Z"/><path d="m3.2 7.6 8.8 4.4 8.8-4.4"/><path d="M12 12v8.8"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="12" height="12" rx="2.5"/><path d="M5.4 15H4.6A2.1 2.1 0 0 1 2.5 12.9V4.6A2.1 2.1 0 0 1 4.6 2.5h8.3A2.1 2.1 0 0 1 15 4.6v.8"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20.5 20.5-4.3-4.3"/></symbol>
+    <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m6.5 9.5 5.5 5.5 5.5-5.5"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M6.5 6.5l11 11"/><path d="m17.5 6.5-11 11"/></symbol>
+    <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5.5 12h13"/></symbol>
+    <symbol id="i-square" viewBox="0 0 24 24"><rect x="5.5" y="5.5" width="13" height="13" rx="2.5"/></symbol>
+    <symbol id="i-restore" viewBox="0 0 24 24"><path d="M3.5 12a8.5 8.5 0 1 0 2.5-6"/><path d="M3.2 4.2v5.3h5.3"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4.2 19.5 12 7 19.8V4.2Z"/></symbol>
+    <symbol id="i-drive" viewBox="0 0 24 24"><path d="M3.2 12.5h17.6"/><path d="M5.4 12.5 7.3 5.6A2 2 0 0 1 9.2 4.2h5.6a2 2 0 0 1 1.9 1.4l1.9 6.9"/><rect x="3.2" y="12.5" width="17.6" height="6.9" rx="2.2"/><path d="M7.4 16h.01"/><path d="M11 16h.01"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3.2 2.4 20.4h19.2L12 3.2Z"/><path d="M12 9.6v4.6"/><path d="M12 17.4h.01"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.2"/><path d="M12 7.8h.01"/></symbol>
+    <symbol id="i-check-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8 12.2 2.8 2.8L16.4 9"/></symbol>
+    <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.6"/><circle cx="12" cy="12" r="1.2"/></symbol>
+    <symbol id="i-chip" viewBox="0 0 24 24"><rect x="6.2" y="6.2" width="11.6" height="11.6" rx="2.4"/><path d="M9.4 2.4v3.8"/><path d="M14.6 2.4v3.8"/><path d="M9.4 17.8v3.8"/><path d="M14.6 17.8v3.8"/><path d="M2.4 9.4h3.8"/><path d="M2.4 14.6h3.8"/><path d="M17.8 9.4h3.8"/><path d="M17.8 14.6h3.8"/></symbol>
+    <symbol id="i-key" viewBox="0 0 24 24"><circle cx="7.6" cy="15.4" r="4.4"/><path d="m10.9 12.1 7.6-7.6"/><path d="m15.7 7.3 2.1 2.1"/><path d="m18.3 4.7 1.7 1.7"/></symbol>
+    <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.6 12S6.2 5.9 12 5.9 21.4 12 21.4 12 17.8 18.1 12 18.1 2.6 12 2.6 12Z"/><circle cx="12" cy="12" r="3.1"/></symbol>
+    <symbol id="i-eye-off" viewBox="0 0 24 24"><path d="M9.6 5.2A9.6 9.6 0 0 1 12 5c5.8 0 9.4 6.1 9.4 6.1a17 17 0 0 1-2.6 3.4"/><path d="M6.2 6.8A16.9 16.9 0 0 0 2.6 11.1S6.2 17.2 12 17.2c1.3 0 2.5-.3 3.6-.7"/><path d="M9.9 9.9a3.1 3.1 0 0 0 4.3 4.3"/><path d="m3.4 3.4 17.2 17.2"/></symbol>
+    <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3.2 7.4a2.2 2.2 0 0 1 2.2-2.2h4.2l2.2 2.4h6.6a2.2 2.2 0 0 1 2.2 2.2v8.4a2.2 2.2 0 0 1-2.2 2.2H5.4a2.2 2.2 0 0 1-2.2-2.2V7.4Z"/></symbol>
+    <symbol id="i-external" viewBox="0 0 24 24"><path d="M14 4.2h5.8V10"/><path d="M19.4 4.6 11 13"/><path d="M18 14v4.2a2 2 0 0 1-2 2H6.2a2 2 0 0 1-2-2V8.4a2 2 0 0 1 2-2H10"/></symbol>
+    <symbol id="i-logo" viewBox="0 0 32 32"><path d="M16 3.4 5.2 9.6v9.9c0 5.4 4.5 8.4 10.8 11.1 6.3-2.7 10.8-5.7 10.8-11.1V9.6L16 3.4Z"/><path d="m11.4 15.6 3.2 3.3 6.2-7.2"/></symbol>
+  </defs>
+</svg>
+
+<!-- ============================================================ arka plan -->
+<div class="ambient" aria-hidden="true">
+  <span class="ambient__orb ambient__orb--a"></span>
+  <span class="ambient__orb ambient__orb--b"></span>
+  <span class="ambient__orb ambient__orb--c"></span>
+  <span class="ambient__grain"></span>
+</div>
+
+<!-- ============================================================ uygulama -->
+<div class="app">
+
+  <header class="titlebar">
+    <div class="titlebar__brand">
+      <span class="mark"><svg><use href="#i-logo"/></svg></span>
+      <span class="wordmark">reMona</span>
+      <span class="brandbar" aria-hidden="true"></span>
+      <span class="wordmark__sub">AICleaner</span>
+      <span class="pill pill--ghost" id="enginePill">kural motoru</span>
+    </div>
+    <div class="titlebar__drag"></div>
+    <div class="titlebar__controls">
+      <button class="wbtn" data-win="minimize" title="Küçült" aria-label="Küçült"><svg><use href="#i-minus"/></svg></button>
+      <button class="wbtn" data-win="maximize" title="Büyüt" aria-label="Büyüt"><svg><use href="#i-square"/></svg></button>
+      <button class="wbtn wbtn--close" data-win="close" title="Kapat" aria-label="Kapat"><svg><use href="#i-x"/></svg></button>
+    </div>
+  </header>
+
+  <div class="body">
+    <!-- ------------------------------------------------------ kenar çubuğu -->
+    <aside class="sidebar">
+      <nav class="nav" id="nav">
+        <button class="nav__item is-active" data-view="dashboard">
+          <svg class="nav__icon"><use href="#i-grid"/></svg>
+          <span class="nav__label">Panel</span>
+        </button>
+        <button class="nav__item" data-view="categories">
+          <svg class="nav__icon"><use href="#i-layers"/></svg>
+          <span class="nav__label">Kategoriler</span>
+          <span class="nav__badge" id="navCategoriesBadge" hidden></span>
+        </button>
+        <button class="nav__item" data-view="quarantine">
+          <svg class="nav__icon"><use href="#i-shield"/></svg>
+          <span class="nav__label">Karantina</span>
+          <span class="nav__badge" id="navQuarantineBadge" hidden></span>
+        </button>
+        <button class="nav__item" data-view="history">
+          <svg class="nav__icon"><use href="#i-history"/></svg>
+          <span class="nav__label">Geçmiş</span>
+        </button>
+        <button class="nav__item" data-view="assistant">
+          <svg class="nav__icon"><use href="#i-sparkles"/></svg>
+          <span class="nav__label">AI Asistan</span>
+        </button>
+        <button class="nav__item" data-view="settings">
+          <svg class="nav__icon"><use href="#i-sliders"/></svg>
+          <span class="nav__label">Ayarlar</span>
+        </button>
+      </nav>
+
+      <div class="sidebar__foot">
+        <div class="engine" id="engineCard">
+          <span class="engine__dot"></span>
+          <div class="engine__text">
+            <strong id="engineName">Yerel kural motoru</strong>
+            <span id="engineNote">LLM aranıyor…</span>
+          </div>
+        </div>
+        <button class="ghost-btn" id="openDataDir" title="Veri klasörünü aç">
+          <svg><use href="#i-folder"/></svg><span id="versionLabel">v1.0.0</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- ------------------------------------------------------ ana içerik -->
+    <main class="main">
+      <div class="topbar">
+        <div class="topbar__titles">
+          <h1 id="viewTitle">Panel</h1>
+          <p id="viewSubtitle">Diskinizi tarayın, AI güvenli olanı seçsin.</p>
+        </div>
+        <div class="topbar__actions" id="topbarActions"></div>
+      </div>
+
+      <div class="scroller" id="scroller">
+
+        <!-- ================================================ PANEL -->
+        <section class="view is-active" data-view="dashboard">
+          <article class="hero">
+            <div class="hero__visual">
+              <svg class="ring" viewBox="0 0 240 240" aria-hidden="true">
+                <defs>
+                  <linearGradient id="gradDisk" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stop-color="#22d3ee"/>
+                    <stop offset="52%" stop-color="#6366f1"/>
+                    <stop offset="100%" stop-color="#a855f7"/>
+                  </linearGradient>
+                  <linearGradient id="gradReclaim" x1="0" y1="1" x2="1" y2="0">
+                    <stop offset="0%" stop-color="#34d399"/>
+                    <stop offset="100%" stop-color="#22d3ee"/>
+                  </linearGradient>
+                  <radialGradient id="gradHalo" cx="50%" cy="50%" r="50%">
+                    <stop offset="60%" stop-color="rgba(99,102,241,0)"/>
+                    <stop offset="100%" stop-color="rgba(99,102,241,.22)"/>
+                  </radialGradient>
+                </defs>
+                <circle class="ring__halo" cx="120" cy="120" r="112" fill="url(#gradHalo)"/>
+                <circle class="ring__track" cx="120" cy="120" r="96"/>
+                <circle class="ring__value" id="ringDisk" cx="120" cy="120" r="96"/>
+                <circle class="ring__track ring__track--inner" cx="120" cy="120" r="79"/>
+                <circle class="ring__reclaim" id="ringReclaim" cx="120" cy="120" r="79"/>
+              </svg>
+              <div class="ring__center">
+                <span class="ring__pct"><b id="diskPercent">—</b><i>%</i></span>
+                <span class="ring__label" id="diskLabel">disk dolu</span>
+                <span class="ring__free" id="diskFree">—</span>
+              </div>
+            </div>
+
+            <div class="hero__content">
+              <div class="hero__head">
+                <span class="eyebrow"><svg><use href="#i-chip"/></svg> reMona AI · yapay zeka destekli analiz</span>
+                <h2 id="heroTitle">Sistemi tara, kazanç hazır</h2>
+                <p id="heroSummary" class="hero__summary">
+                  Başlamak için taramayı çalıştırın. AI; önbellekleri, geçici dosyaları ve
+                  kopyaları değerlendirip hangi dosyaların güvenle silinebileceğini söyler.
+                </p>
+              </div>
+
+              <div class="stats" id="stats">
+                <div class="stat stat--total">
+                  <span class="stat__label">Toplam atık</span>
+                  <strong class="stat__value" id="statTotal">—</strong>
+                  <span class="stat__meta" id="statTotalMeta">tarama bekleniyor</span>
+                </div>
+                <div class="stat stat--safe">
+                  <span class="stat__label">Risksiz kazanç</span>
+                  <strong class="stat__value" id="statSafe">—</strong>
+                  <span class="stat__meta" id="statSafeMeta">veri kaybı yok</span>
+                </div>
+                <div class="stat stat--count">
+                  <span class="stat__label">Dosya sayısı</span>
+                  <strong class="stat__value" id="statCount">—</strong>
+                  <span class="stat__meta">bulunan öğe</span>
+                </div>
+                <div class="stat stat--vault">
+                  <span class="stat__label">Karantinada</span>
+                  <strong class="stat__value" id="statVault">—</strong>
+                  <span class="stat__meta" id="statVaultMeta">geri alınabilir</span>
+                </div>
+              </div>
+
+              <div class="hero__actions">
+                <button class="btn btn--primary btn--xl" id="scanBtn">
+                  <svg><use href="#i-play"/></svg>
+                  <span>Taramayı başlat</span>
+                </button>
+                <label class="switch" title="Derin tarama büyük dosyaları ve kopyaları da arar (daha uzun sürer)">
+                  <input type="checkbox" id="deepToggle">
+                  <span class="switch__track"><span class="switch__thumb"></span></span>
+                  <span class="switch__label">Derin tarama</span>
+                </label>
+                <button class="btn btn--ghost" id="quickSelectBtn" disabled>
+                  <svg><use href="#i-sparkles"/></svg><span>AI öneriyi seç</span>
+                </button>
+              </div>
+
+              <div class="progress" id="scanProgress" hidden>
+                <div class="progress__bar"><span class="progress__fill" id="progressFill"></span></div>
+                <div class="progress__meta">
+                  <span id="progressStage">Hazırlanıyor…</span>
+                  <span id="progressPercent">0%</span>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <div class="grid grid--two">
+            <article class="card card--insights">
+              <header class="card__head">
+                <h3><svg><use href="#i-sparkles"/></svg> AI içgörüleri</h3>
+                <span class="pill" id="insightCount">—</span>
+              </header>
+              <div class="insights" id="insights">
+                <div class="empty">
+                  <svg><use href="#i-info"/></svg>
+                  <p>Tarama yapıldığında AI değerlendirmesi burada görünür.</p>
+                </div>
+              </div>
+            </article>
+
+            <article class="card">
+              <header class="card__head">
+                <h3><svg><use href="#i-layers"/></svg> Kategori dağılımı</h3>
+                <button class="link" data-goto="categories">Tümü <svg><use href="#i-chevron"/></svg></button>
+              </header>
+              <div class="breakdown" id="breakdown">
+                <div class="empty">
+                  <svg><use href="#i-info"/></svg>
+                  <p>Henüz veri yok. Taramayı çalıştırın.</p>
+                </div>
+              </div>
+            </article>
+          </div>
+
+          <article class="card card--reclaim" id="reclaimCard" hidden>
+            <div class="reclaim__icon"><svg><use href="#i-target"/></svg></div>
+            <div class="reclaim__body">
+              <h3 id="reclaimTitle">AI ne öneriyor?</h3>
+              <p id="reclaimText"></p>
+            </div>
+            <button class="btn btn--primary" id="applyRecommended">
+              <svg><use href="#i-check"/></svg><span>Önerilenleri seç</span>
+            </button>
+          </article>
+        </section>
+
+        <!-- ================================================ KATEGORİLER -->
+        <section class="view" data-view="categories">
+          <div class="toolbar">
+            <label class="field field--search">
+              <svg><use href="#i-search"/></svg>
+              <input type="search" id="catSearch" placeholder="Kategori veya dosya ara…" autocomplete="off">
+            </label>
+            <div class="chips" id="riskFilter">
+              <button class="chip is-active" data-risk="all">Tümü</button>
+              <button class="chip chip--safe" data-risk="safe">Güvenli</button>
+              <button class="chip chip--caution" data-risk="caution">Dikkatli</button>
+              <button class="chip chip--risky" data-risk="risky">Riskli</button>
+            </div>
+            <div class="toolbar__spacer"></div>
+            <button class="btn btn--ghost btn--sm" id="selectSafeBtn" disabled>
+              <svg><use href="#i-shield"/></svg><span>Güvenlileri seç</span>
+            </button>
+            <button class="btn btn--ghost btn--sm" id="clearSelBtn" disabled>
+              <svg><use href="#i-x"/></svg><span>Seçimi temizle</span>
+            </button>
+          </div>
+          <div class="catlist" id="catList">
+            <div class="empty empty--lg">
+              <svg><use href="#i-layers"/></svg>
+              <h4>Tarama bekleniyor</h4>
+              <p>Panelden taramayı başlattığınızda kategoriler burada listelenir.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================================================ KARANTİNA -->
+        <section class="view" data-view="quarantine">
+          <div class="vaulthead">
+            <div class="vaulthead__stat">
+              <span class="vaulthead__label">Karantinada bekleyen</span>
+              <strong id="vaultSize">—</strong>
+            </div>
+            <div class="vaulthead__stat">
+              <span class="vaulthead__label">Oturum</span>
+              <strong id="vaultSessions">—</strong>
+            </div>
+            <div class="vaulthead__stat">
+              <span class="vaulthead__label">Dosya</span>
+              <strong id="vaultFiles">—</strong>
+            </div>
+            <p class="vaulthead__note">
+              <svg><use href="#i-shield"/></svg>
+              Karantinadaki dosyalar silinmez, taşınır. İstediğiniz an geri yükleyebilirsiniz.
+            </p>
+          </div>
+          <div class="vaultlist" id="vaultList"></div>
+        </section>
+
+        <!-- ================================================ GEÇMİŞ -->
+        <section class="view" data-view="history">
+          <div class="historylist" id="historyList"></div>
+        </section>
+
+        <!-- ================================================ AI ASİSTAN -->
+        <section class="view" data-view="assistant">
+          <div class="grid grid--assistant">
+            <article class="card">
+              <header class="card__head">
+                <h3><svg><use href="#i-target"/></svg> Hedefe göre akıllı seçim</h3>
+              </header>
+              <p class="muted">
+                Ne kadar yer açmak istediğinizi söyleyin; AI yalnızca güvenli kategorilerden
+                seçerek hedefe ulaşmaya çalışır. Riskli gruplar asla otomatik seçilmez.
+              </p>
+              <div class="target">
+                <div class="target__value"><b id="targetValue">5,0</b> GB</div>
+                <input type="range" id="targetRange" min="0.5" max="30" step="0.5" value="5">
+                <div class="target__scale"><span>0,5 GB</span><span>30 GB</span></div>
+              </div>
+              <button class="btn btn--primary" id="pickBtn">
+                <svg><use href="#i-sparkles"/></svg><span>AI seçsin</span>
+              </button>
+              <div class="pickresult" id="pickResult" hidden></div>
+            </article>
+
+            <article class="card">
+              <header class="card__head">
+                <h3><svg><use href="#i-chip"/></svg> Danışman</h3>
+                <span class="pill" id="assistantEngine">—</span>
+              </header>
+              <div class="chat" id="chat">
+                <div class="chat__msg chat__msg--ai">
+                  <p>Merhaba. Tarama sonrası “ne silebilirim?”, “en çok yer nerede?” gibi
+                  soruları yanıtlayabilirim.</p>
+                </div>
+              </div>
+              <div class="chat__suggest" id="chatSuggest">
+                <button data-q="Ne silebilirim?">Ne silebilirim?</button>
+                <button data-q="Diskim neden doldu?">Diskim neden doldu?</button>
+                <button data-q="Kopya dosyalar güvenli mi?">Kopyalar güvenli mi?</button>
+                <button data-q="Riskli olanlar hangileri?">Riskli olanlar?</button>
+              </div>
+              <form class="chat__form" id="chatForm">
+                <input type="text" id="chatInput" placeholder="Bir soru yazın…" autocomplete="off">
+                <button class="btn btn--primary btn--icon" type="submit" aria-label="Gönder">
+                  <svg><use href="#i-play"/></svg>
+                </button>
+              </form>
+            </article>
+          </div>
+        </section>
+
+        <!-- ================================================ AYARLAR -->
+        <section class="view" data-view="settings">
+          <div class="grid grid--two">
+            <article class="card card--wide">
+              <header class="card__head">
+                <h3><svg><use href="#i-sparkles"/></svg> AI sağlayıcısı</h3>
+                <span class="pill pill--ghost" id="aiStatusPill">denetleniyor…</span>
+              </header>
+
+              <p class="card__lede">
+                Yanıtları kural motoru yerine gerçek bir dil modeli üretsin. OpenAI anahtarınızı
+                girin ve modeli seçin; anahtar diskte işletim sisteminin şifreleme kasasıyla
+                saklanır ve arayüze bir daha gönderilmez. OpenAI uyumlu her uç nokta çalışır.
+              </p>
+
+              <div class="field">
+                <span class="field__label">Sağlayıcı</span>
+                <div class="segmented segmented--wrap" id="aiProviderGroup">
+                  <button type="button" data-provider="auto">Otomatik</button>
+                  <button type="button" data-provider="openai">OpenAI</button>
+                  <button type="button" data-provider="ollama">Ollama (yerel)</button>
+                  <button type="button" data-provider="rules">Yalnızca kurallar</button>
+                </div>
+              </div>
+
+              <div class="ai-openai" id="aiOpenaiPanel" hidden>
+                <div class="field">
+                  <label class="field__label" for="aiKey">API anahtarı</label>
+                  <div class="input-group">
+                    <span class="input-group__icon"><svg><use href="#i-key"/></svg></span>
+                    <input class="input mono" id="aiKey" type="password" placeholder="sk-…"
+                           autocomplete="off" spellcheck="false" aria-describedby="aiKeyHint">
+                    <button class="input-group__btn" id="aiKeyToggle" type="button"
+                            title="Anahtarı göster" aria-label="Anahtarı göster">
+                      <svg><use href="#i-eye"/></svg>
+                    </button>
+                  </div>
+                  <p class="field__hint" id="aiKeyHint">Henüz anahtar eklenmedi.</p>
+                </div>
+
+                <div class="field-row">
+                  <div class="field">
+                    <label class="field__label" for="aiBase">Uç nokta</label>
+                    <input class="input mono" id="aiBase" type="url"
+                           placeholder="https://api.openai.com/v1" spellcheck="false">
+                  </div>
+                  <div class="field">
+                    <label class="field__label" for="aiModel">Model</label>
+                    <div class="input-group">
+                      <input class="input mono" id="aiModel" list="aiModelList"
+                             placeholder="gpt-4o-mini" spellcheck="false">
+                      <datalist id="aiModelList"></datalist>
+                      <button class="input-group__btn" id="aiModelFetch" type="button"
+                              title="Modelleri getir" aria-label="Modelleri getir">
+                        <svg><use href="#i-refresh"/></svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="field__actions">
+                  <button class="btn btn--primary btn--sm" id="aiSave">
+                    <svg><use href="#i-check"/></svg><span>Kaydet</span>
+                  </button>
+                  <button class="btn btn--ghost btn--sm" id="aiTest">
+                    <svg><use href="#i-bolt"/></svg><span>Bağlantıyı test et</span>
+                  </button>
+                  <button class="btn btn--ghost btn--sm" id="aiKeyClear" hidden>
+                    <svg><use href="#i-x"/></svg><span>Anahtarı kaldır</span>
+                  </button>
+                  <span class="status" id="aiTestStatus" hidden></span>
+                </div>
+              </div>
+            </article>
+
+            <article class="card">
+              <header class="card__head"><h3><svg><use href="#i-trash"/></svg> Temizleme davranışı</h3></header>
+
+              <div class="setting">
+                <div class="setting__text">
+                  <strong>Karantinaya taşı</strong>
+                  <span>Dosyalar silinmez, geri dönüşü olacak şekilde saklanır.</span>
+                </div>
+                <label class="switch">
+                  <input type="radio" name="cleanMode" value="quarantine" id="modeQuarantine">
+                  <span class="switch__track switch__track--radio"><span class="switch__thumb"></span></span>
+                </label>
+              </div>
+
+              <div class="setting setting--danger">
+                <div class="setting__text">
+                  <strong>Kalıcı olarak sil</strong>
+                  <span>Geri alınamaz. Geri dönüşüm kutusuna da gitmez.</span>
+                </div>
+                <label class="switch">
+                  <input type="radio" name="cleanMode" value="delete" id="modeDelete">
+                  <span class="switch__track switch__track--radio"><span class="switch__thumb"></span></span>
+                </label>
+              </div>
+
+              <hr class="rule">
+
+              <div class="setting">
+                <div class="setting__text">
+                  <strong>Derin taramayı varsayılan yap</strong>
+                  <span>Büyük dosyalar ve kopyalar her taramada aranır.</span>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="setDeep">
+                  <span class="switch__track"><span class="switch__thumb"></span></span>
+                </label>
+              </div>
+
+              <div class="setting">
+                <div class="setting__text">
+                  <strong>Güvenli kategorileri otomatik seç</strong>
+                  <span>Tarama bittiğinde risksiz gruplar işaretlenir.</span>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="setAuto">
+                  <span class="switch__track"><span class="switch__thumb"></span></span>
+                </label>
+              </div>
+
+              <div class="setting">
+                <div class="setting__text">
+                  <strong>Hareketi azalt</strong>
+                  <span>Animasyonları sadeleştirir, düşük donanımda akıcılık sağlar.</span>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="setMotion">
+                  <span class="switch__track"><span class="switch__thumb"></span></span>
+                </label>
+              </div>
+            </article>
+
+            <article class="card">
+              <header class="card__head"><h3><svg><use href="#i-info"/></svg> Uygulama bilgisi</h3></header>
+              <dl class="kv" id="aboutList"></dl>
+              <hr class="rule">
+              <div class="setting">
+                <div class="setting__text">
+                  <strong>Veri klasörü</strong>
+                  <span id="dataDirPath" class="mono">—</span>
+                </div>
+                <button class="btn btn--ghost btn--sm" id="openDataDir2">
+                  <svg><use href="#i-external"/></svg><span>Aç</span>
+                </button>
+              </div>
+              <div class="safety">
+                <svg><use href="#i-shield"/></svg>
+                <p>
+                  Silme işlemi yalnızca tarama kategorilerinde tanımlı köklerin altında çalışır.
+                  Windows, Program Files ve geri dönüşüm kutusunun sistem bölümü koda gömülü
+                  yasak listesiyle korunur.
+                </p>
+              </div>
+            </article>
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- ------------------------------------------------------ seçim çubuğu -->
+  <div class="dock" id="dock" hidden>
+    <div class="dock__info">
+      <strong id="dockSize">0 B</strong>
+      <span id="dockMeta">seçim yok</span>
+    </div>
+    <div class="dock__risk" id="dockRisk"></div>
+    <div class="dock__spacer"></div>
+    <button class="btn btn--ghost btn--sm" id="dockPreview">
+      <svg><use href="#i-info"/></svg><span>Önizle</span>
+    </button>
+    <div class="segmented" id="dockMode">
+      <button class="is-active" data-mode="quarantine">Karantina</button>
+      <button data-mode="delete">Kalıcı sil</button>
+    </div>
+    <button class="btn btn--primary" id="dockClean">
+      <svg><use href="#i-sparkles"/></svg><span>Temizle</span>
+    </button>
+  </div>
+</div>
+
+<!-- ============================================================ katmanlar -->
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<div class="modal" id="modal" hidden>
+  <div class="modal__scrim" data-close></div>
+  <div class="modal__panel" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <header class="modal__head">
+      <span class="modal__icon" id="modalIcon"><svg><use href="#i-alert"/></svg></span>
+      <div>
+        <h3 id="modalTitle">Onay</h3>
+        <p id="modalText"></p>
+      </div>
+    </header>
+    <div class="modal__body" id="modalBody"></div>
+    <footer class="modal__foot">
+      <button class="btn btn--ghost" id="modalCancel">Vazgeç</button>
+      <button class="btn btn--primary" id="modalConfirm">Onayla</button>
+    </footer>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

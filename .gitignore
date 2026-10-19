@@ -1,0 +1,40 @@
+# Bağımlılıklar ve derleme çıktıları
+node_modules/
+release/
+dist/
+build/
+coverage/
+*.tsbuildinfo
+
+# Kullanıcı verisi: ayar, geçmiş, son tarama ve karantina.
+# settings.json şifrelenmiş olsa da API anahtarı burada durur — asla commit edilmez.
+data/
+quarantine/
+
+# Gizli bilgiler
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+.npmrc
+.git-credentials
+
+# Geliştirici araçları ve ajan çıktıları
+.remona/
+.vscode/
+.idea/
+python-legacy/
+
+# Günlükler ve geçici dosyalar
+*.log
+npm-debug.log*
+*.tmp
+*.bak
+
+# İşletim sistemi
+.DS_Store
+Thumbs.db
+desktop.ini

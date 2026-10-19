@@ -1,0 +1,65 @@
+{
+  "name": "remona",
+  "productName": "reMona",
+  "version": "1.0.0",
+  "description": "reMona (AICleaner) — yapay zeka destekli Windows disk temizleyici, Electron masaüstü uygulaması",
+  "main": "electron/main.js",
+  "author": "reMona",
+  "license": "MIT",
+  "private": true,
+  "keywords": [
+    "windows",
+    "disk-cleaner",
+    "cleaner",
+    "electron",
+    "ai",
+    "openai",
+    "system-utility",
+    "turkish"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev",
+    "test": "node --test",
+    "smoke": "node scripts/smoke.js",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
+  },
+  "build": {
+    "appId": "com.remona.aicleaner",
+    "productName": "reMona",
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "files": [
+      "electron/**/*",
+      "src/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "reMona-${version}-setup.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "shortcutName": "reMona AICleaner"
+    }
+  },
+  "devDependencies": {
+    "electron": "^44.9.0",
+    "electron-builder": "^26.15.3"
+  }
+}
