@@ -1,4 +1,4 @@
-'use strict';
+﻿'use strict';
 
 /**
  * Uygulama yapılandırması, taranacak konumlar ve güvenlik sınırları.
@@ -6,11 +6,17 @@
  * Bu dosya tek doğruluk kaynağıdır: hangi yolların taranabileceği ve
  * silinebileceği burada tanımlanır. Tarayıcı ve temizleyici yalnızca
  * buradaki köklerin altında çalışır.
+ *
+ * Kategori adları ve açıklamaları burada tutulmaz: metinler `src/i18n`
+ * altındaki kataloglardan gelir (`cat.<id>.name` / `cat.<id>.desc`), böylece
+ * arayüz dili değiştiğinde tarama sonucu da aynı dilde üretilir.
  */
 
 const os = require('os');
 const path = require('path');
 const fs = require('fs');
+
+const i18n = require('../i18n');
 
 // ------------------------------------------------------------------ yollar
 const SRC_DIR = path.resolve(__dirname, '..');
@@ -61,6 +67,9 @@ const OLD_FILE_DAYS = 180;
 const DUP_MIN_BYTES = 1024 * 1024;
 const DUP_MAX_FILES = 20000;
 
+/** Metinlerde gösterilecek eşikler (dilden bağımsız birimler). */
+const LARGE_FILE_LABEL = `${Math.round(LARGE_FILE_BYTES / (1024 * 1024))} MB`;
+
 // Silme işlemleri için mutlak yasak: bu parçaları içeren hiçbir yol silinemez.
 const DENY_FRAGMENTS = [
   '\\system32',
@@ -104,25 +113,20 @@ const SKIP_DIR_NAMES = [
 const CATEGORIES = [
   {
     id: 'user_temp',
-    name: 'Kullanıcı Geçici Dosyaları',
     icon: 'flask',
     risk: 'safe',
     mode: 'walk',
     roots: [TEMP],
-    description: 'Kurulum ve güncelleme artıkları, uygulamaların bıraktığı geçici dosyalar.',
   },
   {
     id: 'windows_temp',
-    name: 'Windows Geçici Klasörü',
     icon: 'windows',
     risk: 'caution',
     mode: 'walk',
     roots: [path.join(WINDIR, 'Temp')],
-    description: 'Sistem genelindeki geçici dosyalar. Kilitli olanlar atlanır.',
   },
   {
     id: 'browser_cache',
-    name: 'Tarayıcı Önbellekleri',
     icon: 'globe',
     risk: 'safe',
     mode: 'walk',
@@ -142,47 +146,37 @@ const CATEGORIES = [
       path.join(APPDATA, 'Opera Software', 'Opera GX Stable', 'Cache'),
       path.join(LOCALAPPDATA, 'Vivaldi', 'User Data', '*', 'Cache'),
     ],
-    description: 'Sayfa görselleri ve kod önbelleği. Silinmesi güvenlidir, siteler biraz yavaş açılır.',
   },
   {
     id: 'windows_update',
-    name: 'Windows Update Artıkları',
     icon: 'refresh',
     risk: 'caution',
     mode: 'walk',
     roots: [path.join(WINDIR, 'SoftwareDistribution', 'Download')],
-    description: 'Kurulmuş güncellemelerin indirme dosyaları. Yönetici izni gerekebilir.',
   },
   {
     id: 'thumbnails',
-    name: 'Küçük Resim Önbelleği',
     icon: 'image',
     risk: 'safe',
     mode: 'glob',
     roots: [path.join(LOCALAPPDATA, 'Microsoft', 'Windows', 'Explorer', 'thumbcache_*.db')],
-    description: "Gezgin'deki dosya önizlemeleri. Yeniden oluşturulur.",
   },
   {
     id: 'prefetch',
-    name: 'Prefetch Dosyaları',
     icon: 'bolt',
     risk: 'caution',
     mode: 'walk',
     roots: [path.join(WINDIR, 'Prefetch')],
-    description: 'Uygulama açılışını hızlandıran önbellek. Silinirse ilk açılışlar yavaşlar.',
   },
   {
     id: 'crash_dumps',
-    name: 'Çökme Dökümleri',
     icon: 'burst',
     risk: 'safe',
     mode: 'walk',
     roots: [path.join(LOCALAPPDATA, 'CrashDumps'), path.join(WINDIR, 'Minidump')],
-    description: 'Çöken uygulamaların hata kayıtları. Sorun ayıklamıyorsanız gereksizdir.',
   },
   {
     id: 'logs',
-    name: 'Sistem ve Uygulama Günlükleri',
     icon: 'scroll',
     risk: 'caution',
     mode: 'glob',
@@ -192,51 +186,70 @@ const CATEGORIES = [
       path.join(WINDIR, 'Logs', 'WindowsUpdate', '*.etl'),
       path.join(TEMP, '*.log'),
     ],
-    description: 'Eski kurulum ve tanılama günlükleri.',
   },
   {
     id: 'recycle_bin',
-    name: 'Geri Dönüşüm Kutusu',
     icon: 'trash',
     risk: 'caution',
     mode: 'special',
     roots: [],
-    description: 'Geri dönüşüm kutusuna attığınız dosyalar. Boşaltıldığında kurtarılamaz.',
   },
   {
     id: 'downloads_old',
-    name: 'Eski İndirilenler',
     icon: 'download',
     risk: 'risky',
     mode: 'walk',
     roots: [path.join(USER_HOME, 'Downloads')],
     min_age_days: OLD_FILE_DAYS,
-    description: `${OLD_FILE_DAYS} günden uzun süredir değişmeyen indirilenler. İçeriği sizin kararınız.`,
   },
   {
     id: 'large_files',
-    name: 'Büyük Dosyalar',
     icon: 'elephant',
     risk: 'risky',
     mode: 'special',
     deep_only: true,
     roots: [],
-    description: '300 MB üzerindeki dosyalar. En çok yer açan ama en çok dikkat isteyen grup.',
   },
   {
     id: 'duplicates',
-    name: 'Kopya Dosyalar',
     icon: 'copy',
     risk: 'risky',
     mode: 'special',
     deep_only: true,
     roots: [],
-    description: 'Aynı içeriğe sahip dosyalar. Bir kopyayı silmek güvenli, hepsini silmek değil.',
   },
 ];
 
 const CATEGORY_BY_ID = Object.fromEntries(CATEGORIES.map((c) => [c.id, c]));
 const SAFE_CATEGORY_IDS = CATEGORIES.filter((c) => c.risk === 'safe').map((c) => c.id);
+
+/** Kategori adı, seçili arayüz dilinde. */
+function categoryName(id) {
+  return i18n.t(`cat.${id}.name`);
+}
+
+/** Kategori açıklaması, eşik değerleri yerleştirilmiş olarak. */
+const DESC_VARS = { days: OLD_FILE_DAYS, size: LARGE_FILE_LABEL };
+
+function categoryDesc(id) {
+  return i18n.t(`cat.${id}.desc`, DESC_VARS);
+}
+
+/**
+ * Kategori metninin çeviri anahtarları.
+ *
+ * Tarama sonucu diske yazıldığı için içine sabitlenmiş metin koymak yanlış
+ * olur: uygulama başka bir dille açıldığında kategori adları eski dilde
+ * kalırdı. Bu yüzden görünüm anahtarı ve değişkenleri taşır, metni seçili
+ * dilde arayüz üretir.
+ */
+function categoryKeys(id) {
+  return {
+    name_key: `cat.${id}.name`,
+    desc_key: `cat.${id}.desc`,
+    desc_vars: DESC_VARS,
+  };
+}
 
 /**
  * `special` modundaki tarayıcıların kendi kökleri yoktur; temizleyicinin
@@ -253,7 +266,7 @@ const DEFAULT_SETTINGS = {
   deep_scan: false,
   clean_mode: 'quarantine', // quarantine | delete
   auto_select_safe: true,
-  language: 'tr',
+  language: 'auto', // auto = Windows dili | en | tr | de | …
   reduce_motion: false,
 
   // --- AI sağlayıcısı (Ayarlar ekranından düzenlenir)
@@ -307,6 +320,7 @@ module.exports = {
   MAX_WALK_DEPTH,
   MAX_ITEMS_PER_CATEGORY,
   LARGE_FILE_BYTES,
+  LARGE_FILE_LABEL,
   OLD_FILE_DAYS,
   DUP_MIN_BYTES,
   DUP_MAX_FILES,
@@ -322,5 +336,8 @@ module.exports = {
   DUPLICATE_ROOTS,
   DEFAULT_SETTINGS,
 
+  categoryName,
+  categoryDesc,
+  categoryKeys,
   ensureDirs,
 };

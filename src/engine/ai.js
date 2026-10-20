@@ -6,7 +6,7 @@
  * Üç katmanlı çalışır:
  *
  * 1. Kural motoru (her zaman açık): kategori riski, dosya yaşı ve boyut
- *    ağırlığından güven skoru üretir, Türkçe içgörüler çıkarır.
+ *    ağırlığından güven skoru üretir, seçili arayüz dilinde içgörüler çıkarır.
  * 2. Akıllı seçim: hedefe (ör. 5 GB) ulaşmak için en güvenli/en verimli
  *    kategorileri sıralar.
  * 3. Yerel LLM (varsa): Ollama ya da OpenAI uyumlu uç nokta üzerinden
@@ -15,16 +15,24 @@
 
 const config = require('./config');
 const store = require('./store');
+const scanner = require('./scanner');
+const i18n = require('../i18n');
 const { humanSize } = require('./utils');
 
 const RISK_WEIGHT = { safe: 1.0, caution: 0.55, risky: 0.2 };
-const RISK_LABEL = { safe: 'Güvenli', caution: 'Dikkatli', risky: 'Riskli' };
-const VERDICT_LABEL = {
-  sil: 'Silinebilir',
-  dikkatli: 'Gözden geçir',
-  dokunma: 'Dokunma',
-  boş: 'Boş',
-};
+
+/** İç karar anahtarları katalogdaki kararlı anahtarlara eşlenir. */
+const VERDICT_KEYS = { sil: 'delete', dikkatli: 'review', dokunma: 'avoid', 'boş': 'empty' };
+
+/** Risk etiketi, seçili arayüz dilinde. */
+function riskLabel(risk) {
+  return i18n.t(`risk.${risk}`);
+}
+
+/** Karar etiketi ("Silinebilir" / "Can be removed" …). */
+function verdictLabel(verdict) {
+  return i18n.t(`verdict.${VERDICT_KEYS[verdict] || 'avoid'}`);
+}
 
 const PROVIDER_TTL_MS = 30000;
 let providerCache = { at: 0, value: null };
@@ -63,16 +71,16 @@ async function ollamaModel() {
   }
 }
 
-/** HTTP durum kodlarını kullanıcının anlayacağı Türkçe cümlelere çevirir. */
+/** HTTP durum kodlarını kullanıcının anlayacağı cümlelere çevirir. */
 function httpMessage(status, detail) {
   const text = String(detail || '').trim();
-  if (status === 401) return 'API anahtarı reddedildi (401). Anahtarı kontrol edin.';
-  if (status === 403) return 'Bu anahtarın istenen modele erişim yetkisi yok (403).';
-  if (status === 404) return `Uç nokta veya model bulunamadı (404).${text ? ` ${text}` : ''}`;
-  if (status === 429) return 'İstek sınırı ya da kota aşıldı (429). Bir süre sonra deneyin.';
-  if (status === 413) return 'İstek gövdesi çok büyük (413).';
-  if (status >= 500) return `Sağlayıcı tarafında hata (${status}). Sonra tekrar deneyin.`;
-  return text || `İstek başarısız oldu (HTTP ${status}).`;
+  if (status === 401) return i18n.t('http.e401');
+  if (status === 403) return i18n.t('http.e403');
+  if (status === 404) return i18n.t('http.e404', { detail: text }).trim();
+  if (status === 429) return i18n.t('http.e429');
+  if (status === 413) return i18n.t('http.e413');
+  if (status >= 500) return i18n.t('http.e5xx', { status });
+  return text || i18n.t('http.default', { status, detail: '' }).trim();
 }
 
 /**
@@ -86,7 +94,7 @@ async function openaiRequest(pathname, { method = 'GET', body, timeoutMs } = {})
       ok: false,
       status: 0,
       cfg,
-      error: 'OpenAI API anahtarı girilmemiş. Ayarlar → AI sağlayıcısı bölümünden ekleyin.',
+      error: i18n.t('ai.noKey'),
     };
   }
 
@@ -119,8 +127,8 @@ async function openaiRequest(pathname, { method = 'GET', body, timeoutMs } = {})
       status: 0,
       cfg,
       error: aborted
-        ? 'İstek zaman aşımına uğradı. Uç nokta adresini ve bağlantıyı kontrol edin.'
-        : `Sunucuya ulaşılamadı: ${String((error && error.message) || error)}`,
+        ? i18n.t('ai.timeout')
+        : i18n.t('ai.unreachable', { error: String((error && error.message) || error) }),
     };
   }
 }
@@ -153,7 +161,7 @@ async function testConnection(model) {
   const cfg = await store.getAiConfig();
   const target = String(model || cfg.model || '').trim();
   if (!target) {
-    return { ok: false, error: 'Model adı boş. Önce bir model seçin.' };
+    return { ok: false, error: i18n.t('ai.noModel') };
   }
 
   const started = Date.now();
@@ -163,8 +171,8 @@ async function testConnection(model) {
     body: {
       model: target,
       messages: [
-        { role: 'system', content: 'Yalnızca "hazır" sözcüğünü yaz.' },
-        { role: 'user', content: 'Bağlantı testi.' },
+        { role: 'system', content: i18n.t('ai.testRequest') },
+        { role: 'user', content: i18n.t('ai.testPing') },
       ],
       max_tokens: 8,
       temperature: 0,
@@ -196,16 +204,16 @@ async function providerStatus({ refresh = false } = {}) {
   const cfg = await store.getAiConfig();
   const rules = {
     engine: 'local-rules',
-    model: 'kural motoru',
+    model: i18n.t('engine.rulesTag'),
     available: true,
     configured: cfg.provider,
-    note: 'Kural motoru kullanılıyor',
+    note: i18n.t('provider.noteRules'),
   };
 
   let status = rules;
 
   if (cfg.provider === 'rules') {
-    status = { ...rules, note: 'Ayarlarda yalnızca kural motoru seçildi' };
+    status = { ...rules, note: i18n.t('provider.noteRulesOnly') };
   } else if (cfg.provider === 'openai') {
     status = cfg.has_key
       ? {
@@ -213,27 +221,45 @@ async function providerStatus({ refresh = false } = {}) {
           model: cfg.model,
           available: true,
           configured: 'openai',
-          note: 'OpenAI bağlı',
+          note: i18n.t('provider.noteOpenAi'),
         }
       : {
           ...rules,
           configured: 'openai',
-          note: 'OpenAI seçildi ancak API anahtarı girilmemiş',
+          note: i18n.t('provider.noteOpenAiNoKey'),
         };
   } else if (cfg.provider === 'ollama') {
     const model = await ollamaModel();
     status = model
-      ? { engine: 'ollama', model, available: true, configured: 'ollama', note: 'Yerel LLM bağlı' }
-      : { ...rules, configured: 'ollama', note: 'Yerel Ollama çalışmıyor' };
+      ? {
+          engine: 'ollama',
+          model,
+          available: true,
+          configured: 'ollama',
+          note: i18n.t('provider.noteOllama'),
+        }
+      : { ...rules, configured: 'ollama', note: i18n.t('provider.noteOllamaDown') };
   } else {
     // auto: yerel LLM → OpenAI → kural motoru
     const model = await ollamaModel();
     if (model) {
-      status = { engine: 'ollama', model, available: true, configured: 'auto', note: 'Yerel LLM bağlı' };
+      status = {
+        engine: 'ollama',
+        model,
+        available: true,
+        configured: 'auto',
+        note: i18n.t('provider.noteOllama'),
+      };
     } else if (cfg.has_key) {
-      status = { engine: 'openai', model: cfg.model, available: true, configured: 'auto', note: 'OpenAI bağlı' };
+      status = {
+        engine: 'openai',
+        model: cfg.model,
+        available: true,
+        configured: 'auto',
+        note: i18n.t('provider.noteOpenAi'),
+      };
     } else {
-      status = { ...rules, configured: 'auto', note: 'Yerel LLM bulunamadı, kural motoru kullanılıyor' };
+      status = { ...rules, configured: 'auto', note: i18n.t('provider.noteNoLocal') };
     }
   }
 
@@ -244,7 +270,7 @@ async function providerStatus({ refresh = false } = {}) {
 // ------------------------------------------------------------------ skorlama
 function confidence(cat, totalSize, diskPercent) {
   const base = { safe: 92, caution: 62, risky: 25 }[cat.risk] ?? 50;
-  if (!cat.size) return { confidence: 0, verdict: 'boş', reason: 'Silinecek bir şey yok' };
+  if (!cat.size) return { confidence: 0, verdict: 'boş', reason: i18n.t('reason.empty') };
 
   let conf = base;
   const share = totalSize ? cat.size / totalSize : 0;
@@ -262,22 +288,22 @@ function confidence(cat, totalSize, diskPercent) {
   switch (cat.id) {
     case 'prefetch':
       conf = Math.min(conf, 45);
-      reason = 'Kazancı küçük (genelde <200 MB) ve uygulama açılışlarını yavaşlatır.';
+      reason = i18n.t('reason.prefetch');
       break;
     case 'downloads_old':
-      reason = 'İçeriği size ait olabilir. AI yalnızca öneri verir, dosyayı siz seçin.';
+      reason = i18n.t('reason.downloads');
       break;
     case 'recycle_bin':
-      reason = 'Zaten silmeyi seçtiğiniz dosyalar; boşaltmak geri alınamaz.';
+      reason = i18n.t('reason.recycle');
       break;
     case 'duplicates':
-      reason = 'Her gruptan aslı korunur, yalnızca fazla kopyalar işaretlenir.';
+      reason = i18n.t('reason.duplicates');
       break;
     case 'browser_cache':
-      reason = 'Oturum bilgileri ve şifreler etkilenmez, yalnızca önbellek temizlenir.';
+      reason = i18n.t('reason.browser');
       break;
     case 'large_files':
-      reason = 'Boyut tek başına silme gerekçesi değil. Dosyanın ne olduğuna bakın.';
+      reason = i18n.t('reason.large');
       break;
     default:
       break;
@@ -292,7 +318,8 @@ function confidence(cat, totalSize, diskPercent) {
 }
 
 /** Tarama sonucuna AI değerlendirmesi ekler. */
-async function analyze(result) {
+async function analyze(input) {
+  const result = scanner.localizeView(input);
   const categories = result.categories || [];
   const totalSize = result.totals.all || 1;
   const disk = result.disk.primary;
@@ -304,8 +331,8 @@ async function analyze(result) {
     evaluations[cat.id] = {
       confidence: conf,
       verdict,
-      verdict_label: VERDICT_LABEL[verdict],
-      risk_label: RISK_LABEL[cat.risk],
+      verdict_label: verdictLabel(verdict),
+      risk_label: riskLabel(cat.risk),
       reason,
       weight: RISK_WEIGHT[cat.risk],
     };
@@ -351,8 +378,8 @@ function insights(result, evaluations) {
     return [
       {
         level: 'info',
-        title: 'Temiz görünüyor',
-        text: 'Taranan konumlarda temizlenecek kayda değer dosya bulunmadı.',
+        title: i18n.t('insight.cleanTitle'),
+        text: i18n.t('insight.cleanText'),
       },
     ];
   }
@@ -361,15 +388,23 @@ function insights(result, evaluations) {
   const share = total ? Math.round((biggest.size / total) * 100) : 0;
   out.push({
     level: 'win',
-    title: `En büyük kazanç: ${biggest.name}`,
-    text: `${biggest.size_h} geri kazanılabilir — toplam atığın %${share}'i. AI güveni %${evaluations[biggest.id].confidence}.`,
+    title: i18n.t('insight.biggestTitle', { name: biggest.name }),
+    text: i18n.t('insight.biggestText', {
+      size: biggest.size_h,
+      percent: share,
+      confidence: evaluations[biggest.id].confidence,
+    }),
   });
 
   if ((disk.percent || 0) >= 85) {
     out.push({
       level: 'warn',
-      title: 'Disk doluluğu kritik',
-      text: `${disk.drive} sürücüsü %${disk.percent} dolu, yalnızca ${disk.free_h} boş yer var. Önerilen temizliği önceliklendirin.`,
+      title: i18n.t('insight.diskFullTitle'),
+      text: i18n.t('insight.diskFullText', {
+        drive: disk.drive,
+        percent: disk.percent,
+        free: disk.free_h,
+      }),
     });
   }
 
@@ -378,8 +413,11 @@ function insights(result, evaluations) {
     const safeTotal = safeCats.reduce((sum, c) => sum + c.size, 0);
     out.push({
       level: 'ok',
-      title: 'Risksiz kazanç hazır',
-      text: `${humanSize(safeTotal)} tutarında önbellek ve geçici dosya var; bunları silmek veri kaybı yaratmaz (${safeCats.length} kategori).`,
+      title: i18n.t('insight.safeTitle'),
+      text: i18n.t('insight.safeText', {
+        size: humanSize(safeTotal),
+        count: safeCats.length,
+      }),
     });
   }
 
@@ -388,8 +426,8 @@ function insights(result, evaluations) {
     const names = risky.slice(0, 3).map((c) => c.name).join(', ');
     out.push({
       level: 'warn',
-      title: 'Elle onay gereken grup',
-      text: `${names} kişisel dosyalarınızı içerebilir. AI bunları varsayılan seçime eklemez; yalnızca incelediklerinizi silin.`,
+      title: i18n.t('insight.riskyTitle'),
+      text: i18n.t('insight.riskyText', { names }),
     });
   }
 
@@ -397,8 +435,11 @@ function insights(result, evaluations) {
   if (prefetch) {
     out.push({
       level: 'info',
-      title: 'Prefetch: düşük kazanç',
-      text: `${prefetch.size_h} yer açar ama sonraki açılışları yavaşlatır. AI bu kategoriyi düşük puanlıyor (%${evaluations.prefetch.confidence}).`,
+      title: i18n.t('insight.prefetchTitle'),
+      text: i18n.t('insight.prefetchText', {
+        size: prefetch.size_h,
+        confidence: evaluations.prefetch.confidence,
+      }),
     });
   }
 
@@ -406,8 +447,8 @@ function insights(result, evaluations) {
   if (dups) {
     out.push({
       level: 'win',
-      title: 'Kopya dosyalar bulundu',
-      text: `${dups.size_h} aynı içeriğin tekrarı. Asıllar korunacak şekilde ${dups.file_count} fazla kopya işaretlendi.`,
+      title: i18n.t('insight.dupsTitle'),
+      text: i18n.t('insight.dupsText', { size: dups.size_h, count: dups.file_count }),
     });
   }
 
@@ -415,8 +456,8 @@ function insights(result, evaluations) {
   if (stale.length) {
     out.push({
       level: 'info',
-      title: 'Yıllardır dokunulmamış dosyalar',
-      text: `${stale.map((c) => c.name).join(', ')} içindeki her dosya bir yıldan uzun süredir değişmemiş; silinmesi büyük olasılıkla güvenli.`,
+      title: i18n.t('insight.staleTitle'),
+      text: i18n.t('insight.staleText', { names: stale.map((c) => c.name).join(', ') }),
     });
   }
 
@@ -425,15 +466,16 @@ function insights(result, evaluations) {
 
 function summaryText(result, recommendedIds) {
   const totals = result.totals;
-  if (totals.all === 0) return 'Sisteminizde temizlenecek dosya bulunmadı.';
+  if (totals.all === 0) return i18n.t('summary.nothing');
   const rec = result.categories
     .filter((c) => recommendedIds.includes(c.id))
     .reduce((sum, c) => sum + c.size, 0);
-  return (
-    `Toplam ${totals.all_h} atık bulundu (${totals.file_count.toLocaleString('tr-TR')} dosya). ` +
-    `AI'nın güvenle önerdiği kısım ${humanSize(rec)}. ` +
-    `Kalan ${humanSize(totals.all - rec)} için sizin onayınız gerekiyor.`
-  );
+  return i18n.t('summary.text', {
+    size: totals.all_h,
+    count: i18n.number(totals.file_count),
+    recommended: humanSize(rec),
+    rest: humanSize(totals.all - rec),
+  });
 }
 
 // ------------------------------------------------------------------ akıllı seçim
@@ -466,47 +508,57 @@ async function smartPick(result, targetBytes) {
 }
 
 // ------------------------------------------------------------------ soru-cevap
-/** Kullanıcının sorusunu yanıtlar: LLM varsa LLM, yoksa kural motoru. */
-async function ask(question, result) {
+/**
+ * Kullanıcının sorusunu yanıtlar: LLM varsa LLM, yoksa kural motoru.
+ * `intent` arayüzdeki hazır soru düğmelerinden gelir; böylece kural motoru
+ * hangi dilde yazıldığından bağımsız olarak doğru yanıtı seçebilir.
+ */
+async function ask(question, result, options = {}) {
   const text = String(question || '').trim();
-  if (!text) {
-    return { answer: 'Bir soru yazın; örneğin "ne silebilirim?"', engine: 'local-rules' };
+  const intent = String(options.intent || '').trim();
+  if (!text && !intent) {
+    return { answer: i18n.t('ai.askEmpty'), engine: 'local-rules' };
   }
 
   const context = contextText(result);
   const status = await providerStatus();
 
   if (status.engine === 'ollama') {
-    const answer = await ollamaGenerate(text, context, status.model);
+    const answer = await ollamaGenerate(text || intent, context, status.model);
     if (answer) return { answer, engine: `ollama:${status.model}` };
   } else if (status.engine === 'openai') {
-    const answer = await openaiGenerate(text, context);
-    if (answer) return { answer, engine: `openai:${config.OPENAI_MODEL}` };
+    const cfg = await store.getAiConfig();
+    const reply = await openaiGenerate(text || intent, context, cfg);
+    if (reply.text) return { answer: reply.text, engine: `openai:${cfg.model}` };
+    // Anahtar/uç nokta hatası sessizce yutulmaz: kullanıcı nedenini görür.
+    if (reply.error) return { answer: reply.error, engine: 'openai:error' };
   }
 
-  return { answer: ruleAnswer(text, result), engine: 'local-rules' };
+  return { answer: ruleAnswer(text || intent, result, intent), engine: 'local-rules' };
 }
 
+/** Modele verilen tarama özeti. Girdi veridir; arayüz dilinden bağımsızdır. */
 function contextText(result) {
-  if (!result) return 'Henüz tarama yapılmadı.';
+  if (!result) return 'No scan has been run yet.';
   const disk = result.disk.primary;
   const lines = [
-    `Disk ${disk.drive}: toplam ${disk.total_h}, boş ${disk.free_h}, dolu %${disk.percent}.`,
-    `Toplam atık: ${result.totals.all_h} (${result.totals.file_count} dosya).`,
+    `Disk ${disk.drive}: total ${disk.total_h}, free ${disk.free_h}, used ${disk.percent}%.`,
+    `Total junk: ${result.totals.all_h} (${result.totals.file_count} files).`,
   ];
   for (const cat of result.categories) {
     if (cat.size > 0) {
-      lines.push(`- ${cat.name} (${cat.risk}): ${cat.size_h}, ${cat.file_count} dosya.`);
+      lines.push(`- ${cat.name} (${cat.risk}): ${cat.size_h}, ${cat.file_count} files.`);
     }
   }
   return lines.join('\n');
 }
 
-const SYSTEM_PROMPT =
-  'Sen reMona (AICleaner) adlı Windows disk temizleyicisinin danışmanısın. ' +
-  'Kısa, net ve Türkçe yanıt ver. En fazla 4 cümle. ' +
-  'Sistem dosyalarını silmeyi asla önerme; riskli kategorilerde kullanıcıya seçim bırak. ' +
-  'Yalnızca verilen tarama verisine dayan.';
+/** Sistem istemi: seçili arayüz dilinde yanıt ister. */
+function systemPrompt() {
+  return `${i18n.t('ai.systemPrompt')} ${i18n.t('ai.languageLine', {
+    language: i18n.localeMeta().english,
+  })}`;
+}
 
 async function ollamaGenerate(question, context, model) {
   try {
@@ -515,7 +567,7 @@ async function ollamaGenerate(question, context, model) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model,
-        prompt: `${SYSTEM_PROMPT}\n\nTarama verisi:\n${context}\n\nSoru: ${question}`,
+        prompt: `${systemPrompt()}\n\nScan data:\n${context}\n\nQuestion: ${question}`,
         stream: false,
         options: { temperature: 0.3, num_predict: 220 },
       }),
@@ -535,8 +587,8 @@ async function openaiGenerate(question, context, cfg) {
     body: {
       model: config_.model,
       messages: [
-        { role: 'system', content: SYSTEM_PROMPT },
-        { role: 'user', content: `Tarama verisi:\n${context}\n\nSoru: ${question}` },
+        { role: 'system', content: systemPrompt() },
+        { role: 'user', content: `Scan data:\n${context}\n\nQuestion: ${question}` },
       ],
       temperature: config_.temperature,
       max_tokens: config_.max_tokens,
@@ -546,69 +598,82 @@ async function openaiGenerate(question, context, cfg) {
   if (!result.ok) return { text: '', error: result.error };
 
   const text = String(result.data?.choices?.[0]?.message?.content || '').trim();
-  if (!text) return { text: '', error: 'Model boş yanıt döndürdü.' };
+  if (!text) return { text: '', error: i18n.t('ai.emptyReply') };
   return { text, error: '' };
 }
 
-function ruleAnswer(question, result) {
-  if (!result) {
-    return 'Önce bir tarama çalıştırın; sonra hangi dosyaların silinebileceğini değerlendirebilirim.';
-  }
+/** Yazılı sorular için niyet kalıpları (birden çok dilde anahtar sözcük). */
+const INTENT_PATTERNS = {
+  what: /\b(delete|remove|clean|cleanup|free|junk|what)\b|sil|öner|tavsiye|hangi|temizle|löschen|supprimer|eliminar|eliminare|excluir|удал|削除|삭제|حذف/i,
+  disk: /\b(disk|drive|space|storage|full)\b|yer|alan|dolu|espace|espacio|spazio|platz|место|容量|空間|مساحة/i,
+  duplicates: /\b(duplicate|duplicates|copies|copy)\b|kopya|doublon|duplicado|duplicat|doppelt|дубликат|重复|重複|중복|مكرر/i,
+  risky: /\b(risk|risky|safe|safety|danger|dangerous)\b|güven|risik|risque|riesgo|rischio|риск|リスク|위험|خطر/i,
+};
 
-  const q = question.toLowerCase();
-  const cats = result.categories;
+/**
+ * Kural motoru yanıtı. `intent` verilmişse anahtar sözcük araması atlanır;
+ * böylece arayüzdeki hazır sorular her dilde doğru dalı seçer.
+ */
+function ruleAnswer(question, result, intent = '') {
+  if (!result) return i18n.t('rule.noScan');
+  result = scanner.localizeView(result);
+
+  const q = String(question || '').toLowerCase();
+  const cats = result.categories || [];
   const totalH = result.totals.all_h;
+  const wants = (name) => (intent ? intent === name : INTENT_PATTERNS[name].test(q));
 
-  if (/(ne sil|nereden|öner|tavsiye|başla|hangi)/.test(q)) {
+  if (wants('what')) {
     const safe = cats.filter((c) => c.risk === 'safe' && c.size > 0);
     if (safe.length) {
       const names = safe.map((c) => `${c.name} (${c.size_h})`).join(', ');
       const total = safe.reduce((sum, c) => sum + c.size, 0);
-      return (
-        `Güvenle temizleyebileceğiniz ${safe.length} kategori var: ${names}. ` +
-        `Toplam ${humanSize(total)} kazanç ve veri kaybı riski yok. ` +
-        'Kalan gruplar kişisel dosyalarınızı içerebilir, onları seçerek silin.'
-      );
+      return i18n.t('rule.safeList', { count: safe.length, names, size: humanSize(total) });
     }
-    return `Risksiz kategori kalmadı. Toplam atık ${totalH}; kalanı inceledikten sonra silebilirsiniz.`;
+    return i18n.t('rule.noSafe', { size: totalH });
   }
 
-  if (/(disk|yer|alan|dolu)/.test(q)) {
+  if (wants('disk')) {
     const disk = result.disk.primary;
-    return (
-      `${disk.drive} sürücüsü %${disk.percent} dolu: ${disk.used_h} kullanımda, ${disk.free_h} boş. ` +
-      `Tarama ${totalH} atık buldu; risksiz kısmı temizlemek boş alanı artırır.`
-    );
+    return i18n.t('rule.disk', {
+      drive: disk.drive,
+      percent: disk.percent,
+      used: disk.used_h,
+      free: disk.free_h,
+      junk: totalH,
+    });
   }
 
+  // Kategori adları da çevrildiği için eşleşme her dilde çalışır.
   for (const cat of cats) {
-    const key = cat.name.toLowerCase().split(/\s+/)[0];
-    if (key && key.length > 3 && q.includes(key) && cat.size > 0) {
-      return `${cat.name}: ${cat.size_h}, ${cat.file_count} dosya. Risk seviyesi ${RISK_LABEL[cat.risk]} — gerekçe: ${cat.description}`;
+    if (cat.size <= 0) continue;
+    const words = String(cat.name || '')
+      .toLowerCase()
+      .split(/[^\p{L}\p{N}]+/u)
+      .filter((word) => word.length > 3);
+    if (words.some((word) => q.includes(word))) {
+      return i18n.t('rule.category', {
+        name: cat.name,
+        size: cat.size_h,
+        count: cat.file_count,
+        risk: riskLabel(cat.risk),
+        reason: cat.description,
+      });
     }
   }
 
-  if (/(güven|risk)/.test(q)) {
-    return (
-      'Güvenli kategoriler: tarayıcı önbellekleri, küçük resim önbelleği, geçici dosyalar ' +
-      've çökme dökümleri. Riski olanlar: eski indirilenler, büyük dosyalar ve kopyalar — ' +
-      'bunları tek tek gözden geçirmeniz gerekir.'
-    );
-  }
+  if (wants('risky')) return i18n.t('rule.trust');
 
-  if (/(kopya|duplicate)/.test(q)) {
+  if (wants('duplicates')) {
     const dup = cats.find((c) => c.id === 'duplicates');
     if (dup && dup.size > 0) {
-      return `${dup.size_h} tutarında kopya bulundu. Asıllar korunur, ${dup.file_count} fazla kopya silinebilir.`;
+      return i18n.t('rule.duplicates', { size: dup.size_h, count: dup.file_count });
     }
-    return 'Kopya dosya bulunmadı (derin tarama kapalıysa açıp tekrar deneyin).';
+    return i18n.t('rule.noDuplicates');
   }
 
   const safeTotal = cats.filter((c) => c.risk === 'safe').reduce((sum, c) => sum + c.size, 0);
-  return (
-    `Özet: ${totalH} atık bulundu, bunun ${humanSize(safeTotal)} kadarı risksiz. ` +
-    '"Ne silebilirim?" diye sorarsanız kategori kategori önerebilirim.'
-  );
+  return i18n.t('rule.summary', { junk: totalH, safe: humanSize(safeTotal) });
 }
 
 module.exports = {
@@ -621,6 +686,7 @@ module.exports = {
   ask,
   confidence,
   ruleAnswer,
-  RISK_LABEL,
+  riskLabel,
+  verdictLabel,
   RISK_WEIGHT,
 };

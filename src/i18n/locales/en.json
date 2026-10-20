@@ -1,0 +1,514 @@
+{
+  "app": {
+    "title": "reMona — AICleaner · AI-Powered Disk Cleaner"
+  },
+  "common": {
+    "file": "file",
+    "items": "{count} items"
+  },
+  "win": {
+    "minimize": "Minimize",
+    "maximize": "Maximize",
+    "restore": "Restore",
+    "close": "Close"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "categories": "Categories",
+    "quarantine": "Quarantine",
+    "history": "History",
+    "assistant": "AI Assistant",
+    "settings": "Settings"
+  },
+  "view": {
+    "dashboard": {
+      "title": "Dashboard",
+      "subtitle": "Scan your disk and let AI pick what is safe."
+    },
+    "categories": {
+      "title": "Categories",
+      "subtitle": "Review what was found and decide what gets removed."
+    },
+    "quarantine": {
+      "title": "Quarantine",
+      "subtitle": "Cleaned files are kept here instead of being deleted."
+    },
+    "history": {
+      "title": "History",
+      "subtitle": "A record of every cleanup you have run."
+    },
+    "assistant": {
+      "title": "AI Assistant",
+      "subtitle": "Set a target or ask in plain language."
+    },
+    "settings": {
+      "title": "Settings",
+      "subtitle": "Cleanup behaviour and application information."
+    }
+  },
+  "engine": {
+    "rulesTag": "rule engine",
+    "rulesName": "Local rule engine",
+    "searching": "Looking for an LLM…",
+    "ollama": "Local LLM (Ollama)",
+    "remote": "Remote LLM"
+  },
+  "dash": {
+    "eyebrow": "reMona AI · AI-powered analysis",
+    "readyTitle": "Scan the system, the gain is ready",
+    "readyText": "Run a scan to start. AI evaluates caches, temporary files and duplicates, then tells you which ones can be removed safely.",
+    "doneTitle": "{size} can be reclaimed safely",
+    "cleanTitle": "Your system looks clean",
+    "afterClean": "Cleanup finished. Run a new scan to refresh these numbers.",
+    "reclaimTitle": "What does AI suggest?",
+    "reclaimTitleFor": "AI is asking for approval on {size}",
+    "reclaimText": "{count} categories passed the safety threshold (confidence ≥ 80%). Risky groups (old downloads, large files, duplicates) were left out.",
+    "insightCount": "{count} findings"
+  },
+  "disk": {
+    "used": "disk used",
+    "after": "after cleanup",
+    "freeAfter": "{free} free → {after}"
+  },
+  "stat": {
+    "total": "Total junk",
+    "safe": "Risk-free gain",
+    "count": "File count",
+    "vault": "In quarantine",
+    "totalWaiting": "waiting for a scan",
+    "totalScanned": "scanned in {sec}s",
+    "safeMeta": "no data loss",
+    "countMeta": "items found",
+    "vaultMeta": "recoverable",
+    "vaultSessions": "{count} sessions · recoverable"
+  },
+  "card": {
+    "insights": "AI insights",
+    "breakdown": "Category breakdown",
+    "all": "All"
+  },
+  "empty": {
+    "insights": "The AI assessment appears here once a scan is done.",
+    "noData": "No data yet. Run a scan.",
+    "catWaitingTitle": "Waiting for a scan",
+    "catWaitingText": "Start a scan from the dashboard and the categories are listed here.",
+    "noMatchTitle": "No matching category",
+    "noMatchText": "Change the filter or the search term.",
+    "vaultTitle": "Quarantine is empty",
+    "vaultText": "Files moved to quarantine are listed here and can be restored.",
+    "historyTitle": "No cleanup yet",
+    "historyText": "Every completed cleanup is recorded here."
+  },
+  "btn": {
+    "scan": "Start scan",
+    "scanning": "Scanning…",
+    "aiSelect": "Select AI suggestion",
+    "selectRecommended": "Select recommended",
+    "selectSafe": "Select safe ones",
+    "clearSelection": "Clear selection",
+    "preview": "Preview",
+    "clean": "Clean",
+    "open": "Open",
+    "restore": "Restore",
+    "deletePermanent": "Delete permanently",
+    "cancel": "Cancel",
+    "confirm": "Approve",
+    "gotIt": "Got it",
+    "close": "Close",
+    "save": "Save",
+    "test": "Test connection",
+    "removeKey": "Remove key",
+    "remove": "Remove",
+    "fetchModels": "Fetch models"
+  },
+  "switch": {
+    "deep": "Deep scan",
+    "deepTitle": "Deep scan also looks for large files and duplicates (takes longer)"
+  },
+  "risk": {
+    "all": "All",
+    "safe": "Safe",
+    "caution": "Careful",
+    "risky": "Risky"
+  },
+  "progress": {
+    "preparing": "Preparing…",
+    "starting": "Starting…",
+    "failed": "Scan failed",
+    "scanning": "Scanning {name}…",
+    "disk": "Reading disk information…",
+    "done": "Scan complete",
+    "cleanPreparing": "Preparing cleanup…",
+    "cleanDone": "Cleanup complete",
+    "recycle": "Emptying the Recycle Bin…",
+    "restoring": "Restoring…",
+    "restoreDone": "Restore complete",
+    "processing": "Processing {name}…"
+  },
+  "cat": {
+    "searchPlaceholder": "Search a category or file…",
+    "confidence": "AI confidence {percent}% · {verdict}",
+    "deepOnly": "deep scan",
+    "files": "{count} files",
+    "noFiles": "No files in this category.",
+    "selectCategory": "Select category",
+    "deselectCategory": "Deselect category",
+    "select": "Select",
+    "selectFile": "Select file",
+    "file": "File",
+    "size": "Size",
+    "modified": "Modified",
+    "today": "today",
+    "daysAgo": "{count} days",
+    "reveal": "Show in Explorer",
+    "revealAria": "Show in Explorer",
+    "moreFiles": "+{count} more files (only the largest are shown)",
+    "user_temp": {
+      "name": "User Temporary Files",
+      "desc": "Leftovers from installers and updates, temporary files that applications leave behind."
+    },
+    "windows_temp": {
+      "name": "Windows Temporary Folder",
+      "desc": "System-wide temporary files. Locked ones are skipped."
+    },
+    "browser_cache": {
+      "name": "Browser Caches",
+      "desc": "Page images and code caches. Safe to remove; sites open slightly slower afterwards."
+    },
+    "windows_update": {
+      "name": "Windows Update Leftovers",
+      "desc": "Downloaded files of installed updates. Administrator permission may be required."
+    },
+    "thumbnails": {
+      "name": "Thumbnail Cache",
+      "desc": "File previews shown in Explorer. They are rebuilt automatically."
+    },
+    "prefetch": {
+      "name": "Prefetch Files",
+      "desc": "A cache that speeds up application launches. Deleting it slows down the first launches."
+    },
+    "crash_dumps": {
+      "name": "Crash Dumps",
+      "desc": "Error records of crashed applications. Unnecessary unless you are debugging."
+    },
+    "logs": {
+      "name": "System and Application Logs",
+      "desc": "Old installation and diagnostic logs."
+    },
+    "recycle_bin": {
+      "name": "Recycle Bin",
+      "desc": "Files you sent to the Recycle Bin. Once emptied they cannot be recovered."
+    },
+    "downloads_old": {
+      "name": "Old Downloads",
+      "desc": "Downloads unchanged for more than {days} days. What they contain is your call."
+    },
+    "large_files": {
+      "name": "Large Files",
+      "desc": "Files larger than {size}. The biggest gains, but they need the most attention."
+    },
+    "duplicates": {
+      "name": "Duplicate Files",
+      "desc": "Files with identical content. Deleting one copy is safe, deleting all of them is not."
+    }
+  },
+  "toast": {
+    "revealFailed": "Could not open",
+    "partialTitle": "Partial selection",
+    "partialText": "This category has {count} more files that are not shown; selecting files one by one only processes what is listed.",
+    "scanDoneTitle": "Scan complete",
+    "scanDoneText": "{size} of junk found · {count} files · {sec}s",
+    "scanFailed": "Scan failed",
+    "scanError": "Scan error",
+    "previewFailed": "Could not build the preview",
+    "cleanFailed": "Cleanup failed",
+    "finishedTitle": "Cleanup finished",
+    "finishedText": "{size} reclaimed",
+    "noSuggestionTitle": "No suggestion",
+    "noSuggestionText": "AI found no category above the safety threshold.",
+    "aiSelectedTitle": "AI suggestion selected",
+    "aiSelectedText": "{count} categories · {size}",
+    "aiPickedTitle": "AI made its selection",
+    "aiPickedText": "{count} categories · {size}",
+    "restoredTitle": "Restored",
+    "restoredPartialTitle": "Partially restored",
+    "restoreFailed": "Restore failed",
+    "restoreText": "{count} files · {size}",
+    "restoreFailedText": " · {count} files failed",
+    "purgeFailed": "Could not delete",
+    "purgeOk": "Quarantine session deleted",
+    "aiSavedTitle": "AI settings saved",
+    "aiSavedText": "The new provider is used from your next question onwards.",
+    "connectedTitle": "Connection successful",
+    "startupTitle": "Startup error",
+    "devTitle": "Development mode",
+    "devText": "Press F12 to open DevTools."
+  },
+  "vault": {
+    "pending": "Waiting in quarantine",
+    "sessions": "Sessions",
+    "files": "Files",
+    "note": "Files in quarantine are not deleted, they are moved. You can restore them at any time.",
+    "sessionLine": "{count} files · {size}",
+    "restoreTitle": "Restore these files?",
+    "restoreText": "{count} files ({size}) will be moved back to their original locations.",
+    "purgeTitle": "Delete permanently?",
+    "purgeText": "{count} files ({size}) will be removed from quarantine for good.",
+    "purgeWarn": "This cannot be undone. Files are erased from the disk and need a recovery tool."
+  },
+  "mode": {
+    "quarantine": "quarantine",
+    "permanentDelete": "permanent delete",
+    "quarantineShort": "Quarantine",
+    "deleteShort": "Delete permanently"
+  },
+  "hist": {
+    "filesCleaned": "{count} files cleaned",
+    "permanent": "permanently deleted",
+    "quarantined": "moved to quarantine",
+    "errors": "{count} errors",
+    "reclaimed": "reclaimed"
+  },
+  "asst": {
+    "title": "Goal-based smart selection",
+    "desc": "Tell how much space you want to free; AI reaches the target by picking only from safe categories. Risky groups are never auto-selected.",
+    "pick": "Let AI choose",
+    "engine": "Advisor",
+    "greeting": "Hello. After a scan I can answer questions like “what can I delete?” or “what takes the most space?”.",
+    "inputPlaceholder": "Type a question…",
+    "send": "Send",
+    "engineMeta": "engine: {engine}",
+    "suggestWhat": "What can I delete?",
+    "suggestWhy": "Why is my disk full?",
+    "suggestDup": "Are duplicates safe?",
+    "suggestRisky": "Which ones are risky?",
+    "noAnswer": "No answer received."
+  },
+  "pick": {
+    "selected": "{size} selected",
+    "targetNote": " (target {size}). ",
+    "reached": "Target reached; the selection contains only safe categories.",
+    "shortfall": "{size} of the target could not be met — the rest sits in risky groups.",
+    "nothing": "AI found no category above the safety threshold. Enable deep scan and try again, or review the categories manually.",
+    "needScan": "You need to run a scan first."
+  },
+  "set": {
+    "ai": {
+      "title": "AI provider",
+      "checking": "checking…",
+      "lede": "Let a real language model produce the answers instead of the rule engine. Enter your OpenAI key and pick a model; the key is stored with the operating system's encryption vault and is never sent back to the interface. Any OpenAI-compatible endpoint works.",
+      "provider": "Provider",
+      "apiKey": "API key",
+      "showKey": "Show key",
+      "hideKey": "Hide key",
+      "keyNone": "No key added yet.",
+      "keySaved": "A key is stored. Type a new one to replace it, or use “Remove key”.",
+      "keyEnv": "The key is read from an environment variable. You can override it by typing a new key here.",
+      "keyCreate": "No key added yet. You can create one at platform.openai.com.",
+      "removeTitle": "Remove the API key?",
+      "removeText": "The key is deleted from disk and the assistant falls back to the rule engine.",
+      "endpoint": "Endpoint",
+      "model": "Model",
+      "waitingKey": "waiting for key"
+    },
+    "clean": {
+      "title": "Cleanup behaviour",
+      "quarantineTitle": "Move to quarantine",
+      "quarantineText": "Files are not deleted; they are kept so they can be restored.",
+      "deleteTitle": "Delete permanently",
+      "deleteText": "Cannot be undone. Files do not go to the Recycle Bin either.",
+      "deepTitle": "Make deep scan the default",
+      "deepText": "Large files and duplicates are searched on every scan.",
+      "autoTitle": "Auto-select safe categories",
+      "autoText": "Risk-free groups are checked when a scan finishes.",
+      "motionTitle": "Reduce motion",
+      "motionText": "Simplifies animations so the app stays smooth on low-end hardware."
+    },
+    "lang": {
+      "title": "Language",
+      "text": "Interface language. Leave it on “System default” to follow Windows.",
+      "system": "System default (Windows)",
+      "detected": "Detected from Windows: {language}",
+      "fallback": "Some languages are not translated yet; those screens appear in English."
+    },
+    "about": {
+      "title": "Application info",
+      "product": "Product",
+      "version": "Version",
+      "electron": "Electron",
+      "chromium": "Chromium",
+      "node": "Node",
+      "platform": "Platform",
+      "drive": "System drive",
+      "dataDir": "Data folder",
+      "safety": "Deletion only happens under the roots defined by the scan categories. Windows, Program Files and the Recycle Bin's system area are protected by a deny-list compiled into the code."
+    }
+  },
+  "provider": {
+    "auto": "Automatic",
+    "openai": "OpenAI",
+    "ollama": "Ollama (local)",
+    "rules": "Rules only",
+    "noteRules": "built-in rules, no model needed",
+    "noteRulesOnly": "rules only, as configured",
+    "noteOpenAi": "answering with the OpenAI model",
+    "noteOpenAiNoKey": "OpenAI selected but no API key yet — add one in Settings",
+    "noteOllama": "answering with the local model",
+    "noteOllamaDown": "Ollama is not reachable — using rules",
+    "noteNoLocal": "no model found — using rules"
+  },
+  "status": {
+    "saving": "Saving…",
+    "saved": "Settings saved.",
+    "saveFailed": "Settings could not be saved.",
+    "fetching": "Fetching the model list…",
+    "modelsFound": "{count} models found — pick one from the list.",
+    "noModels": "No usable chat model was found for this key.",
+    "modelsFailed": "Could not fetch the model list.",
+    "keyNotSaved": "The key could not be saved, so the model list was not fetched.",
+    "keyNotSavedShort": "The key could not be saved.",
+    "enterModel": "Enter a model name first.",
+    "testing": "Testing the connection…",
+    "testFailed": "The test could not run.",
+    "connectFailed": "Could not connect.",
+    "replied": "{model} responded{latency}",
+    "latency": " · {ms} ms",
+    "keyRemoved": "Key removed.",
+    "keyRemoveFailed": "The key could not be removed."
+  },
+  "ai": {
+    "noKey": "No OpenAI API key was entered. Add one under Settings → AI provider.",
+    "timeout": "The request timed out. Check the endpoint address and your connection.",
+    "unreachable": "Could not reach the server: {error}",
+    "emptyReply": "The model returned an empty reply.",
+    "noModel": "The model name is empty. Choose a model first.",
+    "askEmpty": "Type a question; for example “what can I delete?”",
+    "systemPrompt": "You are the advisor of reMona (AICleaner), a Windows disk cleaner. Answer briefly, clearly and in at most four sentences. Never recommend deleting system files; for risky categories leave the choice to the user. Rely only on the scan data provided.",
+    "languageLine": "Answer in {language}.",
+    "testPing": "Connection test.",
+    "testRequest": "Reply with the single word \"ready\"."
+  },
+  "http": {
+    "e401": "The API key was rejected (401). Check the key.",
+    "e403": "This key is not allowed to access the requested model (403).",
+    "e404": "Endpoint or model not found (404). {detail}",
+    "e429": "Rate limit or quota exceeded (429). Try again later.",
+    "e413": "The request body is too large (413).",
+    "e5xx": "Error on the provider side ({status}). Try again later.",
+    "default": "The request failed (HTTP {status}). {detail}",
+    "fallback": "The request failed."
+  },
+  "verdict": {
+    "delete": "Can be removed",
+    "review": "Review",
+    "avoid": "Do not touch",
+    "empty": "Empty"
+  },
+  "reason": {
+    "prefetch": "The gain is small (usually under 200 MB) and deleting it slows down application launches.",
+    "downloads": "The content may be yours. AI only suggests; you pick the files.",
+    "recycle": "These are files you already chose to delete; emptying is irreversible.",
+    "duplicates": "The original of each group is kept; only the extra copies are marked.",
+    "browser": "Session data and passwords are not affected, only the cache is cleared.",
+    "large": "Size alone is not a reason to delete. Look at what the file is.",
+    "empty": "Nothing to remove"
+  },
+  "insight": {
+    "cleanTitle": "Looks clean",
+    "cleanText": "No files worth cleaning were found in the scanned locations.",
+    "biggestTitle": "Biggest gain: {name}",
+    "biggestText": "{size} can be reclaimed — {percent}% of all junk. AI confidence {confidence}%.",
+    "diskFullTitle": "Disk usage is critical",
+    "diskFullText": "{drive} is {percent}% full, only {free} free. Prioritise the recommended cleanup.",
+    "safeTitle": "Risk-free gain ready",
+    "safeText": "{size} of caches and temporary files; removing them causes no data loss ({count} categories).",
+    "riskyTitle": "Needs manual approval",
+    "riskyText": "{names} may contain your personal files. AI never adds them to the default selection; delete only what you have reviewed.",
+    "prefetchTitle": "Prefetch: low gain",
+    "prefetchText": "{size} frees space but slows the next launches. AI scores this category low ({confidence}%).",
+    "dupsTitle": "Duplicate files found",
+    "dupsText": "{size} of identical content. {count} extra copies are marked while originals are kept.",
+    "staleTitle": "Files untouched for years",
+    "staleText": "Every file in {names} has not changed for over a year; deleting them is very likely safe."
+  },
+  "summary": {
+    "nothing": "No files to clean were found on your system.",
+    "text": "{size} of junk found in total ({count} files). AI safely recommends {recommended}. The remaining {rest} needs your approval."
+  },
+  "note": {
+    "deepOff": "Deep scan is off",
+    "notFound": "Not found on this computer",
+    "scanFailed": "Could not scan: {error}",
+    "unknownMode": "Unknown scan mode",
+    "recycleUnreadable": "The Recycle Bin could not be read",
+    "recycleEmpty": "The Recycle Bin is empty",
+    "recycleItems": "{count} items",
+    "recycleWarn": "Once emptied, the files cannot be recovered",
+    "noLarge": "No files larger than {size}",
+    "noDup": "No duplicate files found",
+    "dupGroups": "{count} duplicate groups · only the original of each group is kept",
+    "dupDetail": "one of {count} copies · original: {path}"
+  },
+  "guard": {
+    "invalidPath": "Invalid path",
+    "component": "Protected system component: {fragment}",
+    "outside": "Outside the allowed scan roots",
+    "root": "The root folder cannot be deleted",
+    "folder": "Protected folder: {dir}"
+  },
+  "err": {
+    "noScan": "Run a scan first",
+    "invalidSession": "Invalid session name",
+    "invalidSessionPath": "Invalid session path",
+    "sessionMissing": "No such quarantine session",
+    "sessionNotFound": "Session not found",
+    "invalidRow": "Invalid quarantine record",
+    "quarantineFileMissing": "Quarantine file not found",
+    "revealNotInScan": "This path is not part of the current scan",
+    "scanRunning": "A scan is already running",
+    "cleanRunning": "A cleanup is already running",
+    "unknown": "Unknown error",
+    "restoredSuffix": " (restored)"
+  },
+  "prev": {
+    "title": "Cleanup preview",
+    "text": "Nothing was changed. This only shows what would happen.",
+    "files": "Files to delete",
+    "size": "Space to reclaim",
+    "cats": "Categories (full)",
+    "items": "Individually selected",
+    "skipped": "Skipped by the safety gate",
+    "blocked": "Blocked on protected paths"
+  },
+  "clean": {
+    "title": "Start the cleanup?",
+    "text": "The selected files go through the safety gate before anything is processed.",
+    "method": "Method",
+    "permanent": "Permanent delete",
+    "quarantine": "Move to quarantine",
+    "riskCats": "{risk} categories",
+    "warnDelete": "Permanent delete is selected. Files will not be quarantined and cannot be restored.",
+    "safeNote": "Files are moved to quarantine; you can restore them at any time.",
+    "doneTitle": "Cleanup finished",
+    "doneText": "{size} reclaimed.",
+    "processed": "Files processed",
+    "reclaimed": "Space gained",
+    "skipped": "{count} files were skipped (locked or protected path). See the list below for details.",
+    "restorable": "Files are in quarantine. You can restore them from the Quarantine tab."
+  },
+  "rule": {
+    "noScan": "Run a scan first; then I can tell which files can be deleted.",
+    "safeList": "You can safely clean {count} categories: {names}. That frees {size} with no risk of data loss. The remaining groups may contain personal files — delete those by selecting them.",
+    "noSafe": "No risk-free categories are left. Total junk is {size}; you can delete the rest after reviewing it.",
+    "disk": "{drive} is {percent}% full: {used} in use, {free} free. The scan found {junk} of junk; cleaning the risk-free part increases free space.",
+    "category": "{name}: {size}, {count} files. Risk level {risk} — reason: {reason}",
+    "trust": "Safe categories: browser caches, the thumbnail cache, temporary files and crash dumps. Risky ones: old downloads, large files and duplicates — review those one by one.",
+    "duplicates": "{size} of duplicates found. Originals are kept; {count} extra copies can be deleted.",
+    "noDuplicates": "No duplicate files were found (turn on deep scan and try again if it was off).",
+    "summary": "Summary: {junk} of junk found, {safe} of it risk-free. Ask me “what can I delete?” and I can suggest category by category."
+  },
+  "dock": {
+    "none": "no selection",
+    "files": "{files} files · {cats} full categories"
+  }
+}

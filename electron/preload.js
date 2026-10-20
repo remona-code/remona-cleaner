@@ -35,6 +35,10 @@ const api = {
     get: () => invoke('settings:get'),
     set: (patch) => invoke('settings:set', patch),
   },
+  i18n: {
+    bundle: (code) => invoke('i18n:bundle', code),
+    set: (code) => invoke('i18n:set', code),
+  },
   scan: {
     start: (options) => invoke('scan:start', options),
     status: () => invoke('scan:status'),
@@ -45,7 +49,7 @@ const api = {
   ai: {
     analyze: () => invoke('ai:analyze'),
     provider: (options) => invoke('ai:provider', options),
-    ask: (question) => invoke('ai:ask', { question }),
+    ask: (question, intent) => invoke('ai:ask', { question, intent }),
     pick: (targetBytes) => invoke('ai:pick', { targetBytes }),
     config: () => invoke('ai:config'),
     models: () => invoke('ai:models'),

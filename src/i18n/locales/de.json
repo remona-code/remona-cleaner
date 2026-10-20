@@ -1,0 +1,514 @@
+{
+  "app": {
+    "title": "reMona — AICleaner · KI-gestützte Festplattenreinigung"
+  },
+  "common": {
+    "file": "Datei",
+    "items": "{count} Elemente"
+  },
+  "win": {
+    "minimize": "Minimieren",
+    "maximize": "Maximieren",
+    "restore": "Wiederherstellen",
+    "close": "Schließen"
+  },
+  "nav": {
+    "dashboard": "Übersicht",
+    "categories": "Kategorien",
+    "quarantine": "Quarantäne",
+    "history": "Verlauf",
+    "assistant": "KI-Assistent",
+    "settings": "Einstellungen"
+  },
+  "view": {
+    "dashboard": {
+      "title": "Übersicht",
+      "subtitle": "Scannen Sie die Festplatte, die KI wählt das Sichere aus."
+    },
+    "categories": {
+      "title": "Kategorien",
+      "subtitle": "Prüfen Sie die Funde und entscheiden Sie, was entfernt wird."
+    },
+    "quarantine": {
+      "title": "Quarantäne",
+      "subtitle": "Bereinigte Dateien werden hier aufbewahrt statt gelöscht."
+    },
+    "history": {
+      "title": "Verlauf",
+      "subtitle": "Ein Protokoll jeder durchgeführten Reinigung."
+    },
+    "assistant": {
+      "title": "KI-Assistent",
+      "subtitle": "Setzen Sie ein Ziel oder fragen Sie in normaler Sprache."
+    },
+    "settings": {
+      "title": "Einstellungen",
+      "subtitle": "Reinigungsverhalten und Informationen zur Anwendung."
+    }
+  },
+  "engine": {
+    "rulesTag": "Regel-Engine",
+    "rulesName": "Lokale Regel-Engine",
+    "searching": "Suche nach einem LLM…",
+    "ollama": "Lokales LLM (Ollama)",
+    "remote": "Entferntes LLM"
+  },
+  "dash": {
+    "eyebrow": "reMona AI · KI-gestützte Analyse",
+    "readyTitle": "System scannen, die Einsparung wartet",
+    "readyText": "Starten Sie einen Scan. Die KI bewertet Caches, temporäre Dateien und Duplikate und sagt Ihnen, was gefahrlos entfernt werden kann.",
+    "doneTitle": "{size} lassen sich gefahrlos zurückgewinnen",
+    "cleanTitle": "Ihr System sieht sauber aus",
+    "afterClean": "Reinigung abgeschlossen. Starten Sie einen neuen Scan, um diese Zahlen zu aktualisieren.",
+    "reclaimTitle": "Was schlägt die KI vor?",
+    "reclaimTitleFor": "Die KI bittet um Freigabe für {size}",
+    "reclaimText": "{count} Kategorien haben die Sicherheitsschwelle überschritten (Vertrauen ≥ 80 %). Riskante Gruppen (alte Downloads, große Dateien, Duplikate) blieben außen vor.",
+    "insightCount": "{count} Hinweise"
+  },
+  "disk": {
+    "used": "Datenträger belegt",
+    "after": "nach der Reinigung",
+    "freeAfter": "{free} frei → {after}"
+  },
+  "stat": {
+    "total": "Müll gesamt",
+    "safe": "Risikofreier Gewinn",
+    "count": "Dateianzahl",
+    "vault": "In Quarantäne",
+    "totalWaiting": "wartet auf einen Scan",
+    "totalScanned": "in {sec} s gescannt",
+    "safeMeta": "kein Datenverlust",
+    "countMeta": "Elemente gefunden",
+    "vaultMeta": "wiederherstellbar",
+    "vaultSessions": "{count} Sitzungen · wiederherstellbar"
+  },
+  "card": {
+    "insights": "KI-Erkenntnisse",
+    "breakdown": "Verteilung nach Kategorie",
+    "all": "Alle"
+  },
+  "empty": {
+    "insights": "Die KI-Bewertung erscheint hier, sobald ein Scan fertig ist.",
+    "noData": "Noch keine Daten. Starten Sie einen Scan.",
+    "catWaitingTitle": "Warten auf einen Scan",
+    "catWaitingText": "Starten Sie einen Scan in der Übersicht, dann werden die Kategorien hier aufgelistet.",
+    "noMatchTitle": "Keine passende Kategorie",
+    "noMatchText": "Ändern Sie den Filter oder den Suchbegriff.",
+    "vaultTitle": "Quarantäne ist leer",
+    "vaultText": "In die Quarantäne verschobene Dateien werden hier aufgelistet und können wiederhergestellt werden.",
+    "historyTitle": "Noch keine Reinigung",
+    "historyText": "Jede abgeschlossene Reinigung wird hier protokolliert."
+  },
+  "btn": {
+    "scan": "Scan starten",
+    "scanning": "Scannen…",
+    "aiSelect": "KI-Vorschlag übernehmen",
+    "selectRecommended": "Empfohlene auswählen",
+    "selectSafe": "Sichere auswählen",
+    "clearSelection": "Auswahl aufheben",
+    "preview": "Vorschau",
+    "clean": "Bereinigen",
+    "open": "Öffnen",
+    "restore": "Wiederherstellen",
+    "deletePermanent": "Endgültig löschen",
+    "cancel": "Abbrechen",
+    "confirm": "Bestätigen",
+    "gotIt": "Verstanden",
+    "close": "Schließen",
+    "save": "Speichern",
+    "test": "Verbindung testen",
+    "removeKey": "Schlüssel entfernen",
+    "remove": "Entfernen",
+    "fetchModels": "Modelle abrufen"
+  },
+  "switch": {
+    "deep": "Tiefenscan",
+    "deepTitle": "Der Tiefenscan sucht auch nach großen Dateien und Duplikaten (dauert länger)"
+  },
+  "risk": {
+    "all": "Alle",
+    "safe": "Sicher",
+    "caution": "Vorsichtig",
+    "risky": "Riskant"
+  },
+  "progress": {
+    "preparing": "Vorbereiten…",
+    "starting": "Start…",
+    "failed": "Scan fehlgeschlagen",
+    "scanning": "{name} wird gescannt…",
+    "disk": "Datenträgerinformationen werden gelesen…",
+    "done": "Scan abgeschlossen",
+    "cleanPreparing": "Reinigung wird vorbereitet…",
+    "cleanDone": "Reinigung abgeschlossen",
+    "recycle": "Papierkorb wird geleert…",
+    "restoring": "Wiederherstellen…",
+    "restoreDone": "Wiederherstellung abgeschlossen",
+    "processing": "{name} wird verarbeitet…"
+  },
+  "cat": {
+    "searchPlaceholder": "Kategorie oder Datei suchen…",
+    "confidence": "KI-Vertrauen {percent} % · {verdict}",
+    "deepOnly": "Tiefenscan",
+    "files": "{count} Dateien",
+    "noFiles": "Keine Dateien in dieser Kategorie.",
+    "selectCategory": "Kategorie auswählen",
+    "deselectCategory": "Auswahl aufheben",
+    "select": "Auswählen",
+    "selectFile": "Datei auswählen",
+    "file": "Datei",
+    "size": "Größe",
+    "modified": "Geändert",
+    "today": "heute",
+    "daysAgo": "{count} Tage",
+    "reveal": "Im Explorer anzeigen",
+    "revealAria": "Im Explorer anzeigen",
+    "moreFiles": "+{count} weitere Dateien (nur die größten werden gezeigt)",
+    "user_temp": {
+      "name": "Temporäre Dateien des Benutzers",
+      "desc": "Reste von Installationen und Updates, temporäre Dateien von Anwendungen."
+    },
+    "windows_temp": {
+      "name": "Windows-Temp-Ordner",
+      "desc": "Systemweite temporäre Dateien. Gesperrte Dateien werden übersprungen."
+    },
+    "browser_cache": {
+      "name": "Browser-Caches",
+      "desc": "Seitenbilder und Code-Caches. Gefahrlos entfernbar; Seiten laden danach etwas langsamer."
+    },
+    "windows_update": {
+      "name": "Windows-Update-Reste",
+      "desc": "Heruntergeladene Dateien installierter Updates. Administratorrechte können nötig sein."
+    },
+    "thumbnails": {
+      "name": "Vorschaubild-Cache",
+      "desc": "Dateivorschauen im Explorer. Sie werden automatisch neu erzeugt."
+    },
+    "prefetch": {
+      "name": "Prefetch-Dateien",
+      "desc": "Ein Cache, der Programmstarts beschleunigt. Löschen verlangsamt die ersten Starts."
+    },
+    "crash_dumps": {
+      "name": "Absturzabbilder",
+      "desc": "Fehleraufzeichnungen abgestürzter Anwendungen. Unnötig, außer Sie debuggen."
+    },
+    "logs": {
+      "name": "System- und Anwendungsprotokolle",
+      "desc": "Alte Installations- und Diagnoseprotokolle."
+    },
+    "recycle_bin": {
+      "name": "Papierkorb",
+      "desc": "Dateien, die Sie in den Papierkorb verschoben haben. Nach dem Leeren sind sie nicht wiederherstellbar."
+    },
+    "downloads_old": {
+      "name": "Alte Downloads",
+      "desc": "Downloads, die seit über {days} Tagen unverändert sind. Was darin steckt, entscheiden Sie."
+    },
+    "large_files": {
+      "name": "Große Dateien",
+      "desc": "Dateien größer als {size}. Der größte Gewinn, aber auch am aufmerksamkeitsbedürftigsten."
+    },
+    "duplicates": {
+      "name": "Doppelte Dateien",
+      "desc": "Dateien mit identischem Inhalt. Eine Kopie zu löschen ist sicher, alle nicht."
+    }
+  },
+  "toast": {
+    "revealFailed": "Konnte nicht geöffnet werden",
+    "partialTitle": "Teilweise Auswahl",
+    "partialText": "Diese Kategorie enthält {count} weitere nicht angezeigte Dateien; bei Einzelauswahl werden nur die gelisteten verarbeitet.",
+    "scanDoneTitle": "Scan abgeschlossen",
+    "scanDoneText": "{size} Müll gefunden · {count} Dateien · {sec} s",
+    "scanFailed": "Scan fehlgeschlagen",
+    "scanError": "Scan-Fehler",
+    "previewFailed": "Vorschau konnte nicht erstellt werden",
+    "cleanFailed": "Reinigung fehlgeschlagen",
+    "finishedTitle": "Reinigung abgeschlossen",
+    "finishedText": "{size} zurückgewonnen",
+    "noSuggestionTitle": "Kein Vorschlag",
+    "noSuggestionText": "Die KI fand keine Kategorie über der Sicherheitsschwelle.",
+    "aiSelectedTitle": "KI-Vorschlag ausgewählt",
+    "aiSelectedText": "{count} Kategorien · {size}",
+    "aiPickedTitle": "Die KI hat ausgewählt",
+    "aiPickedText": "{count} Kategorien · {size}",
+    "restoredTitle": "Wiederhergestellt",
+    "restoredPartialTitle": "Teilweise wiederhergestellt",
+    "restoreFailed": "Wiederherstellung fehlgeschlagen",
+    "restoreText": "{count} Dateien · {size}",
+    "restoreFailedText": " · {count} Dateien fehlgeschlagen",
+    "purgeFailed": "Konnte nicht gelöscht werden",
+    "purgeOk": "Quarantäne-Sitzung gelöscht",
+    "aiSavedTitle": "KI-Einstellungen gespeichert",
+    "aiSavedText": "Der neue Anbieter wird ab der nächsten Frage verwendet.",
+    "connectedTitle": "Verbindung erfolgreich",
+    "startupTitle": "Startfehler",
+    "devTitle": "Entwicklungsmodus",
+    "devText": "F12 öffnet die DevTools."
+  },
+  "vault": {
+    "pending": "Wartet in der Quarantäne",
+    "sessions": "Sitzungen",
+    "files": "Dateien",
+    "note": "Dateien in der Quarantäne werden nicht gelöscht, sondern verschoben. Sie können sie jederzeit wiederherstellen.",
+    "sessionLine": "{count} Dateien · {size}",
+    "restoreTitle": "Diese Dateien wiederherstellen?",
+    "restoreText": "{count} Dateien ({size}) werden an ihre ursprünglichen Orte zurückverschoben.",
+    "purgeTitle": "Endgültig löschen?",
+    "purgeText": "{count} Dateien ({size}) werden endgültig aus der Quarantäne entfernt.",
+    "purgeWarn": "Das kann nicht rückgängig gemacht werden. Die Dateien werden von der Festplatte gelöscht und benötigen ein Wiederherstellungstool."
+  },
+  "mode": {
+    "quarantine": "Quarantäne",
+    "permanentDelete": "endgültig löschen",
+    "quarantineShort": "Quarantäne",
+    "deleteShort": "Endgültig löschen"
+  },
+  "hist": {
+    "filesCleaned": "{count} Dateien bereinigt",
+    "permanent": "endgültig gelöscht",
+    "quarantined": "in Quarantäne verschoben",
+    "errors": "{count} Fehler",
+    "reclaimed": "zurückgewonnen"
+  },
+  "asst": {
+    "title": "Zielbasierte intelligente Auswahl",
+    "desc": "Sagen Sie, wie viel Speicher Sie freigeben möchten; die KI erreicht das Ziel nur mit sicheren Kategorien. Riskante Gruppen werden nie automatisch ausgewählt.",
+    "pick": "KI entscheiden lassen",
+    "engine": "Berater",
+    "greeting": "Hallo. Nach einem Scan kann ich Fragen wie „Was kann ich löschen?“ oder „Was belegt am meisten Platz?“ beantworten.",
+    "inputPlaceholder": "Frage eingeben…",
+    "send": "Senden",
+    "engineMeta": "Engine: {engine}",
+    "suggestWhat": "Was kann ich löschen?",
+    "suggestWhy": "Warum ist meine Festplatte voll?",
+    "suggestDup": "Sind Duplikate sicher?",
+    "suggestRisky": "Welche sind riskant?",
+    "noAnswer": "Keine Antwort erhalten."
+  },
+  "pick": {
+    "selected": "{size} ausgewählt",
+    "targetNote": " (Ziel {size}). ",
+    "reached": "Ziel erreicht; die Auswahl enthält nur sichere Kategorien.",
+    "shortfall": "{size} des Ziels konnten nicht erreicht werden — der Rest liegt in riskanten Gruppen.",
+    "nothing": "Die KI fand keine Kategorie über der Sicherheitsschwelle. Aktivieren Sie den Tiefenscan und versuchen Sie es erneut, oder prüfen Sie die Kategorien manuell.",
+    "needScan": "Sie müssen zuerst einen Scan durchführen."
+  },
+  "set": {
+    "ai": {
+      "title": "KI-Anbieter",
+      "checking": "wird geprüft…",
+      "lede": "Lassen Sie die Antworten von einem echten Sprachmodell statt von der Regel-Engine erzeugen. Geben Sie Ihren OpenAI-Schlüssel ein und wählen Sie ein Modell; der Schlüssel wird im Verschlüsselungsspeicher des Betriebssystems abgelegt und nie wieder an die Oberfläche gesendet. Jeder OpenAI-kompatible Endpunkt funktioniert.",
+      "provider": "Anbieter",
+      "apiKey": "API-Schlüssel",
+      "showKey": "Schlüssel anzeigen",
+      "hideKey": "Schlüssel verbergen",
+      "keyNone": "Noch kein Schlüssel hinterlegt.",
+      "keySaved": "Ein Schlüssel ist gespeichert. Geben Sie einen neuen ein oder nutzen Sie „Schlüssel entfernen“.",
+      "keyEnv": "Der Schlüssel wird aus einer Umgebungsvariable gelesen. Sie können ihn hier überschreiben.",
+      "keyCreate": "Noch kein Schlüssel hinterlegt. Sie können einen unter platform.openai.com erstellen.",
+      "removeTitle": "API-Schlüssel entfernen?",
+      "removeText": "Der Schlüssel wird von der Festplatte gelöscht und der Assistent fällt auf die Regel-Engine zurück.",
+      "endpoint": "Endpunkt",
+      "model": "Modell",
+      "waitingKey": "wartet auf Schlüssel"
+    },
+    "clean": {
+      "title": "Reinigungsverhalten",
+      "quarantineTitle": "In Quarantäne verschieben",
+      "quarantineText": "Dateien werden nicht gelöscht, sondern für eine Wiederherstellung aufbewahrt.",
+      "deleteTitle": "Endgültig löschen",
+      "deleteText": "Nicht rückgängig zu machen. Dateien landen auch nicht im Papierkorb.",
+      "deepTitle": "Tiefenscan als Standard",
+      "deepText": "Große Dateien und Duplikate werden bei jedem Scan gesucht.",
+      "autoTitle": "Sichere Kategorien automatisch auswählen",
+      "autoText": "Risikofreie Gruppen werden nach einem Scan angehakt.",
+      "motionTitle": "Bewegung reduzieren",
+      "motionText": "Vereinfacht Animationen, damit die App auf schwacher Hardware flüssig bleibt."
+    },
+    "lang": {
+      "title": "Sprache",
+      "text": "Sprache der Oberfläche. Auf „Systemstandard“ lassen, um Windows zu folgen.",
+      "system": "Systemstandard (Windows)",
+      "detected": "Aus Windows erkannt: {language}",
+      "fallback": "Einige Sprachen sind noch nicht übersetzt; diese Ansichten erscheinen auf Englisch."
+    },
+    "about": {
+      "title": "Anwendungsinformationen",
+      "product": "Produkt",
+      "version": "Version",
+      "electron": "Electron",
+      "chromium": "Chromium",
+      "node": "Node",
+      "platform": "Plattform",
+      "drive": "Systemlaufwerk",
+      "dataDir": "Datenordner",
+      "safety": "Gelöscht wird nur unterhalb der von den Scan-Kategorien definierten Wurzeln. Windows, Programme und der Systembereich des Papierkorbs sind durch eine im Code hinterlegte Sperrliste geschützt."
+    }
+  },
+  "provider": {
+    "auto": "Automatisch",
+    "openai": "OpenAI",
+    "ollama": "Ollama (lokal)",
+    "rules": "Nur Regeln",
+    "noteRules": "eingebaute Regeln, kein Modell nötig",
+    "noteRulesOnly": "nur Regeln, wie eingestellt",
+    "noteOpenAi": "antwortet mit dem OpenAI-Modell",
+    "noteOpenAiNoKey": "OpenAI gewählt, aber kein Schlüssel — in den Einstellungen hinzufügen",
+    "noteOllama": "antwortet mit dem lokalen Modell",
+    "noteOllamaDown": "Ollama nicht erreichbar — Regeln werden genutzt",
+    "noteNoLocal": "kein Modell gefunden — Regeln werden genutzt"
+  },
+  "status": {
+    "saving": "Speichern…",
+    "saved": "Einstellungen gespeichert.",
+    "saveFailed": "Einstellungen konnten nicht gespeichert werden.",
+    "fetching": "Modellliste wird geladen…",
+    "modelsFound": "{count} Modelle gefunden — wählen Sie eines aus der Liste.",
+    "noModels": "Für diesen Schlüssel wurde kein nutzbares Chat-Modell gefunden.",
+    "modelsFailed": "Modellliste konnte nicht geladen werden.",
+    "keyNotSaved": "Der Schlüssel konnte nicht gespeichert werden, daher wurde die Modellliste nicht geladen.",
+    "keyNotSavedShort": "Der Schlüssel konnte nicht gespeichert werden.",
+    "enterModel": "Geben Sie zuerst einen Modellnamen ein.",
+    "testing": "Verbindung wird getestet…",
+    "testFailed": "Der Test konnte nicht ausgeführt werden.",
+    "connectFailed": "Verbindung fehlgeschlagen.",
+    "replied": "{model} hat geantwortet{latency}",
+    "latency": " · {ms} ms",
+    "keyRemoved": "Schlüssel entfernt.",
+    "keyRemoveFailed": "Der Schlüssel konnte nicht entfernt werden."
+  },
+  "ai": {
+    "noKey": "Es wurde kein OpenAI-API-Schlüssel eingegeben. Fügen Sie ihn unter Einstellungen → KI-Anbieter hinzu.",
+    "timeout": "Die Anfrage hat das Zeitlimit überschritten. Prüfen Sie die Endpunktadresse und Ihre Verbindung.",
+    "unreachable": "Server nicht erreichbar: {error}",
+    "emptyReply": "Das Modell hat eine leere Antwort geliefert.",
+    "noModel": "Der Modellname ist leer. Wählen Sie zuerst ein Modell.",
+    "askEmpty": "Geben Sie eine Frage ein, zum Beispiel „Was kann ich löschen?“",
+    "systemPrompt": "Du bist der Berater von reMona (AICleaner), einem Windows-Festplattenreiniger. Antworte kurz, klar und in höchstens vier Sätzen. Empfehle niemals das Löschen von Systemdateien; bei riskanten Kategorien überlässt du die Wahl dem Benutzer. Stütze dich nur auf die bereitgestellten Scandaten.",
+    "languageLine": "Antworte auf {language}.",
+    "testPing": "Verbindungstest.",
+    "testRequest": "Antworte mit dem einzigen Wort \"bereit\"."
+  },
+  "http": {
+    "e401": "Der API-Schlüssel wurde abgelehnt (401). Prüfen Sie den Schlüssel.",
+    "e403": "Dieser Schlüssel darf nicht auf das angeforderte Modell zugreifen (403).",
+    "e404": "Endpunkt oder Modell nicht gefunden (404). {detail}",
+    "e429": "Ratenlimit oder Kontingent überschritten (429). Versuchen Sie es später erneut.",
+    "e413": "Der Anfragetext ist zu groß (413).",
+    "e5xx": "Fehler beim Anbieter ({status}). Versuchen Sie es später erneut.",
+    "default": "Die Anfrage ist fehlgeschlagen (HTTP {status}). {detail}",
+    "fallback": "Die Anfrage ist fehlgeschlagen."
+  },
+  "verdict": {
+    "delete": "Entfernbar",
+    "review": "Prüfen",
+    "avoid": "Nicht anfassen",
+    "empty": "Leer"
+  },
+  "reason": {
+    "prefetch": "Der Gewinn ist klein (meist unter 200 MB) und das Löschen verlangsamt Programmstarts.",
+    "downloads": "Der Inhalt könnte Ihnen gehören. Die KI schlägt nur vor; Sie wählen die Dateien.",
+    "recycle": "Das sind Dateien, die Sie bereits löschen wollten; das Leeren ist unwiderruflich.",
+    "duplicates": "Das Original jeder Gruppe bleibt erhalten; nur die zusätzlichen Kopien werden markiert.",
+    "browser": "Sitzungsdaten und Passwörter sind nicht betroffen, nur der Cache wird geleert.",
+    "large": "Die Größe allein ist kein Grund zu löschen. Sehen Sie nach, was die Datei ist.",
+    "empty": "Nichts zu entfernen"
+  },
+  "insight": {
+    "cleanTitle": "Sieht sauber aus",
+    "cleanText": "In den gescannten Orten wurden keine reinigungsbedürftigen Dateien gefunden.",
+    "biggestTitle": "Größter Gewinn: {name}",
+    "biggestText": "{size} lassen sich zurückgewinnen — {percent} % des gesamten Mülls. KI-Vertrauen {confidence} %.",
+    "diskFullTitle": "Datenträgerauslastung ist kritisch",
+    "diskFullText": "{drive} ist zu {percent} % voll, nur {free} frei. Priorisieren Sie die empfohlene Reinigung.",
+    "safeTitle": "Risikofreier Gewinn bereit",
+    "safeText": "{size} an Caches und temporären Dateien; das Entfernen verursacht keinen Datenverlust ({count} Kategorien).",
+    "riskyTitle": "Manuelle Freigabe nötig",
+    "riskyText": "{names} können persönliche Dateien enthalten. Die KI nimmt sie nie in die Standardauswahl auf; löschen Sie nur, was Sie geprüft haben.",
+    "prefetchTitle": "Prefetch: geringer Gewinn",
+    "prefetchText": "{size} schaffen Platz, verlangsamen aber die nächsten Starts. Die KI bewertet diese Kategorie niedrig ({confidence} %).",
+    "dupsTitle": "Doppelte Dateien gefunden",
+    "dupsText": "{size} identischer Inhalt. {count} zusätzliche Kopien sind markiert, die Originale bleiben.",
+    "staleTitle": "Seit Jahren unberührte Dateien",
+    "staleText": "Jede Datei in {names} ist seit über einem Jahr unverändert; das Löschen ist sehr wahrscheinlich sicher."
+  },
+  "summary": {
+    "nothing": "Auf Ihrem System wurden keine zu reinigenden Dateien gefunden.",
+    "text": "Insgesamt {size} Müll gefunden ({count} Dateien). Die KI empfiehlt gefahrlos {recommended}. Die restlichen {rest} benötigen Ihre Freigabe."
+  },
+  "note": {
+    "deepOff": "Tiefenscan ist aus",
+    "notFound": "Auf diesem Computer nicht gefunden",
+    "scanFailed": "Scan nicht möglich: {error}",
+    "unknownMode": "Unbekannter Scanmodus",
+    "recycleUnreadable": "Der Papierkorb konnte nicht gelesen werden",
+    "recycleEmpty": "Der Papierkorb ist leer",
+    "recycleItems": "{count} Elemente",
+    "recycleWarn": "Nach dem Leeren sind die Dateien nicht wiederherstellbar",
+    "noLarge": "Keine Dateien größer als {size}",
+    "noDup": "Keine doppelten Dateien gefunden",
+    "dupGroups": "{count} Duplikatgruppen · nur das Original jeder Gruppe bleibt",
+    "dupDetail": "eine von {count} Kopien · Original: {path}"
+  },
+  "guard": {
+    "invalidPath": "Ungültiger Pfad",
+    "component": "Geschützte Systemkomponente: {fragment}",
+    "outside": "Außerhalb der erlaubten Scan-Wurzeln",
+    "root": "Der Wurzelordner kann nicht gelöscht werden",
+    "folder": "Geschützter Ordner: {dir}"
+  },
+  "err": {
+    "noScan": "Führen Sie zuerst einen Scan durch",
+    "invalidSession": "Ungültiger Sitzungsname",
+    "invalidSessionPath": "Ungültiger Sitzungspfad",
+    "sessionMissing": "Keine solche Quarantäne-Sitzung",
+    "sessionNotFound": "Sitzung nicht gefunden",
+    "invalidRow": "Ungültiger Quarantäne-Eintrag",
+    "quarantineFileMissing": "Quarantänedatei nicht gefunden",
+    "revealNotInScan": "Dieser Pfad gehört nicht zum aktuellen Scan",
+    "scanRunning": "Ein Scan läuft bereits",
+    "cleanRunning": "Eine Reinigung läuft bereits",
+    "unknown": "Unbekannter Fehler",
+    "restoredSuffix": " (wiederhergestellt)"
+  },
+  "prev": {
+    "title": "Reinigungsvorschau",
+    "text": "Es wurde nichts geändert. Dies zeigt nur, was passieren würde.",
+    "files": "Zu löschende Dateien",
+    "size": "Freizugebender Speicher",
+    "cats": "Kategorien (vollständig)",
+    "items": "Einzeln ausgewählt",
+    "skipped": "Von der Sicherheitsprüfung übersprungen",
+    "blocked": "Auf geschützten Pfaden blockiert"
+  },
+  "clean": {
+    "title": "Reinigung starten?",
+    "text": "Die ausgewählten Dateien durchlaufen vor der Verarbeitung die Sicherheitsprüfung.",
+    "method": "Methode",
+    "permanent": "Endgültiges Löschen",
+    "quarantine": "In Quarantäne verschieben",
+    "riskCats": "{risk} Kategorien",
+    "warnDelete": "Endgültiges Löschen ist gewählt. Dateien kommen nicht in die Quarantäne und können nicht wiederhergestellt werden.",
+    "safeNote": "Dateien werden in die Quarantäne verschoben; Sie können sie jederzeit wiederherstellen.",
+    "doneTitle": "Reinigung abgeschlossen",
+    "doneText": "{size} zurückgewonnen.",
+    "processed": "Verarbeitete Dateien",
+    "reclaimed": "Gewonnener Speicher",
+    "skipped": "{count} Dateien wurden übersprungen (gesperrt oder geschützter Pfad). Details siehe Liste unten.",
+    "restorable": "Die Dateien sind in der Quarantäne. Sie können sie im Tab Quarantäne wiederherstellen."
+  },
+  "rule": {
+    "noScan": "Führen Sie zuerst einen Scan durch; dann kann ich sagen, welche Dateien gelöscht werden können.",
+    "safeList": "Sie können {count} Kategorien gefahrlos bereinigen: {names}. Das schafft {size} ohne Risiko eines Datenverlusts. Die übrigen Gruppen können persönliche Dateien enthalten — löschen Sie diese durch Auswahl.",
+    "noSafe": "Es sind keine risikofreien Kategorien mehr übrig. Der Gesamtmüll beträgt {size}; den Rest können Sie nach Prüfung löschen.",
+    "disk": "{drive} ist zu {percent} % voll: {used} belegt, {free} frei. Der Scan fand {junk} Müll; die risikofreie Bereinigung erhöht den freien Speicher.",
+    "category": "{name}: {size}, {count} Dateien. Risikostufe {risk} — Grund: {reason}",
+    "trust": "Sichere Kategorien: Browser-Caches, Vorschaubild-Cache, temporäre Dateien und Absturzabbilder. Riskant: alte Downloads, große Dateien und Duplikate — prüfen Sie diese einzeln.",
+    "duplicates": "{size} Duplikate gefunden. Originale bleiben; {count} zusätzliche Kopien können gelöscht werden.",
+    "noDuplicates": "Es wurden keine doppelten Dateien gefunden (aktivieren Sie den Tiefenscan und versuchen Sie es erneut, falls er aus war).",
+    "summary": "Zusammenfassung: {junk} Müll gefunden, {safe} davon risikofrei. Fragen Sie „Was kann ich löschen?“ und ich schlage Kategorie für Kategorie vor."
+  },
+  "dock": {
+    "none": "keine Auswahl",
+    "files": "{files} Dateien · {cats} ganze Kategorien"
+  }
+}

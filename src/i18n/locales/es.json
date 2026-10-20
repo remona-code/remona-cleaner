@@ -1,0 +1,514 @@
+{
+  "app": {
+    "title": "reMona — AICleaner · Limpiador de disco con IA"
+  },
+  "common": {
+    "file": "archivo",
+    "items": "{count} elementos"
+  },
+  "win": {
+    "minimize": "Minimizar",
+    "maximize": "Maximizar",
+    "restore": "Restaurar",
+    "close": "Cerrar"
+  },
+  "nav": {
+    "dashboard": "Panel",
+    "categories": "Categorías",
+    "quarantine": "Cuarentena",
+    "history": "Historial",
+    "assistant": "Asistente IA",
+    "settings": "Ajustes"
+  },
+  "view": {
+    "dashboard": {
+      "title": "Panel",
+      "subtitle": "Analiza el disco y deja que la IA elija lo seguro."
+    },
+    "categories": {
+      "title": "Categorías",
+      "subtitle": "Revisa lo encontrado y decide qué se elimina."
+    },
+    "quarantine": {
+      "title": "Cuarentena",
+      "subtitle": "Los archivos limpiados se guardan aquí en lugar de borrarse."
+    },
+    "history": {
+      "title": "Historial",
+      "subtitle": "Un registro de cada limpieza realizada."
+    },
+    "assistant": {
+      "title": "Asistente IA",
+      "subtitle": "Fija un objetivo o pregunta en lenguaje natural."
+    },
+    "settings": {
+      "title": "Ajustes",
+      "subtitle": "Comportamiento de la limpieza e información de la aplicación."
+    }
+  },
+  "engine": {
+    "rulesTag": "motor de reglas",
+    "rulesName": "Motor de reglas local",
+    "searching": "Buscando un LLM…",
+    "ollama": "LLM local (Ollama)",
+    "remote": "LLM remoto"
+  },
+  "dash": {
+    "eyebrow": "reMona AI · análisis con IA",
+    "readyTitle": "Analiza el sistema, la ganancia está lista",
+    "readyText": "Ejecuta un análisis para empezar. La IA evalúa cachés, archivos temporales y duplicados, y te dice qué se puede quitar sin riesgo.",
+    "doneTitle": "{size} se pueden recuperar sin riesgo",
+    "cleanTitle": "Tu sistema parece limpio",
+    "afterClean": "Limpieza terminada. Ejecuta un nuevo análisis para actualizar estas cifras.",
+    "reclaimTitle": "¿Qué sugiere la IA?",
+    "reclaimTitleFor": "La IA pide aprobación para {size}",
+    "reclaimText": "{count} categorías superaron el umbral de seguridad (confianza ≥ 80 %). Los grupos riesgosos (descargas antiguas, archivos grandes, duplicados) quedaron fuera.",
+    "insightCount": "{count} hallazgos"
+  },
+  "disk": {
+    "used": "disco usado",
+    "after": "tras la limpieza",
+    "freeAfter": "{free} libres → {after}"
+  },
+  "stat": {
+    "total": "Basura total",
+    "safe": "Ganancia sin riesgo",
+    "count": "Número de archivos",
+    "vault": "En cuarentena",
+    "totalWaiting": "esperando un análisis",
+    "totalScanned": "analizado en {sec} s",
+    "safeMeta": "sin pérdida de datos",
+    "countMeta": "elementos encontrados",
+    "vaultMeta": "recuperable",
+    "vaultSessions": "{count} sesiones · recuperable"
+  },
+  "card": {
+    "insights": "Conclusiones de la IA",
+    "breakdown": "Desglose por categoría",
+    "all": "Todo"
+  },
+  "empty": {
+    "insights": "La evaluación de la IA aparecerá aquí cuando termine un análisis.",
+    "noData": "Aún no hay datos. Ejecuta un análisis.",
+    "catWaitingTitle": "Esperando un análisis",
+    "catWaitingText": "Inicia un análisis desde el panel y las categorías aparecerán aquí.",
+    "noMatchTitle": "Ninguna categoría coincide",
+    "noMatchText": "Cambia el filtro o el término de búsqueda.",
+    "vaultTitle": "La cuarentena está vacía",
+    "vaultText": "Los archivos movidos a la cuarentena se listan aquí y se pueden restaurar.",
+    "historyTitle": "Aún no hay limpiezas",
+    "historyText": "Cada limpieza completada queda registrada aquí."
+  },
+  "btn": {
+    "scan": "Iniciar análisis",
+    "scanning": "Analizando…",
+    "aiSelect": "Usar sugerencia de la IA",
+    "selectRecommended": "Seleccionar recomendados",
+    "selectSafe": "Seleccionar los seguros",
+    "clearSelection": "Quitar selección",
+    "preview": "Vista previa",
+    "clean": "Limpiar",
+    "open": "Abrir",
+    "restore": "Restaurar",
+    "deletePermanent": "Eliminar definitivamente",
+    "cancel": "Cancelar",
+    "confirm": "Aprobar",
+    "gotIt": "Entendido",
+    "close": "Cerrar",
+    "save": "Guardar",
+    "test": "Probar conexión",
+    "removeKey": "Quitar clave",
+    "remove": "Quitar",
+    "fetchModels": "Obtener modelos"
+  },
+  "switch": {
+    "deep": "Análisis profundo",
+    "deepTitle": "El análisis profundo también busca archivos grandes y duplicados (tarda más)"
+  },
+  "risk": {
+    "all": "Todo",
+    "safe": "Seguro",
+    "caution": "Con cuidado",
+    "risky": "Riesgoso"
+  },
+  "progress": {
+    "preparing": "Preparando…",
+    "starting": "Iniciando…",
+    "failed": "El análisis falló",
+    "scanning": "Analizando {name}…",
+    "disk": "Leyendo información del disco…",
+    "done": "Análisis completado",
+    "cleanPreparing": "Preparando la limpieza…",
+    "cleanDone": "Limpieza completada",
+    "recycle": "Vaciando la Papelera de reciclaje…",
+    "restoring": "Restaurando…",
+    "restoreDone": "Restauración completada",
+    "processing": "Procesando {name}…"
+  },
+  "cat": {
+    "searchPlaceholder": "Buscar una categoría o un archivo…",
+    "confidence": "Confianza de la IA {percent} % · {verdict}",
+    "deepOnly": "análisis profundo",
+    "files": "{count} archivos",
+    "noFiles": "No hay archivos en esta categoría.",
+    "selectCategory": "Seleccionar categoría",
+    "deselectCategory": "Quitar categoría",
+    "select": "Seleccionar",
+    "selectFile": "Seleccionar archivo",
+    "file": "Archivo",
+    "size": "Tamaño",
+    "modified": "Modificado",
+    "today": "hoy",
+    "daysAgo": "{count} días",
+    "reveal": "Mostrar en el Explorador",
+    "revealAria": "Mostrar en el Explorador",
+    "moreFiles": "+{count} archivos más (solo se muestran los más grandes)",
+    "user_temp": {
+      "name": "Archivos temporales del usuario",
+      "desc": "Restos de instaladores y actualizaciones, archivos temporales que dejan las aplicaciones."
+    },
+    "windows_temp": {
+      "name": "Carpeta temporal de Windows",
+      "desc": "Archivos temporales de todo el sistema. Los bloqueados se omiten."
+    },
+    "browser_cache": {
+      "name": "Cachés de navegadores",
+      "desc": "Imágenes de páginas y cachés de código. Es seguro quitarlas; los sitios abren algo más lentos después."
+    },
+    "windows_update": {
+      "name": "Restos de Windows Update",
+      "desc": "Archivos descargados de actualizaciones instaladas. Puede requerir permisos de administrador."
+    },
+    "thumbnails": {
+      "name": "Caché de miniaturas",
+      "desc": "Vistas previas de archivos del Explorador. Se reconstruyen automáticamente."
+    },
+    "prefetch": {
+      "name": "Archivos Prefetch",
+      "desc": "Una caché que acelera el arranque de aplicaciones. Borrarla ralentiza los primeros arranques."
+    },
+    "crash_dumps": {
+      "name": "Volcados de fallos",
+      "desc": "Registros de errores de aplicaciones que fallaron. Innecesarios salvo que estés depurando."
+    },
+    "logs": {
+      "name": "Registros del sistema y de aplicaciones",
+      "desc": "Registros antiguos de instalación y diagnóstico."
+    },
+    "recycle_bin": {
+      "name": "Papelera de reciclaje",
+      "desc": "Archivos que enviaste a la papelera. Una vez vaciada no se pueden recuperar."
+    },
+    "downloads_old": {
+      "name": "Descargas antiguas",
+      "desc": "Descargas sin cambios durante más de {days} días. Qué contienen lo decides tú."
+    },
+    "large_files": {
+      "name": "Archivos grandes",
+      "desc": "Archivos mayores de {size}. La mayor ganancia, pero también la que más atención requiere."
+    },
+    "duplicates": {
+      "name": "Archivos duplicados",
+      "desc": "Archivos con contenido idéntico. Borrar una copia es seguro, borrarlas todas no."
+    }
+  },
+  "toast": {
+    "revealFailed": "No se pudo abrir",
+    "partialTitle": "Selección parcial",
+    "partialText": "Esta categoría tiene {count} archivos más sin mostrar; al seleccionar archivos uno a uno solo se procesa lo listado.",
+    "scanDoneTitle": "Análisis completado",
+    "scanDoneText": "{size} de basura encontrada · {count} archivos · {sec} s",
+    "scanFailed": "El análisis falló",
+    "scanError": "Error de análisis",
+    "previewFailed": "No se pudo crear la vista previa",
+    "cleanFailed": "La limpieza falló",
+    "finishedTitle": "Limpieza terminada",
+    "finishedText": "{size} recuperados",
+    "noSuggestionTitle": "Sin sugerencias",
+    "noSuggestionText": "La IA no encontró ninguna categoría por encima del umbral de seguridad.",
+    "aiSelectedTitle": "Sugerencia de la IA aplicada",
+    "aiSelectedText": "{count} categorías · {size}",
+    "aiPickedTitle": "La IA hizo su selección",
+    "aiPickedText": "{count} categorías · {size}",
+    "restoredTitle": "Restaurados",
+    "restoredPartialTitle": "Restaurados parcialmente",
+    "restoreFailed": "La restauración falló",
+    "restoreText": "{count} archivos · {size}",
+    "restoreFailedText": " · {count} archivos fallaron",
+    "purgeFailed": "No se pudo borrar",
+    "purgeOk": "Sesión de cuarentena borrada",
+    "aiSavedTitle": "Ajustes de IA guardados",
+    "aiSavedText": "El nuevo proveedor se usará desde tu próxima pregunta.",
+    "connectedTitle": "Conexión correcta",
+    "startupTitle": "Error de inicio",
+    "devTitle": "Modo de desarrollo",
+    "devText": "Pulsa F12 para abrir DevTools."
+  },
+  "vault": {
+    "pending": "Esperando en cuarentena",
+    "sessions": "Sesiones",
+    "files": "Archivos",
+    "note": "Los archivos en cuarentena no se borran, se mueven. Puedes restaurarlos en cualquier momento.",
+    "sessionLine": "{count} archivos · {size}",
+    "restoreTitle": "¿Restaurar estos archivos?",
+    "restoreText": "{count} archivos ({size}) se devolverán a sus ubicaciones originales.",
+    "purgeTitle": "¿Eliminar definitivamente?",
+    "purgeText": "{count} archivos ({size}) se quitarán de la cuarentena para siempre.",
+    "purgeWarn": "Esto no se puede deshacer. Los archivos se borran del disco y hacen falta herramientas de recuperación."
+  },
+  "mode": {
+    "quarantine": "cuarentena",
+    "permanentDelete": "borrado permanente",
+    "quarantineShort": "Cuarentena",
+    "deleteShort": "Borrado permanente"
+  },
+  "hist": {
+    "filesCleaned": "{count} archivos limpiados",
+    "permanent": "borrados definitivamente",
+    "quarantined": "movidos a la cuarentena",
+    "errors": "{count} errores",
+    "reclaimed": "recuperados"
+  },
+  "asst": {
+    "title": "Selección inteligente por objetivo",
+    "desc": "Di cuánto espacio quieres liberar; la IA alcanza el objetivo eligiendo solo categorías seguras. Los grupos riesgosos nunca se seleccionan solos.",
+    "pick": "Que elija la IA",
+    "engine": "Asesor",
+    "greeting": "Hola. Tras un análisis puedo responder preguntas como «¿qué puedo borrar?» o «¿qué ocupa más espacio?».",
+    "inputPlaceholder": "Escribe una pregunta…",
+    "send": "Enviar",
+    "engineMeta": "motor: {engine}",
+    "suggestWhat": "¿Qué puedo borrar?",
+    "suggestWhy": "¿Por qué está lleno mi disco?",
+    "suggestDup": "¿Los duplicados son seguros?",
+    "suggestRisky": "¿Cuáles son riesgosos?",
+    "noAnswer": "No se recibió respuesta."
+  },
+  "pick": {
+    "selected": "{size} seleccionados",
+    "targetNote": " (objetivo {size}). ",
+    "reached": "Objetivo alcanzado; la selección contiene solo categorías seguras.",
+    "shortfall": "No se pudo alcanzar {size} del objetivo — el resto está en grupos riesgosos.",
+    "nothing": "La IA no encontró ninguna categoría por encima del umbral de seguridad. Activa el análisis profundo e inténtalo de nuevo, o revisa las categorías a mano.",
+    "needScan": "Primero debes ejecutar un análisis."
+  },
+  "set": {
+    "ai": {
+      "title": "Proveedor de IA",
+      "checking": "comprobando…",
+      "lede": "Deja que un modelo de lenguaje real genere las respuestas en lugar del motor de reglas. Introduce tu clave de OpenAI y elige un modelo; la clave se guarda en el almacén cifrado del sistema operativo y nunca vuelve a la interfaz. Cualquier punto de acceso compatible con OpenAI funciona.",
+      "provider": "Proveedor",
+      "apiKey": "Clave de API",
+      "showKey": "Mostrar clave",
+      "hideKey": "Ocultar clave",
+      "keyNone": "Aún no hay clave.",
+      "keySaved": "Hay una clave guardada. Escribe una nueva para reemplazarla o usa «Quitar clave».",
+      "keyEnv": "La clave se lee de una variable de entorno. Puedes reemplazarla escribiendo una nueva aquí.",
+      "keyCreate": "Aún no hay clave. Puedes crear una en platform.openai.com.",
+      "removeTitle": "¿Quitar la clave de API?",
+      "removeText": "La clave se borra del disco y el asistente vuelve al motor de reglas.",
+      "endpoint": "Punto de acceso",
+      "model": "Modelo",
+      "waitingKey": "esperando clave"
+    },
+    "clean": {
+      "title": "Comportamiento de la limpieza",
+      "quarantineTitle": "Mover a la cuarentena",
+      "quarantineText": "Los archivos no se borran; se guardan para poder restaurarlos.",
+      "deleteTitle": "Eliminar definitivamente",
+      "deleteText": "No se puede deshacer. Los archivos tampoco van a la papelera.",
+      "deepTitle": "Análisis profundo por defecto",
+      "deepText": "Los archivos grandes y los duplicados se buscan en cada análisis.",
+      "autoTitle": "Seleccionar categorías seguras automáticamente",
+      "autoText": "Los grupos sin riesgo se marcan al terminar el análisis.",
+      "motionTitle": "Reducir movimiento",
+      "motionText": "Simplifica las animaciones para que la app vaya fluida en equipos modestos."
+    },
+    "lang": {
+      "title": "Idioma",
+      "text": "Idioma de la interfaz. Déjalo en «Predeterminado del sistema» para seguir a Windows.",
+      "system": "Predeterminado del sistema (Windows)",
+      "detected": "Detectado en Windows: {language}",
+      "fallback": "Algunos idiomas aún no están traducidos; esas pantallas aparecen en inglés."
+    },
+    "about": {
+      "title": "Información de la aplicación",
+      "product": "Producto",
+      "version": "Versión",
+      "electron": "Electron",
+      "chromium": "Chromium",
+      "node": "Node",
+      "platform": "Plataforma",
+      "drive": "Unidad del sistema",
+      "dataDir": "Carpeta de datos",
+      "safety": "Solo se borra bajo las raíces definidas por las categorías de análisis. Windows, Program Files y el área del sistema de la papelera están protegidos por una lista de bloqueo incluida en el código."
+    }
+  },
+  "provider": {
+    "auto": "Automático",
+    "openai": "OpenAI",
+    "ollama": "Ollama (local)",
+    "rules": "Solo reglas",
+    "noteRules": "reglas integradas, sin modelo",
+    "noteRulesOnly": "solo reglas, según la configuración",
+    "noteOpenAi": "respondiendo con el modelo de OpenAI",
+    "noteOpenAiNoKey": "OpenAI elegido pero sin clave — añádela en Ajustes",
+    "noteOllama": "respondiendo con el modelo local",
+    "noteOllamaDown": "Ollama no responde — se usan las reglas",
+    "noteNoLocal": "no se encontró modelo — se usan las reglas"
+  },
+  "status": {
+    "saving": "Guardando…",
+    "saved": "Ajustes guardados.",
+    "saveFailed": "No se pudieron guardar los ajustes.",
+    "fetching": "Obteniendo la lista de modelos…",
+    "modelsFound": "{count} modelos encontrados — elige uno de la lista.",
+    "noModels": "No se encontró ningún modelo de chat utilizable para esta clave.",
+    "modelsFailed": "No se pudo obtener la lista de modelos.",
+    "keyNotSaved": "No se pudo guardar la clave, así que no se obtuvo la lista de modelos.",
+    "keyNotSavedShort": "No se pudo guardar la clave.",
+    "enterModel": "Escribe primero un nombre de modelo.",
+    "testing": "Probando la conexión…",
+    "testFailed": "No se pudo ejecutar la prueba.",
+    "connectFailed": "No se pudo conectar.",
+    "replied": "{model} respondió{latency}",
+    "latency": " · {ms} ms",
+    "keyRemoved": "Clave eliminada.",
+    "keyRemoveFailed": "No se pudo eliminar la clave."
+  },
+  "ai": {
+    "noKey": "No se introdujo ninguna clave de API de OpenAI. Añádela en Ajustes → Proveedor de IA.",
+    "timeout": "La solicitud agotó el tiempo de espera. Revisa la dirección del punto de acceso y tu conexión.",
+    "unreachable": "No se pudo alcanzar el servidor: {error}",
+    "emptyReply": "El modelo devolvió una respuesta vacía.",
+    "noModel": "El nombre del modelo está vacío. Elige uno primero.",
+    "askEmpty": "Escribe una pregunta; por ejemplo «¿qué puedo borrar?»",
+    "systemPrompt": "Eres el asesor de reMona (AICleaner), un limpiador de disco para Windows. Responde breve y claro, en cuatro frases como máximo. Nunca recomiendes borrar archivos del sistema; en las categorías riesgosas deja la decisión al usuario. Básate solo en los datos de análisis proporcionados.",
+    "languageLine": "Responde en {language}.",
+    "testPing": "Prueba de conexión.",
+    "testRequest": "Responde con la única palabra \"listo\"."
+  },
+  "http": {
+    "e401": "La clave de API fue rechazada (401). Revisa la clave.",
+    "e403": "Esta clave no puede acceder al modelo solicitado (403).",
+    "e404": "Punto de acceso o modelo no encontrado (404). {detail}",
+    "e429": "Límite de peticiones o cuota superada (429). Inténtalo más tarde.",
+    "e413": "El cuerpo de la solicitud es demasiado grande (413).",
+    "e5xx": "Error en el proveedor ({status}). Inténtalo más tarde.",
+    "default": "La solicitud falló (HTTP {status}). {detail}",
+    "fallback": "La solicitud falló."
+  },
+  "verdict": {
+    "delete": "Se puede quitar",
+    "review": "Revisar",
+    "avoid": "No tocar",
+    "empty": "Vacío"
+  },
+  "reason": {
+    "prefetch": "La ganancia es pequeña (normalmente menos de 200 MB) y borrarlo ralentiza el arranque de aplicaciones.",
+    "downloads": "El contenido puede ser tuyo. La IA solo sugiere; tú eliges los archivos.",
+    "recycle": "Son archivos que ya decidiste borrar; vaciar es irreversible.",
+    "duplicates": "Se conserva el original de cada grupo; solo se marcan las copias extra.",
+    "browser": "Los datos de sesión y las contraseñas no se ven afectados, solo se limpia la caché.",
+    "large": "El tamaño por sí solo no es razón para borrar. Mira qué es el archivo.",
+    "empty": "Nada que quitar"
+  },
+  "insight": {
+    "cleanTitle": "Parece limpio",
+    "cleanText": "No se encontraron archivos que merezca la pena limpiar en las ubicaciones analizadas.",
+    "biggestTitle": "Mayor ganancia: {name}",
+    "biggestText": "{size} recuperables — {percent} % de toda la basura. Confianza de la IA {confidence} %.",
+    "diskFullTitle": "El uso del disco es crítico",
+    "diskFullText": "{drive} está al {percent} %, solo {free} libres. Prioriza la limpieza recomendada.",
+    "safeTitle": "Ganancia sin riesgo lista",
+    "safeText": "{size} de cachés y archivos temporales; quitarlos no causa pérdida de datos ({count} categorías).",
+    "riskyTitle": "Requiere aprobación manual",
+    "riskyText": "{names} puede contener archivos personales. La IA nunca los añade a la selección por defecto; borra solo lo que hayas revisado.",
+    "prefetchTitle": "Prefetch: poca ganancia",
+    "prefetchText": "{size} libera espacio pero ralentiza los siguientes arranques. La IA puntúa bajo esta categoría ({confidence} %).",
+    "dupsTitle": "Se encontraron duplicados",
+    "dupsText": "{size} de contenido idéntico. Se marcan {count} copias extra y se conservan los originales.",
+    "staleTitle": "Archivos sin tocar durante años",
+    "staleText": "Todos los archivos de {names} llevan más de un año sin cambios; borrarlos es muy probablemente seguro."
+  },
+  "summary": {
+    "nothing": "No se encontraron archivos que limpiar en tu sistema.",
+    "text": "Se encontraron {size} de basura en total ({count} archivos). La IA recomienda sin riesgo {recommended}. Los {rest} restantes necesitan tu aprobación."
+  },
+  "note": {
+    "deepOff": "El análisis profundo está desactivado",
+    "notFound": "No se encontró en este equipo",
+    "scanFailed": "No se pudo analizar: {error}",
+    "unknownMode": "Modo de análisis desconocido",
+    "recycleUnreadable": "No se pudo leer la Papelera de reciclaje",
+    "recycleEmpty": "La Papelera de reciclaje está vacía",
+    "recycleItems": "{count} elementos",
+    "recycleWarn": "Una vez vaciada, los archivos no se pueden recuperar",
+    "noLarge": "No hay archivos mayores de {size}",
+    "noDup": "No se encontraron archivos duplicados",
+    "dupGroups": "{count} grupos de duplicados · solo se conserva el original de cada grupo",
+    "dupDetail": "una de {count} copias · original: {path}"
+  },
+  "guard": {
+    "invalidPath": "Ruta no válida",
+    "component": "Componente del sistema protegido: {fragment}",
+    "outside": "Fuera de las raíces de análisis permitidas",
+    "root": "La carpeta raíz no se puede borrar",
+    "folder": "Carpeta protegida: {dir}"
+  },
+  "err": {
+    "noScan": "Ejecuta primero un análisis",
+    "invalidSession": "Nombre de sesión no válido",
+    "invalidSessionPath": "Ruta de sesión no válida",
+    "sessionMissing": "No existe esa sesión de cuarentena",
+    "sessionNotFound": "Sesión no encontrada",
+    "invalidRow": "Registro de cuarentena no válido",
+    "quarantineFileMissing": "Archivo de cuarentena no encontrado",
+    "revealNotInScan": "Esta ruta no forma parte del análisis actual",
+    "scanRunning": "Ya hay un análisis en curso",
+    "cleanRunning": "Ya hay una limpieza en curso",
+    "unknown": "Error desconocido",
+    "restoredSuffix": " (restaurado)"
+  },
+  "prev": {
+    "title": "Vista previa de la limpieza",
+    "text": "No se ha cambiado nada. Esto solo muestra lo que ocurriría.",
+    "files": "Archivos a borrar",
+    "size": "Espacio a recuperar",
+    "cats": "Categorías (completas)",
+    "items": "Seleccionados individualmente",
+    "skipped": "Omitidos por el control de seguridad",
+    "blocked": "Bloqueados en rutas protegidas"
+  },
+  "clean": {
+    "title": "¿Iniciar la limpieza?",
+    "text": "Los archivos seleccionados pasan por el control de seguridad antes de procesarse.",
+    "method": "Método",
+    "permanent": "Borrado permanente",
+    "quarantine": "Mover a la cuarentena",
+    "riskCats": "{risk} categorías",
+    "warnDelete": "Está seleccionado el borrado permanente. Los archivos no irán a la cuarentena y no se podrán restaurar.",
+    "safeNote": "Los archivos se mueven a la cuarentena; puedes restaurarlos en cualquier momento.",
+    "doneTitle": "Limpieza terminada",
+    "doneText": "{size} recuperados.",
+    "processed": "Archivos procesados",
+    "reclaimed": "Espacio ganado",
+    "skipped": "Se omitieron {count} archivos (bloqueados o ruta protegida). Consulta la lista de abajo para más detalles.",
+    "restorable": "Los archivos están en cuarentena. Puedes restaurarlos desde la pestaña Cuarentena."
+  },
+  "rule": {
+    "noScan": "Ejecuta primero un análisis; luego puedo decirte qué archivos se pueden borrar.",
+    "safeList": "Puedes limpiar con seguridad {count} categorías: {names}. Eso libera {size} sin riesgo de pérdida de datos. Los grupos restantes pueden contener archivos personales — bórralos seleccionándolos.",
+    "noSafe": "No quedan categorías sin riesgo. La basura total es {size}; puedes borrar el resto después de revisarlo.",
+    "disk": "{drive} está al {percent} %: {used} en uso, {free} libres. El análisis encontró {junk} de basura; limpiar la parte sin riesgo aumenta el espacio libre.",
+    "category": "{name}: {size}, {count} archivos. Nivel de riesgo {risk} — motivo: {reason}",
+    "trust": "Categorías seguras: cachés de navegadores, caché de miniaturas, archivos temporales y volcados de fallos. Riesgosas: descargas antiguas, archivos grandes y duplicados — revísalas una a una.",
+    "duplicates": "Se encontraron {size} de duplicados. Los originales se conservan; se pueden borrar {count} copias extra.",
+    "noDuplicates": "No se encontraron archivos duplicados (activa el análisis profundo y reinténtalo si estaba desactivado).",
+    "summary": "Resumen: {junk} de basura encontrada, {safe} sin riesgo. Pregúntame «¿qué puedo borrar?» y te lo sugiero categoría por categoría."
+  },
+  "dock": {
+    "none": "sin selección",
+    "files": "{files} archivos · {cats} categorías completas"
+  }
+}

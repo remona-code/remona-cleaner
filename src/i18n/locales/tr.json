@@ -1,0 +1,514 @@
+{
+  "app": {
+    "title": "reMona — AICleaner · Yapay Zeka Destekli Disk Temizleyici"
+  },
+  "common": {
+    "file": "dosya",
+    "items": "{count} öğe"
+  },
+  "win": {
+    "minimize": "Küçült",
+    "maximize": "Büyüt",
+    "restore": "Geri al",
+    "close": "Kapat"
+  },
+  "nav": {
+    "dashboard": "Panel",
+    "categories": "Kategoriler",
+    "quarantine": "Karantina",
+    "history": "Geçmiş",
+    "assistant": "AI Asistan",
+    "settings": "Ayarlar"
+  },
+  "view": {
+    "dashboard": {
+      "title": "Panel",
+      "subtitle": "Diskinizi tarayın, güvenli olanı AI seçsin."
+    },
+    "categories": {
+      "title": "Kategoriler",
+      "subtitle": "Bulunan dosyaları inceleyin ve neyin silineceğine karar verin."
+    },
+    "quarantine": {
+      "title": "Karantina",
+      "subtitle": "Temizlenen dosyalar silinmek yerine burada saklanır."
+    },
+    "history": {
+      "title": "Geçmiş",
+      "subtitle": "Yaptığınız her temizliğin kaydı."
+    },
+    "assistant": {
+      "title": "AI Asistan",
+      "subtitle": "Hedef belirleyin veya doğal dille sorun."
+    },
+    "settings": {
+      "title": "Ayarlar",
+      "subtitle": "Temizleme davranışı ve uygulama bilgisi."
+    }
+  },
+  "engine": {
+    "rulesTag": "kural motoru",
+    "rulesName": "Yerel kural motoru",
+    "searching": "LLM aranıyor…",
+    "ollama": "Yerel LLM (Ollama)",
+    "remote": "Uzak LLM"
+  },
+  "dash": {
+    "eyebrow": "reMona AI · yapay zeka analizi",
+    "readyTitle": "Sistemi tara, kazanç hazır",
+    "readyText": "Başlamak için taramayı çalıştırın. AI; önbellekleri, geçici dosyaları ve kopyaları değerlendirip hangilerinin güvenle silinebileceğini söyler.",
+    "doneTitle": "{size} güvenle geri kazanılabilir",
+    "cleanTitle": "Sisteminiz temiz görünüyor",
+    "afterClean": "Temizlik tamamlandı. Sayıları tazelemek için yeniden tarama çalıştırın.",
+    "reclaimTitle": "AI ne öneriyor?",
+    "reclaimTitleFor": "AI {size} için onay istiyor",
+    "reclaimText": "{count} kategori güvenlik eşiğini geçti (güven ≥ %80). Riskli gruplar (eski indirilenler, büyük dosyalar, kopyalar) seçim dışında bırakıldı.",
+    "insightCount": "{count} bulgu"
+  },
+  "disk": {
+    "used": "disk dolu",
+    "after": "temizlik sonrası",
+    "freeAfter": "{free} boş → {after}"
+  },
+  "stat": {
+    "total": "Toplam atık",
+    "safe": "Risksiz kazanç",
+    "count": "Dosya sayısı",
+    "vault": "Karantinada",
+    "totalWaiting": "tarama bekleniyor",
+    "totalScanned": "{sec} sn'de tarandı",
+    "safeMeta": "veri kaybı yok",
+    "countMeta": "öğe bulundu",
+    "vaultMeta": "geri alınabilir",
+    "vaultSessions": "{count} oturum · geri alınabilir"
+  },
+  "card": {
+    "insights": "AI içgörüleri",
+    "breakdown": "Kategori dağılımı",
+    "all": "Tümü"
+  },
+  "empty": {
+    "insights": "Tarama yapıldığında AI değerlendirmesi burada görünür.",
+    "noData": "Henüz veri yok. Taramayı çalıştırın.",
+    "catWaitingTitle": "Tarama bekleniyor",
+    "catWaitingText": "Panelden taramayı başlattığınızda kategoriler burada listelenir.",
+    "noMatchTitle": "Eşleşen kategori yok",
+    "noMatchText": "Filtreyi veya arama terimini değiştirin.",
+    "vaultTitle": "Karantina boş",
+    "vaultText": "Karantinaya taşınan dosyalar burada listelenir ve geri yüklenebilir.",
+    "historyTitle": "Henüz temizlik yapılmadı",
+    "historyText": "Tamamlanan her temizlik burada kayıt altına alınır."
+  },
+  "btn": {
+    "scan": "Taramayı başlat",
+    "scanning": "Taranıyor…",
+    "aiSelect": "AI önerisini seç",
+    "selectRecommended": "Önerilenleri seç",
+    "selectSafe": "Güvenlileri seç",
+    "clearSelection": "Seçimi temizle",
+    "preview": "Önizleme",
+    "clean": "Temizle",
+    "open": "Aç",
+    "restore": "Geri yükle",
+    "deletePermanent": "Kalıcı olarak sil",
+    "cancel": "Vazgeç",
+    "confirm": "Onayla",
+    "gotIt": "Anladım",
+    "close": "Kapat",
+    "save": "Kaydet",
+    "test": "Bağlantıyı dene",
+    "removeKey": "Anahtarı kaldır",
+    "remove": "Kaldır",
+    "fetchModels": "Modelleri getir"
+  },
+  "switch": {
+    "deep": "Derin tarama",
+    "deepTitle": "Derin tarama büyük dosyaları ve kopyaları da arar (daha uzun sürer)"
+  },
+  "risk": {
+    "all": "Tümü",
+    "safe": "Güvenli",
+    "caution": "Dikkatli",
+    "risky": "Riskli"
+  },
+  "progress": {
+    "preparing": "Hazırlanıyor…",
+    "starting": "Başlatılıyor…",
+    "failed": "Tarama başarısız",
+    "scanning": "{name} taranıyor…",
+    "disk": "Disk bilgisi okunuyor…",
+    "done": "Tarama tamamlandı",
+    "cleanPreparing": "Temizlik hazırlanıyor…",
+    "cleanDone": "Temizlik tamamlandı",
+    "recycle": "Geri dönüşüm kutusu boşaltılıyor…",
+    "restoring": "Geri yükleniyor…",
+    "restoreDone": "Geri yükleme tamamlandı",
+    "processing": "{name} işleniyor…"
+  },
+  "cat": {
+    "searchPlaceholder": "Kategori veya dosya ara…",
+    "confidence": "AI güveni %{percent} · {verdict}",
+    "deepOnly": "derin tarama",
+    "files": "{count} dosya",
+    "noFiles": "Bu kategoride dosya yok.",
+    "selectCategory": "Kategoriyi seç",
+    "deselectCategory": "Seçimi kaldır",
+    "select": "Seç",
+    "selectFile": "Dosyayı seç",
+    "file": "Dosya",
+    "size": "Boyut",
+    "modified": "Değişim",
+    "today": "bugün",
+    "daysAgo": "{count} gün",
+    "reveal": "Gezgin'de göster",
+    "revealAria": "Gezgin'de göster",
+    "moreFiles": "+{count} dosya daha (yalnızca en büyükleri gösteriliyor)",
+    "user_temp": {
+      "name": "Kullanıcı Geçici Dosyaları",
+      "desc": "Kurulum ve güncellemelerden artakalanlar, uygulamaların bıraktığı geçici dosyalar."
+    },
+    "windows_temp": {
+      "name": "Windows Geçici Klasörü",
+      "desc": "Sistem genelindeki geçici dosyalar. Kilitli olanlar atlanır."
+    },
+    "browser_cache": {
+      "name": "Tarayıcı Önbellekleri",
+      "desc": "Sayfa görselleri ve kod önbellekleri. Silmek güvenli; siteler sonrasında biraz yavaş açılır."
+    },
+    "windows_update": {
+      "name": "Windows Update Artıkları",
+      "desc": "Kurulmuş güncellemelerin indirilmiş dosyaları. Yönetici izni gerekebilir."
+    },
+    "thumbnails": {
+      "name": "Küçük Resim Önbelleği",
+      "desc": "Gezgin'de gösterilen dosya önizlemeleri. Kendiliğinden yeniden oluşturulur."
+    },
+    "prefetch": {
+      "name": "Prefetch Dosyaları",
+      "desc": "Uygulamaların açılışını hızlandıran önbellek. Silinirse ilk açılışlar yavaşlar."
+    },
+    "crash_dumps": {
+      "name": "Çökme Dökümleri",
+      "desc": "Çöken uygulamaların hata kayıtları. Hata ayıklamıyorsanız gereksizdir."
+    },
+    "logs": {
+      "name": "Sistem ve Uygulama Günlükleri",
+      "desc": "Eski kurulum ve tanılama günlükleri."
+    },
+    "recycle_bin": {
+      "name": "Geri Dönüşüm Kutusu",
+      "desc": "Geri dönüşüm kutusuna gönderdiğiniz dosyalar. Boşaltıldıktan sonra geri alınamaz."
+    },
+    "downloads_old": {
+      "name": "Eski İndirilenler",
+      "desc": "{days} günden uzun süredir değişmeyen indirilenler. İçeriklerine ne olacağına siz karar verin."
+    },
+    "large_files": {
+      "name": "Büyük Dosyalar",
+      "desc": "{size} üzerindeki dosyalar. En büyük kazanç, ama en çok dikkat isteyen grup."
+    },
+    "duplicates": {
+      "name": "Kopya Dosyalar",
+      "desc": "İçeriği birebir aynı dosyalar. Bir kopyayı silmek güvenli, hepsini silmek değil."
+    }
+  },
+  "toast": {
+    "revealFailed": "Açılamadı",
+    "partialTitle": "Kısmi seçim",
+    "partialText": "Bu kategoride gösterilmeyen {count} dosya daha var; tek tek seçim yapıldığında yalnızca listede görünenler işlenir.",
+    "scanDoneTitle": "Tarama tamamlandı",
+    "scanDoneText": "{size} atık bulundu · {count} dosya · {sec} sn",
+    "scanFailed": "Tarama başarısız",
+    "scanError": "Tarama hatası",
+    "previewFailed": "Önizleme alınamadı",
+    "cleanFailed": "Temizlik başarısız",
+    "finishedTitle": "Temizlik tamamlandı",
+    "finishedText": "{size} geri kazanıldı",
+    "noSuggestionTitle": "Öneri yok",
+    "noSuggestionText": "AI güvenli eşiği geçen kategori bulamadı.",
+    "aiSelectedTitle": "AI önerisi seçildi",
+    "aiSelectedText": "{count} kategori · {size}",
+    "aiPickedTitle": "AI seçimini yaptı",
+    "aiPickedText": "{count} kategori · {size}",
+    "restoredTitle": "Geri yüklendi",
+    "restoredPartialTitle": "Kısmen geri yüklendi",
+    "restoreFailed": "Geri yüklenemedi",
+    "restoreText": "{count} dosya · {size}",
+    "restoreFailedText": " · {count} dosya başarısız",
+    "purgeFailed": "Silinemedi",
+    "purgeOk": "Karantina oturumu silindi",
+    "aiSavedTitle": "AI ayarları kaydedildi",
+    "aiSavedText": "Yeni sağlayıcı bir sonraki sorudan itibaren kullanılacak.",
+    "connectedTitle": "Bağlantı başarılı",
+    "startupTitle": "Başlatma hatası",
+    "devTitle": "Geliştirme modu",
+    "devText": "F12 ile DevTools açılır."
+  },
+  "vault": {
+    "pending": "Karantinada bekliyor",
+    "sessions": "Oturumlar",
+    "files": "Dosyalar",
+    "note": "Karantinadaki dosyalar silinmez, taşınır. İstediğiniz an geri yükleyebilirsiniz.",
+    "sessionLine": "{count} dosya · {size}",
+    "restoreTitle": "Bu dosyalar geri yüklensin mi?",
+    "restoreText": "{count} dosya ({size}) özgün konumlarına geri taşınacak.",
+    "purgeTitle": "Kalıcı olarak silinsin mi?",
+    "purgeText": "{count} dosya ({size}) karantinadan tamamen kaldırılacak.",
+    "purgeWarn": "Bu işlem geri alınamaz. Dosyalar diskten silinir, kurtarma aracı gerekir."
+  },
+  "mode": {
+    "quarantine": "karantina",
+    "permanentDelete": "kalıcı silme",
+    "quarantineShort": "Karantina",
+    "deleteShort": "Kalıcı sil"
+  },
+  "hist": {
+    "filesCleaned": "{count} dosya temizlendi",
+    "permanent": "kalıcı silindi",
+    "quarantined": "karantinaya alındı",
+    "errors": "{count} hata",
+    "reclaimed": "geri kazanıldı"
+  },
+  "asst": {
+    "title": "Hedefe dayalı akıllı seçim",
+    "desc": "Ne kadar yer açmak istediğinizi söyleyin; AI hedefe yalnızca güvenli kategorilerden seçim yaparak ulaşır. Riskli gruplar asla otomatik seçilmez.",
+    "pick": "AI seçsin",
+    "engine": "Danışman",
+    "greeting": "Merhaba. Taramadan sonra “ne silebilirim?” veya “en çok yeri ne kaplıyor?” gibi soruları yanıtlayabilirim.",
+    "inputPlaceholder": "Bir soru yazın…",
+    "send": "Gönder",
+    "engineMeta": "motor: {engine}",
+    "suggestWhat": "Ne silebilirim?",
+    "suggestWhy": "Diskim neden dolu?",
+    "suggestDup": "Kopyalar güvenli mi?",
+    "suggestRisky": "Hangileri riskli?",
+    "noAnswer": "Yanıt alınamadı."
+  },
+  "pick": {
+    "selected": "{size} seçildi",
+    "targetNote": " (hedef {size}). ",
+    "reached": "Hedefe ulaşıldı; seçim yalnızca güvenli kategorilerden oluşuyor.",
+    "shortfall": "Hedefin {size} kadarı karşılanamadı — kalan yer riskli gruplarda.",
+    "nothing": "AI güvenli eşiği geçen kategori bulamadı. Derin taramayı açıp yeniden deneyin veya kategorileri elle inceleyin.",
+    "needScan": "Önce tarama yapmalısınız."
+  },
+  "set": {
+    "ai": {
+      "title": "AI sağlayıcısı",
+      "checking": "denetleniyor…",
+      "lede": "Yanıtları kural motoru yerine gerçek bir dil modeli üretsin. OpenAI anahtarınızı girip bir model seçin; anahtar işletim sisteminin şifreleme kasasında saklanır ve arayüze bir daha gönderilmez. OpenAI uyumlu her uç nokta çalışır.",
+      "provider": "Sağlayıcı",
+      "apiKey": "API anahtarı",
+      "showKey": "Anahtarı göster",
+      "hideKey": "Anahtarı gizle",
+      "keyNone": "Henüz anahtar eklenmedi.",
+      "keySaved": "Anahtar kayıtlı. Değiştirmek için yenisini yazın veya “Anahtarı kaldır” düğmesini kullanın.",
+      "keyEnv": "Anahtar ortam değişkeninden okunuyor. Buradan yeni bir anahtar girerek değiştirebilirsiniz.",
+      "keyCreate": "Henüz anahtar eklenmedi. platform.openai.com üzerinden bir anahtar oluşturabilirsiniz.",
+      "removeTitle": "API anahtarı kaldırılsın mı?",
+      "removeText": "Anahtar diskten silinir ve asistan kural motoruna döner.",
+      "endpoint": "Uç nokta",
+      "model": "Model",
+      "waitingKey": "anahtar bekleniyor"
+    },
+    "clean": {
+      "title": "Temizleme davranışı",
+      "quarantineTitle": "Karantinaya taşı",
+      "quarantineText": "Dosyalar silinmez; geri yüklenebilmeleri için saklanır.",
+      "deleteTitle": "Kalıcı olarak sil",
+      "deleteText": "Geri alınamaz. Dosyalar geri dönüşüm kutusuna da gitmez.",
+      "deepTitle": "Derin tarama varsayılan olsun",
+      "deepText": "Büyük dosyalar ve kopyalar her taramada aranır.",
+      "autoTitle": "Güvenli kategorileri otomatik seç",
+      "autoText": "Tarama bitince risksiz gruplar işaretlenir.",
+      "motionTitle": "Hareketi azalt",
+      "motionText": "Animasyonları sadeleştirir, düşük donanımda akıcı kalır."
+    },
+    "lang": {
+      "title": "Dil",
+      "text": "Arayüz dili. Windows'u izlemesi için “Sistem varsayılanı” seçeneğinde bırakın.",
+      "system": "Sistem varsayılanı (Windows)",
+      "detected": "Windows'tan algılandı: {language}",
+      "fallback": "Bazı diller henüz çevrilmedi; o ekranlar İngilizce görünür."
+    },
+    "about": {
+      "title": "Uygulama bilgisi",
+      "product": "Ürün",
+      "version": "Sürüm",
+      "electron": "Electron",
+      "chromium": "Chromium",
+      "node": "Node",
+      "platform": "Platform",
+      "drive": "Sistem sürücüsü",
+      "dataDir": "Veri klasörü",
+      "safety": "Silme yalnızca tarama kategorilerinin tanımladığı köklerin altında yapılır. Windows, Program Files ve geri dönüşüm kutusunun sistem alanı koda gömülü bir yasak listesiyle korunur."
+    }
+  },
+  "provider": {
+    "auto": "Otomatik",
+    "openai": "OpenAI",
+    "ollama": "Ollama (yerel)",
+    "rules": "Yalnızca kurallar",
+    "noteRules": "yerleşik kurallar, model gerekmez",
+    "noteRulesOnly": "ayara uygun olarak yalnızca kurallar",
+    "noteOpenAi": "OpenAI modeliyle yanıtlıyor",
+    "noteOpenAiNoKey": "OpenAI seçili ama anahtar yok — Ayarlar'dan ekleyin",
+    "noteOllama": "yerel modelle yanıtlıyor",
+    "noteOllamaDown": "Ollama'ya ulaşılamıyor — kurallar kullanılıyor",
+    "noteNoLocal": "model bulunamadı — kurallar kullanılıyor"
+  },
+  "status": {
+    "saving": "Kaydediliyor…",
+    "saved": "Ayarlar kaydedildi.",
+    "saveFailed": "Ayarlar kaydedilemedi.",
+    "fetching": "Model listesi alınıyor…",
+    "modelsFound": "{count} model bulundu — listeden seçebilirsiniz.",
+    "noModels": "Bu anahtar için kullanılabilir sohbet modeli bulunamadı.",
+    "modelsFailed": "Model listesi alınamadı.",
+    "keyNotSaved": "Anahtar kaydedilemedi, model listesi alınamadı.",
+    "keyNotSavedShort": "Anahtar kaydedilemedi.",
+    "enterModel": "Önce bir model adı girin.",
+    "testing": "Bağlantı deneniyor…",
+    "testFailed": "Test çalıştırılamadı.",
+    "connectFailed": "Bağlantı kurulamadı.",
+    "replied": "{model} yanıt verdi{latency}",
+    "latency": " · {ms} ms",
+    "keyRemoved": "Anahtar kaldırıldı.",
+    "keyRemoveFailed": "Anahtar kaldırılamadı."
+  },
+  "ai": {
+    "noKey": "OpenAI API anahtarı girilmedi. Ayarlar → AI sağlayıcısı bölümünden ekleyin.",
+    "timeout": "İstek zaman aşımına uğradı. Uç nokta adresini ve bağlantınızı denetleyin.",
+    "unreachable": "Sunucuya ulaşılamadı: {error}",
+    "emptyReply": "Model boş bir yanıt döndürdü.",
+    "noModel": "Model adı boş. Önce bir model seçin.",
+    "askEmpty": "Bir soru yazın; örneğin “ne silebilirim?”",
+    "systemPrompt": "reMona (AICleaner) Windows disk temizleyicisinin danışmanısın. Kısa, açık ve en fazla dört cümleyle yanıtla. Sistem dosyalarını silmeyi asla önerme; riskli kategorilerde seçimi kullanıcıya bırak. Yalnızca verilen tarama verilerine dayan.",
+    "languageLine": "{language} dilinde yanıtla.",
+    "testPing": "Bağlantı testi.",
+    "testRequest": "Tek kelimeyle \"hazır\" yanıtı ver."
+  },
+  "http": {
+    "e401": "API anahtarı reddedildi (401). Anahtarı denetleyin.",
+    "e403": "Bu anahtarın istenen modele erişim izni yok (403).",
+    "e404": "Uç nokta veya model bulunamadı (404). {detail}",
+    "e429": "Hız sınırı veya kota aşıldı (429). Sonra yeniden deneyin.",
+    "e413": "İstek gövdesi çok büyük (413).",
+    "e5xx": "Sağlayıcı tarafında hata ({status}). Sonra yeniden deneyin.",
+    "default": "İstek başarısız (HTTP {status}). {detail}",
+    "fallback": "İstek başarısız."
+  },
+  "verdict": {
+    "delete": "Silinebilir",
+    "review": "İnceleyin",
+    "avoid": "Dokunmayın",
+    "empty": "Boş"
+  },
+  "reason": {
+    "prefetch": "Kazanç küçük (genelde 200 MB altında) ve silinmesi uygulama açılışlarını yavaşlatır.",
+    "downloads": "İçerik sizin olabilir. AI yalnızca önerir; dosyaları siz seçersiniz.",
+    "recycle": "Bunlar zaten silmeye karar verdiğiniz dosyalar; boşaltma geri alınamaz.",
+    "duplicates": "Her grubun aslı korunur; yalnızca fazla kopyalar işaretlenir.",
+    "browser": "Oturum verileri ve parolalar etkilenmez, yalnızca önbellek temizlenir.",
+    "large": "Tek başına boyut silme gerekçesi değildir. Dosyanın ne olduğuna bakın.",
+    "empty": "Silinecek bir şey yok"
+  },
+  "insight": {
+    "cleanTitle": "Temiz görünüyor",
+    "cleanText": "Taranan konumlarda temizlenmeye değer dosya bulunamadı.",
+    "biggestTitle": "En büyük kazanç: {name}",
+    "biggestText": "{size} geri kazanılabilir — tüm atığın %{percent} kadarı. AI güveni %{confidence}.",
+    "diskFullTitle": "Disk kullanımı kritik",
+    "diskFullText": "{drive} %{percent} dolu, yalnızca {free} boş. Önerilen temizliğe öncelik verin.",
+    "safeTitle": "Risksiz kazanç hazır",
+    "safeText": "{size} önbellek ve geçici dosya; silinmeleri veri kaybına yol açmaz ({count} kategori).",
+    "riskyTitle": "Elle onay gerekiyor",
+    "riskyText": "{names} kişisel dosyalarınızı içerebilir. AI bunları varsayılan seçime hiçbir zaman eklemez; yalnızca incelediğinizi silin.",
+    "prefetchTitle": "Prefetch: düşük kazanç",
+    "prefetchText": "{size} yer açar ama sonraki açılışları yavaşlatır. AI bu kategoriyi düşük puanlıyor (%{confidence}).",
+    "dupsTitle": "Kopya dosyalar bulundu",
+    "dupsText": "{size} birebir aynı içerik. Asıllar korunurken {count} fazla kopya işaretlendi.",
+    "staleTitle": "Yıllardır dokunulmamış dosyalar",
+    "staleText": "{names} içindeki her dosya bir yıldan uzun süredir değişmedi; silinmeleri büyük olasılıkla güvenli."
+  },
+  "summary": {
+    "nothing": "Sisteminizde temizlenecek dosya bulunamadı.",
+    "text": "Toplam {size} atık bulundu ({count} dosya). AI güvenle {recommended} öneriyor. Kalan {rest} için onayınız gerekiyor."
+  },
+  "note": {
+    "deepOff": "Derin tarama kapalı",
+    "notFound": "Bu bilgisayarda bulunamadı",
+    "scanFailed": "Taranamadı: {error}",
+    "unknownMode": "Bilinmeyen tarama modu",
+    "recycleUnreadable": "Geri dönüşüm kutusu okunamadı",
+    "recycleEmpty": "Geri dönüşüm kutusu boş",
+    "recycleItems": "{count} öğe",
+    "recycleWarn": "Boşaltıldıktan sonra dosyalar geri alınamaz",
+    "noLarge": "{size} üzerinde dosya yok",
+    "noDup": "Kopya dosya bulunamadı",
+    "dupGroups": "{count} kopya grubu · her grubun yalnızca aslı korunur",
+    "dupDetail": "{count} kopyadan biri · asıl: {path}"
+  },
+  "guard": {
+    "invalidPath": "Geçersiz yol",
+    "component": "Korunan sistem bileşeni: {fragment}",
+    "outside": "İzin verilen tarama köklerinin dışında",
+    "root": "Kök klasör silinemez",
+    "folder": "Korunan klasör: {dir}"
+  },
+  "err": {
+    "noScan": "Önce tarama yapmalısınız",
+    "invalidSession": "Geçersiz oturum adı",
+    "invalidSessionPath": "Geçersiz oturum yolu",
+    "sessionMissing": "Böyle bir karantina oturumu yok",
+    "sessionNotFound": "Oturum bulunamadı",
+    "invalidRow": "Geçersiz karantina kaydı",
+    "quarantineFileMissing": "Karantina dosyası bulunamadı",
+    "revealNotInScan": "Bu yol geçerli taramanın parçası değil",
+    "scanRunning": "Zaten bir tarama çalışıyor",
+    "cleanRunning": "Zaten bir temizlik çalışıyor",
+    "unknown": "Bilinmeyen hata",
+    "restoredSuffix": " (geri yüklendi)"
+  },
+  "prev": {
+    "title": "Temizlik önizlemesi",
+    "text": "Hiçbir değişiklik yapılmadı. Bu yalnızca ne olacağını gösterir.",
+    "files": "Silinecek dosya",
+    "size": "Geri kazanılacak alan",
+    "cats": "Kategori (tamamı)",
+    "items": "Tek tek seçilen",
+    "skipped": "Güvenlik kapısında atlanan",
+    "blocked": "Korunan yollarda engellenen"
+  },
+  "clean": {
+    "title": "Temizlik başlatılsın mı?",
+    "text": "Seçilen dosyalar işlenmeden önce güvenlik kapısından geçirilir.",
+    "method": "Yöntem",
+    "permanent": "Kalıcı silme",
+    "quarantine": "Karantinaya taşıma",
+    "riskCats": "{risk} kategoriler",
+    "warnDelete": "Kalıcı silme seçili. Dosyalar karantinaya alınmayacak ve geri yüklenemeyecek.",
+    "safeNote": "Dosyalar karantinaya taşınır; istediğiniz an geri yükleyebilirsiniz.",
+    "doneTitle": "Temizlik tamamlandı",
+    "doneText": "{size} geri kazanıldı.",
+    "processed": "İşlenen dosya",
+    "reclaimed": "Kazanılan alan",
+    "skipped": "{count} dosya atlandı (kilitli veya korunan yol). Ayrıntı için aşağıdaki listeye bakın.",
+    "restorable": "Dosyalar karantinada. Karantina sekmesinden geri yükleyebilirsiniz."
+  },
+  "rule": {
+    "noScan": "Önce tarama yapın; sonra hangi dosyaların silinebileceğini söyleyebilirim.",
+    "safeList": "{count} kategoriyi güvenle temizleyebilirsiniz: {names}. Bu, veri kaybı riski olmadan {size} yer açar. Kalan gruplar kişisel dosyalar içerebilir — onları seçerek silin.",
+    "noSafe": "Risksiz kategori kalmadı. Toplam atık {size}; kalanı inceledikten sonra silebilirsiniz.",
+    "disk": "{drive} %{percent} dolu: {used} kullanımda, {free} boş. Tarama {junk} atık buldu; risksiz kısmı temizlemek boş alanı artırır.",
+    "category": "{name}: {size}, {count} dosya. Risk düzeyi {risk} — gerekçe: {reason}",
+    "trust": "Güvenli kategoriler: tarayıcı önbellekleri, küçük resim önbelleği, geçici dosyalar ve çökme dökümleri. Riskli olanlar: eski indirilenler, büyük dosyalar ve kopyalar — bunları tek tek inceleyin.",
+    "duplicates": "{size} kopya bulundu. Asıllar korunur; {count} fazla kopya silinebilir.",
+    "noDuplicates": "Kopya dosya bulunamadı (kapalıysa derin taramayı açıp yeniden deneyin).",
+    "summary": "Özet: {junk} atık bulundu, {safe} kadarı risksiz. “Ne silebilirim?” diye sorarsanız kategori kategori önerebilirim."
+  },
+  "dock": {
+    "none": "seçim yok",
+    "files": "{files} dosya · {cats} kategori tamamı"
+  }
+}

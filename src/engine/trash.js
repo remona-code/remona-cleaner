@@ -13,6 +13,7 @@ const fsp = require('fs/promises');
 const path = require('path');
 
 const config = require('./config');
+const i18n = require('../i18n');
 const { humanSize } = require('./utils');
 
 const IS_WINDOWS = process.platform === 'win32';
@@ -68,7 +69,7 @@ async function fallbackStats() {
   try {
     sids = await fsp.readdir(root, { withFileTypes: true });
   } catch {
-    return { ok: false, size: 0, count: 0, error: 'Geri dönüşüm kutusu okunamadı', source: 'none' };
+    return { ok: false, size: 0, count: 0, error: i18n.t('note.recycleUnreadable'), source: 'none' };
   }
   for (const sid of sids) {
     if (!sid.isDirectory()) continue;
@@ -160,7 +161,7 @@ async function empty() {
       cache = { at: 0, value: null };
       return { ok: true, error: '' };
     }
-    return { ok: false, error: out.trim() || 'Boşaltma başarısız' };
+    return { ok: false, error: out.trim() || i18n.t('err.unknown') };
   } catch (err) {
     const text = String((err && err.stderr) || (err && err.message) || err);
     if (/empty/i.test(text)) {

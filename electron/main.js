@@ -1,4 +1,4 @@
-'use strict';
+﻿'use strict';
 
 /**
  * reMona (AICleaner) — Electron ana süreci.
@@ -55,6 +55,7 @@ const ai = require('../src/engine/ai');
 const cleaner = require('../src/engine/cleaner');
 const store = require('../src/engine/store');
 const trash = require('../src/engine/trash');
+const i18n = require('../src/i18n');
 
 const IS_DEV = process.argv.includes('--dev') || !app.isPackaged;
 
@@ -100,6 +101,29 @@ function wireSecretCipher() {
   }
 }
 wireSecretCipher();
+
+/** `--locale=tr` gibi bir QA bayrağı verildiyse onu döndürür (ayara yazılmaz). */
+function forcedLocale() {
+  const arg = process.argv.find((value) => value.startsWith('--locale'));
+  if (!arg || !arg.includes('=')) return null;
+  return arg.slice(arg.indexOf('=') + 1) || null;
+}
+
+/**
+ * Arayüz dilini belirler: ayarda somut bir dil seçiliyse o, "auto" ise
+ * Windows'un görüntüleme dili kullanılır. Desteklenmeyen bir dil (ör. Fince)
+ * otomatik olarak İngilizce'ye düşer.
+ */
+async function applyLocale() {
+  const forced = forcedLocale();
+  if (forced) return i18n.setLocale(forced);
+
+  const settings = await store.getSettings();
+  const systemLocale = app.getLocale();
+  const wanted =
+    settings.language && settings.language !== 'auto' ? settings.language : systemLocale;
+  return i18n.setLocale(wanted);
+}
 
 /** @type {BrowserWindow|null} */
 let mainWindow = null;
@@ -176,7 +200,7 @@ function createWindow() {
 // ------------------------------------------------------------------ yardımcı
 function requireScan() {
   if (!currentScan) {
-    const err = new Error('Önce tarama yapmalısınız');
+    const err = new Error(i18n.t('err.noScan'));
     err.code = 'NO_SCAN';
     throw err;
   }
@@ -226,6 +250,10 @@ function registerIpc() {
       drive: config.SYSTEM_DRIVE,
       darkMode: nativeTheme.shouldUseDarkColors,
       isDev: IS_DEV,
+      locale: i18n.getLocale(),
+      systemLocale: app.getLocale(),
+      locales: i18n.availableLocales(),
+      rtl: i18n.localeMeta().rtl,
     })
   );
 
@@ -239,15 +267,25 @@ function registerIpc() {
     const known = currentScan
       ? currentScan.result.categories.some((cat) => (cat._full || []).some((r) => r.path === target))
       : false;
-    if (!known) return fail('Bu yol bu taramada bulunmuyor');
+    if (!known) return fail(i18n.t('err.revealNotInScan'));
     shell.showItemInFolder(target);
     return ok(true);
+  });
+
+  // --- dil
+  ipcMain.handle('i18n:bundle', (_event, code) => ok(i18n.bundle(code)));
+  ipcMain.handle('i18n:set', async (_event, code) => {
+    const saved = await store.saveSettings({ language: code || 'auto' });
+    await applyLocale();
+    ai.resetProviderCache();
+    return ok({ ...i18n.bundle(), settings: saved });
   });
 
   // --- ayarlar (API anahtarı arayüze asla ham gitmez)
   ipcMain.handle('settings:get', async () => ok(await store.getPublicSettings()));
   ipcMain.handle('settings:set', async (_event, patch) => {
     const saved = await store.saveSettings(patch || {});
+    if (patch && 'language' in patch) await applyLocale();
     ai.resetProviderCache();
     return ok(saved);
   });
@@ -285,13 +323,18 @@ function registerIpc() {
 
   // --- tarama
   ipcMain.handle('scan:status', () => ok({ scanning: scanInFlight, hasScan: Boolean(currentScan) }));
-  ipcMain.handle('scan:last', async () => ok(await store.getLastScan()));
+  // Kaydedilmiş görünüm, tarandığı andaki dilde biçimlenmiş metin taşır;
+  // seçili dilde yeniden üretilip gönderilir.
+  ipcMain.handle('scan:last', async () => {
+    const view = await store.getLastScan();
+    return ok(view ? scanner.localizeView(view) : null);
+  });
   ipcMain.handle('scan:disk', async () => ok(await scanner.diskInfo()));
   ipcMain.handle('scan:counts', () =>
     ok({
       categories: config.CATEGORIES.map((c) => ({
         id: c.id,
-        name: c.name,
+        name: config.categoryName(c.id),
         risk: c.risk,
         deep_only: Boolean(c.deep_only),
       })),
@@ -300,7 +343,7 @@ function registerIpc() {
   );
 
   ipcMain.handle('scan:start', async (_event, options = {}) => {
-    if (scanInFlight) return fail('Tarama zaten çalışıyor');
+    if (scanInFlight) return fail(i18n.t('err.scanRunning'));
     scanInFlight = true;
     const deep = Boolean(options.deep);
 
@@ -340,7 +383,9 @@ function registerIpc() {
 
   ipcMain.handle('ai:ask', async (_event, payload = {}) => {
     try {
-      const result = await ai.ask(payload.question, currentScan ? currentScan.result : null);
+      const result = await ai.ask(payload.question, currentScan ? currentScan.result : null, {
+        intent: payload.intent,
+      });
       return ok(result);
     } catch (error) {
       return fail(error);
@@ -379,7 +424,7 @@ function registerIpc() {
   });
 
   ipcMain.handle('clean:run', async (_event, payload = {}) => {
-    if (cleanInFlight) return fail('Temizlik zaten çalışıyor');
+    if (cleanInFlight) return fail(i18n.t('err.cleanRunning'));
     cleanInFlight = true;
     try {
       const settings = await store.getSettings();
@@ -435,8 +480,9 @@ if (!gotLock) {
     }
   });
 
-  app.whenReady().then(() => {
+  app.whenReady().then(async () => {
     config.ensureDirs();
+    await applyLocale();
     registerIpc();
     createWindow();
 

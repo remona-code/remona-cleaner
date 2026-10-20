@@ -24,6 +24,9 @@
     "start": "electron .",
     "dev": "electron . --dev",
     "test": "node --test",
+    "check": "npm run i18n:audit && npm run ui:audit",
+    "i18n:audit": "node scripts/i18n-audit.js",
+    "ui:audit": "node scripts/ui-audit.js",
     "smoke": "node scripts/smoke.js",
     "pack": "electron-builder --dir",
     "dist": "electron-builder"

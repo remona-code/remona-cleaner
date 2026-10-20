@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="Content-Security-Policy"
         content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'none'; form-action 'none'; base-uri 'none'">
-  <title>reMona — AICleaner · Yapay Zeka Destekli Disk Temizleyici</title>
+  <title>reMona — AICleaner · AI-Powered Disk Cleaner</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -71,13 +71,13 @@
       <span class="wordmark">reMona</span>
       <span class="brandbar" aria-hidden="true"></span>
       <span class="wordmark__sub">AICleaner</span>
-      <span class="pill pill--ghost" id="enginePill">kural motoru</span>
+      <span class="pill pill--ghost" id="enginePill">rule engine</span>
     </div>
     <div class="titlebar__drag"></div>
     <div class="titlebar__controls">
-      <button class="wbtn" data-win="minimize" title="Küçült" aria-label="Küçült"><svg><use href="#i-minus"/></svg></button>
-      <button class="wbtn" data-win="maximize" title="Büyüt" aria-label="Büyüt"><svg><use href="#i-square"/></svg></button>
-      <button class="wbtn wbtn--close" data-win="close" title="Kapat" aria-label="Kapat"><svg><use href="#i-x"/></svg></button>
+      <button class="wbtn" data-win="minimize" title="Minimize" aria-label="Minimize"><svg><use href="#i-minus"/></svg></button>
+      <button class="wbtn" data-win="maximize" title="Maximize" aria-label="Maximize"><svg><use href="#i-square"/></svg></button>
+      <button class="wbtn wbtn--close" data-win="close" title="Close" aria-label="Close"><svg><use href="#i-x"/></svg></button>
     </div>
   </header>
 
@@ -87,29 +87,29 @@
       <nav class="nav" id="nav">
         <button class="nav__item is-active" data-view="dashboard">
           <svg class="nav__icon"><use href="#i-grid"/></svg>
-          <span class="nav__label">Panel</span>
+          <span class="nav__label" data-i18n="nav.dashboard">Dashboard</span>
         </button>
         <button class="nav__item" data-view="categories">
           <svg class="nav__icon"><use href="#i-layers"/></svg>
-          <span class="nav__label">Kategoriler</span>
+          <span class="nav__label" data-i18n="nav.categories">Categories</span>
           <span class="nav__badge" id="navCategoriesBadge" hidden></span>
         </button>
         <button class="nav__item" data-view="quarantine">
           <svg class="nav__icon"><use href="#i-shield"/></svg>
-          <span class="nav__label">Karantina</span>
+          <span class="nav__label" data-i18n="nav.quarantine">Quarantine</span>
           <span class="nav__badge" id="navQuarantineBadge" hidden></span>
         </button>
         <button class="nav__item" data-view="history">
           <svg class="nav__icon"><use href="#i-history"/></svg>
-          <span class="nav__label">Geçmiş</span>
+          <span class="nav__label" data-i18n="nav.history">History</span>
         </button>
         <button class="nav__item" data-view="assistant">
           <svg class="nav__icon"><use href="#i-sparkles"/></svg>
-          <span class="nav__label">AI Asistan</span>
+          <span class="nav__label" data-i18n="nav.assistant">AI Assistant</span>
         </button>
         <button class="nav__item" data-view="settings">
           <svg class="nav__icon"><use href="#i-sliders"/></svg>
-          <span class="nav__label">Ayarlar</span>
+          <span class="nav__label" data-i18n="nav.settings">Settings</span>
         </button>
       </nav>
 
@@ -117,11 +117,11 @@
         <div class="engine" id="engineCard">
           <span class="engine__dot"></span>
           <div class="engine__text">
-            <strong id="engineName">Yerel kural motoru</strong>
-            <span id="engineNote">LLM aranıyor…</span>
+            <strong id="engineName" data-i18n="engine.rulesName">Local rule engine</strong>
+            <span id="engineNote" data-i18n="engine.searching">Looking for an LLM…</span>
           </div>
         </div>
-        <button class="ghost-btn" id="openDataDir" title="Veri klasörünü aç">
+        <button class="ghost-btn" id="openDataDir" title="Open the data folder" data-i18n-title="set.about.dataDir">
           <svg><use href="#i-folder"/></svg><span id="versionLabel">v1.0.0</span>
         </button>
       </div>
@@ -131,8 +131,8 @@
     <main class="main">
       <div class="topbar">
         <div class="topbar__titles">
-          <h1 id="viewTitle">Panel</h1>
-          <p id="viewSubtitle">Diskinizi tarayın, AI güvenli olanı seçsin.</p>
+          <h1 id="viewTitle">Dashboard</h1>
+          <p id="viewSubtitle">Scan your disk and let AI pick what is safe.</p>
         </div>
         <div class="topbar__actions" id="topbarActions"></div>
       </div>
@@ -167,63 +167,63 @@
               </svg>
               <div class="ring__center">
                 <span class="ring__pct"><b id="diskPercent">—</b><i>%</i></span>
-                <span class="ring__label" id="diskLabel">disk dolu</span>
+                <span class="ring__label" id="diskLabel" data-i18n="disk.used">disk used</span>
                 <span class="ring__free" id="diskFree">—</span>
               </div>
             </div>
 
             <div class="hero__content">
               <div class="hero__head">
-                <span class="eyebrow"><svg><use href="#i-chip"/></svg> reMona AI · yapay zeka destekli analiz</span>
-                <h2 id="heroTitle">Sistemi tara, kazanç hazır</h2>
-                <p id="heroSummary" class="hero__summary">
-                  Başlamak için taramayı çalıştırın. AI; önbellekleri, geçici dosyaları ve
-                  kopyaları değerlendirip hangi dosyaların güvenle silinebileceğini söyler.
+                <span class="eyebrow"><svg><use href="#i-chip"/></svg> <span data-i18n="dash.eyebrow">reMona AI · AI-powered analysis</span></span>
+                <h2 id="heroTitle" data-i18n="dash.readyTitle">Scan your system — value is ready</h2>
+                <p id="heroSummary" class="hero__summary" data-i18n="dash.readyText">
+                  Run a scan to start. AI evaluates caches, temporary files and duplicates,
+                  then tells you which ones can be removed safely.
                 </p>
               </div>
 
               <div class="stats" id="stats">
                 <div class="stat stat--total">
-                  <span class="stat__label">Toplam atık</span>
+                  <span class="stat__label" data-i18n="stat.total">Total junk</span>
                   <strong class="stat__value" id="statTotal">—</strong>
-                  <span class="stat__meta" id="statTotalMeta">tarama bekleniyor</span>
+                  <span class="stat__meta" id="statTotalMeta" data-i18n="stat.totalWaiting">waiting for a scan</span>
                 </div>
                 <div class="stat stat--safe">
-                  <span class="stat__label">Risksiz kazanç</span>
+                  <span class="stat__label" data-i18n="stat.safe">Risk-free gain</span>
                   <strong class="stat__value" id="statSafe">—</strong>
-                  <span class="stat__meta" id="statSafeMeta">veri kaybı yok</span>
+                  <span class="stat__meta" data-i18n="stat.safeMeta">no data loss</span>
                 </div>
                 <div class="stat stat--count">
-                  <span class="stat__label">Dosya sayısı</span>
+                  <span class="stat__label" data-i18n="stat.count">File count</span>
                   <strong class="stat__value" id="statCount">—</strong>
-                  <span class="stat__meta">bulunan öğe</span>
+                  <span class="stat__meta" data-i18n="stat.countMeta">items found</span>
                 </div>
                 <div class="stat stat--vault">
-                  <span class="stat__label">Karantinada</span>
+                  <span class="stat__label" data-i18n="stat.vault">In quarantine</span>
                   <strong class="stat__value" id="statVault">—</strong>
-                  <span class="stat__meta" id="statVaultMeta">geri alınabilir</span>
+                  <span class="stat__meta" id="statVaultMeta" data-i18n="stat.vaultMeta">recoverable</span>
                 </div>
               </div>
 
               <div class="hero__actions">
                 <button class="btn btn--primary btn--xl" id="scanBtn">
                   <svg><use href="#i-play"/></svg>
-                  <span>Taramayı başlat</span>
+                  <span data-i18n="btn.scan">Start scan</span>
                 </button>
-                <label class="switch" title="Derin tarama büyük dosyaları ve kopyaları da arar (daha uzun sürer)">
+                <label class="switch" data-i18n-title="switch.deepTitle">
                   <input type="checkbox" id="deepToggle">
                   <span class="switch__track"><span class="switch__thumb"></span></span>
-                  <span class="switch__label">Derin tarama</span>
+                  <span class="switch__label" data-i18n="switch.deep">Deep scan</span>
                 </label>
                 <button class="btn btn--ghost" id="quickSelectBtn" disabled>
-                  <svg><use href="#i-sparkles"/></svg><span>AI öneriyi seç</span>
+                  <svg><use href="#i-sparkles"/></svg><span data-i18n="btn.aiSelect">Select AI suggestion</span>
                 </button>
               </div>
 
               <div class="progress" id="scanProgress" hidden>
                 <div class="progress__bar"><span class="progress__fill" id="progressFill"></span></div>
                 <div class="progress__meta">
-                  <span id="progressStage">Hazırlanıyor…</span>
+                  <span id="progressStage" data-i18n="progress.preparing">Preparing…</span>
                   <span id="progressPercent">0%</span>
                 </div>
               </div>
@@ -233,26 +233,26 @@
           <div class="grid grid--two">
             <article class="card card--insights">
               <header class="card__head">
-                <h3><svg><use href="#i-sparkles"/></svg> AI içgörüleri</h3>
+                <h3><svg><use href="#i-sparkles"/></svg> <span data-i18n="card.insights">AI insights</span></h3>
                 <span class="pill" id="insightCount">—</span>
               </header>
               <div class="insights" id="insights">
                 <div class="empty">
                   <svg><use href="#i-info"/></svg>
-                  <p>Tarama yapıldığında AI değerlendirmesi burada görünür.</p>
+                  <p data-i18n="empty.insights">AI assessment appears here after a scan.</p>
                 </div>
               </div>
             </article>
 
             <article class="card">
               <header class="card__head">
-                <h3><svg><use href="#i-layers"/></svg> Kategori dağılımı</h3>
-                <button class="link" data-goto="categories">Tümü <svg><use href="#i-chevron"/></svg></button>
+                <h3><svg><use href="#i-layers"/></svg> <span data-i18n="card.breakdown">Category breakdown</span></h3>
+                <button class="link" data-goto="categories"><span data-i18n="card.all">All</span> <svg><use href="#i-chevron"/></svg></button>
               </header>
               <div class="breakdown" id="breakdown">
                 <div class="empty">
                   <svg><use href="#i-info"/></svg>
-                  <p>Henüz veri yok. Taramayı çalıştırın.</p>
+                  <p data-i18n="empty.noData">No data yet. Run a scan.</p>
                 </div>
               </div>
             </article>
@@ -261,11 +261,11 @@
           <article class="card card--reclaim" id="reclaimCard" hidden>
             <div class="reclaim__icon"><svg><use href="#i-target"/></svg></div>
             <div class="reclaim__body">
-              <h3 id="reclaimTitle">AI ne öneriyor?</h3>
+              <h3 id="reclaimTitle" data-i18n="dash.reclaimTitle">What does AI suggest?</h3>
               <p id="reclaimText"></p>
             </div>
             <button class="btn btn--primary" id="applyRecommended">
-              <svg><use href="#i-check"/></svg><span>Önerilenleri seç</span>
+              <svg><use href="#i-check"/></svg><span data-i18n="btn.selectRecommended">Select recommended</span>
             </button>
           </article>
         </section>
@@ -275,27 +275,27 @@
           <div class="toolbar">
             <label class="field field--search">
               <svg><use href="#i-search"/></svg>
-              <input type="search" id="catSearch" placeholder="Kategori veya dosya ara…" autocomplete="off">
+              <input type="search" id="catSearch" placeholder="Search a category or file…" data-i18n-ph="cat.searchPlaceholder" autocomplete="off">
             </label>
             <div class="chips" id="riskFilter">
-              <button class="chip is-active" data-risk="all">Tümü</button>
-              <button class="chip chip--safe" data-risk="safe">Güvenli</button>
-              <button class="chip chip--caution" data-risk="caution">Dikkatli</button>
-              <button class="chip chip--risky" data-risk="risky">Riskli</button>
+              <button class="chip is-active" data-risk="all" data-i18n="risk.all">All</button>
+              <button class="chip chip--safe" data-risk="safe" data-i18n="risk.safe">Safe</button>
+              <button class="chip chip--caution" data-risk="caution" data-i18n="risk.caution">Careful</button>
+              <button class="chip chip--risky" data-risk="risky" data-i18n="risk.risky">Risky</button>
             </div>
             <div class="toolbar__spacer"></div>
             <button class="btn btn--ghost btn--sm" id="selectSafeBtn" disabled>
-              <svg><use href="#i-shield"/></svg><span>Güvenlileri seç</span>
+              <svg><use href="#i-shield"/></svg><span data-i18n="btn.selectSafe">Select safe</span>
             </button>
             <button class="btn btn--ghost btn--sm" id="clearSelBtn" disabled>
-              <svg><use href="#i-x"/></svg><span>Seçimi temizle</span>
+              <svg><use href="#i-x"/></svg><span data-i18n="btn.clearSelection">Clear selection</span>
             </button>
           </div>
           <div class="catlist" id="catList">
             <div class="empty empty--lg">
               <svg><use href="#i-layers"/></svg>
-              <h4>Tarama bekleniyor</h4>
-              <p>Panelden taramayı başlattığınızda kategoriler burada listelenir.</p>
+              <h4 data-i18n="empty.catWaitingTitle">Waiting for a scan</h4>
+              <p data-i18n="empty.catWaitingText">Start a scan from the dashboard and the categories are listed here.</p>
             </div>
           </div>
         </section>
@@ -304,20 +304,20 @@
         <section class="view" data-view="quarantine">
           <div class="vaulthead">
             <div class="vaulthead__stat">
-              <span class="vaulthead__label">Karantinada bekleyen</span>
+              <span class="vaulthead__label" data-i18n="vault.pending">Waiting in quarantine</span>
               <strong id="vaultSize">—</strong>
             </div>
             <div class="vaulthead__stat">
-              <span class="vaulthead__label">Oturum</span>
+              <span class="vaulthead__label" data-i18n="vault.sessions">Sessions</span>
               <strong id="vaultSessions">—</strong>
             </div>
             <div class="vaulthead__stat">
-              <span class="vaulthead__label">Dosya</span>
+              <span class="vaulthead__label" data-i18n="vault.files">Files</span>
               <strong id="vaultFiles">—</strong>
             </div>
             <p class="vaulthead__note">
               <svg><use href="#i-shield"/></svg>
-              Karantinadaki dosyalar silinmez, taşınır. İstediğiniz an geri yükleyebilirsiniz.
+              <span data-i18n="vault.note">Files in quarantine are moved, not deleted. You can restore them at any time.</span>
             </p>
           </div>
           <div class="vaultlist" id="vaultList"></div>
@@ -333,43 +333,42 @@
           <div class="grid grid--assistant">
             <article class="card">
               <header class="card__head">
-                <h3><svg><use href="#i-target"/></svg> Hedefe göre akıllı seçim</h3>
+                <h3><svg><use href="#i-target"/></svg> <span data-i18n="asst.title">Goal-based smart selection</span></h3>
               </header>
-              <p class="muted">
-                Ne kadar yer açmak istediğinizi söyleyin; AI yalnızca güvenli kategorilerden
-                seçerek hedefe ulaşmaya çalışır. Riskli gruplar asla otomatik seçilmez.
+              <p class="muted" data-i18n="asst.desc">
+                Tell how much space you want to free; AI only picks from safe categories to
+                reach that target. Risky groups are never selected automatically.
               </p>
               <div class="target">
-                <div class="target__value"><b id="targetValue">5,0</b> GB</div>
+                <div class="target__value"><b id="targetValue">5.0</b> GB</div>
                 <input type="range" id="targetRange" min="0.5" max="30" step="0.5" value="5">
-                <div class="target__scale"><span>0,5 GB</span><span>30 GB</span></div>
+                <div class="target__scale"><span id="targetMin">0.5 GB</span><span id="targetMax">30 GB</span></div>
               </div>
               <button class="btn btn--primary" id="pickBtn">
-                <svg><use href="#i-sparkles"/></svg><span>AI seçsin</span>
+                <svg><use href="#i-sparkles"/></svg><span data-i18n="asst.pick">Let AI choose</span>
               </button>
               <div class="pickresult" id="pickResult" hidden></div>
             </article>
 
             <article class="card">
               <header class="card__head">
-                <h3><svg><use href="#i-chip"/></svg> Danışman</h3>
+                <h3><svg><use href="#i-chip"/></svg> <span data-i18n="asst.engine">Advisor</span></h3>
                 <span class="pill" id="assistantEngine">—</span>
               </header>
               <div class="chat" id="chat">
                 <div class="chat__msg chat__msg--ai">
-                  <p>Merhaba. Tarama sonrası “ne silebilirim?”, “en çok yer nerede?” gibi
-                  soruları yanıtlayabilirim.</p>
+                  <p data-i18n="asst.greeting">Hello. After a scan I can answer questions like “what can I delete?” or “what takes the most space?”.</p>
                 </div>
               </div>
               <div class="chat__suggest" id="chatSuggest">
-                <button data-q="Ne silebilirim?">Ne silebilirim?</button>
-                <button data-q="Diskim neden doldu?">Diskim neden doldu?</button>
-                <button data-q="Kopya dosyalar güvenli mi?">Kopyalar güvenli mi?</button>
-                <button data-q="Riskli olanlar hangileri?">Riskli olanlar?</button>
+                <button data-intent="what" data-i18n="asst.suggestWhat">What can I delete?</button>
+                <button data-intent="disk" data-i18n="asst.suggestWhy">Why is my disk full?</button>
+                <button data-intent="duplicates" data-i18n="asst.suggestDup">Are duplicate files safe?</button>
+                <button data-intent="risky" data-i18n="asst.suggestRisky">Which ones are risky?</button>
               </div>
               <form class="chat__form" id="chatForm">
-                <input type="text" id="chatInput" placeholder="Bir soru yazın…" autocomplete="off">
-                <button class="btn btn--primary btn--icon" type="submit" aria-label="Gönder">
+                <input type="text" id="chatInput" placeholder="Type a question…" data-i18n-ph="asst.inputPlaceholder" autocomplete="off">
+                <button class="btn btn--primary btn--icon" type="submit" aria-label="Send" data-i18n-aria="asst.send">
                   <svg><use href="#i-play"/></svg>
                 </button>
               </form>
@@ -382,55 +381,55 @@
           <div class="grid grid--two">
             <article class="card card--wide">
               <header class="card__head">
-                <h3><svg><use href="#i-sparkles"/></svg> AI sağlayıcısı</h3>
-                <span class="pill pill--ghost" id="aiStatusPill">denetleniyor…</span>
+                <h3><svg><use href="#i-sparkles"/></svg> <span data-i18n="set.ai.title">AI provider</span></h3>
+                <span class="pill pill--ghost" id="aiStatusPill" data-i18n="set.ai.checking">checking…</span>
               </header>
 
-              <p class="card__lede">
-                Yanıtları kural motoru yerine gerçek bir dil modeli üretsin. OpenAI anahtarınızı
-                girin ve modeli seçin; anahtar diskte işletim sisteminin şifreleme kasasıyla
-                saklanır ve arayüze bir daha gönderilmez. OpenAI uyumlu her uç nokta çalışır.
+              <p class="card__lede" data-i18n="set.ai.lede">
+                Let a real language model answer instead of the rule engine. Enter your OpenAI
+                key and pick a model; the key is stored with the operating system's encryption
+                vault and is never sent to the interface again. Any OpenAI-compatible endpoint works.
               </p>
 
               <div class="field">
-                <span class="field__label">Sağlayıcı</span>
+                <span class="field__label" data-i18n="set.ai.provider">Provider</span>
                 <div class="segmented segmented--wrap" id="aiProviderGroup">
-                  <button type="button" data-provider="auto">Otomatik</button>
-                  <button type="button" data-provider="openai">OpenAI</button>
-                  <button type="button" data-provider="ollama">Ollama (yerel)</button>
-                  <button type="button" data-provider="rules">Yalnızca kurallar</button>
+                  <button type="button" data-provider="auto" data-i18n="provider.auto">Automatic</button>
+                  <button type="button" data-provider="openai" data-i18n="provider.openai">OpenAI</button>
+                  <button type="button" data-provider="ollama" data-i18n="provider.ollama">Ollama (local)</button>
+                  <button type="button" data-provider="rules" data-i18n="provider.rules">Rules only</button>
                 </div>
               </div>
 
               <div class="ai-openai" id="aiOpenaiPanel" hidden>
                 <div class="field">
-                  <label class="field__label" for="aiKey">API anahtarı</label>
+                  <label class="field__label" for="aiKey" data-i18n="set.ai.apiKey">API key</label>
                   <div class="input-group">
                     <span class="input-group__icon"><svg><use href="#i-key"/></svg></span>
                     <input class="input mono" id="aiKey" type="password" placeholder="sk-…"
                            autocomplete="off" spellcheck="false" aria-describedby="aiKeyHint">
                     <button class="input-group__btn" id="aiKeyToggle" type="button"
-                            title="Anahtarı göster" aria-label="Anahtarı göster">
+                            title="Show key" aria-label="Show key" data-i18n-title="set.ai.showKey" data-i18n-aria="set.ai.showKey">
                       <svg><use href="#i-eye"/></svg>
                     </button>
                   </div>
-                  <p class="field__hint" id="aiKeyHint">Henüz anahtar eklenmedi.</p>
+                  <p class="field__hint" id="aiKeyHint" data-i18n="set.ai.keyNone">No key added yet.</p>
                 </div>
 
                 <div class="field-row">
                   <div class="field">
-                    <label class="field__label" for="aiBase">Uç nokta</label>
+                    <label class="field__label" for="aiBase" data-i18n="set.ai.endpoint">Endpoint</label>
                     <input class="input mono" id="aiBase" type="url"
                            placeholder="https://api.openai.com/v1" spellcheck="false">
                   </div>
                   <div class="field">
-                    <label class="field__label" for="aiModel">Model</label>
+                    <label class="field__label" for="aiModel" data-i18n="set.ai.model">Model</label>
                     <div class="input-group">
                       <input class="input mono" id="aiModel" list="aiModelList"
                              placeholder="gpt-4o-mini" spellcheck="false">
                       <datalist id="aiModelList"></datalist>
                       <button class="input-group__btn" id="aiModelFetch" type="button"
-                              title="Modelleri getir" aria-label="Modelleri getir">
+                              title="Fetch models" aria-label="Fetch models" data-i18n-title="btn.fetchModels" data-i18n-aria="btn.fetchModels">
                         <svg><use href="#i-refresh"/></svg>
                       </button>
                     </div>
@@ -439,13 +438,13 @@
 
                 <div class="field__actions">
                   <button class="btn btn--primary btn--sm" id="aiSave">
-                    <svg><use href="#i-check"/></svg><span>Kaydet</span>
+                    <svg><use href="#i-check"/></svg><span data-i18n="btn.save">Save</span>
                   </button>
                   <button class="btn btn--ghost btn--sm" id="aiTest">
-                    <svg><use href="#i-bolt"/></svg><span>Bağlantıyı test et</span>
+                    <svg><use href="#i-bolt"/></svg><span data-i18n="btn.test">Test connection</span>
                   </button>
                   <button class="btn btn--ghost btn--sm" id="aiKeyClear" hidden>
-                    <svg><use href="#i-x"/></svg><span>Anahtarı kaldır</span>
+                    <svg><use href="#i-x"/></svg><span data-i18n="btn.removeKey">Remove key</span>
                   </button>
                   <span class="status" id="aiTestStatus" hidden></span>
                 </div>
@@ -453,12 +452,12 @@
             </article>
 
             <article class="card">
-              <header class="card__head"><h3><svg><use href="#i-trash"/></svg> Temizleme davranışı</h3></header>
+              <header class="card__head"><h3><svg><use href="#i-trash"/></svg> <span data-i18n="set.clean.title">Cleanup behaviour</span></h3></header>
 
               <div class="setting">
                 <div class="setting__text">
-                  <strong>Karantinaya taşı</strong>
-                  <span>Dosyalar silinmez, geri dönüşü olacak şekilde saklanır.</span>
+                  <strong data-i18n="set.clean.quarantineTitle">Move to quarantine</strong>
+                  <span data-i18n="set.clean.quarantineText">Files are not deleted; they are kept so they can be restored.</span>
                 </div>
                 <label class="switch">
                   <input type="radio" name="cleanMode" value="quarantine" id="modeQuarantine">
@@ -468,8 +467,8 @@
 
               <div class="setting setting--danger">
                 <div class="setting__text">
-                  <strong>Kalıcı olarak sil</strong>
-                  <span>Geri alınamaz. Geri dönüşüm kutusuna da gitmez.</span>
+                  <strong data-i18n="set.clean.deleteTitle">Delete permanently</strong>
+                  <span data-i18n="set.clean.deleteText">Cannot be undone. Files do not go to the Recycle Bin either.</span>
                 </div>
                 <label class="switch">
                   <input type="radio" name="cleanMode" value="delete" id="modeDelete">
@@ -481,8 +480,8 @@
 
               <div class="setting">
                 <div class="setting__text">
-                  <strong>Derin taramayı varsayılan yap</strong>
-                  <span>Büyük dosyalar ve kopyalar her taramada aranır.</span>
+                  <strong data-i18n="set.clean.deepTitle">Make deep scan the default</strong>
+                  <span data-i18n="set.clean.deepText">Large files and duplicates are searched on every scan.</span>
                 </div>
                 <label class="switch">
                   <input type="checkbox" id="setDeep">
@@ -492,8 +491,8 @@
 
               <div class="setting">
                 <div class="setting__text">
-                  <strong>Güvenli kategorileri otomatik seç</strong>
-                  <span>Tarama bittiğinde risksiz gruplar işaretlenir.</span>
+                  <strong data-i18n="set.clean.autoTitle">Auto-select safe categories</strong>
+                  <span data-i18n="set.clean.autoText">Risk-free groups are checked when a scan finishes.</span>
                 </div>
                 <label class="switch">
                   <input type="checkbox" id="setAuto">
@@ -503,8 +502,8 @@
 
               <div class="setting">
                 <div class="setting__text">
-                  <strong>Hareketi azalt</strong>
-                  <span>Animasyonları sadeleştirir, düşük donanımda akıcılık sağlar.</span>
+                  <strong data-i18n="set.clean.motionTitle">Reduce motion</strong>
+                  <span data-i18n="set.clean.motionText">Simplifies animations for smoother use on low-end hardware.</span>
                 </div>
                 <label class="switch">
                   <input type="checkbox" id="setMotion">
@@ -514,24 +513,38 @@
             </article>
 
             <article class="card">
-              <header class="card__head"><h3><svg><use href="#i-info"/></svg> Uygulama bilgisi</h3></header>
+              <header class="card__head"><h3><svg><use href="#i-globe"/></svg> <span data-i18n="set.lang.title">Language</span></h3></header>
+              <p class="muted" data-i18n="set.lang.text">Interface language. Leave it on “System default” to follow Windows.</p>
+              <div class="field">
+                <label class="field__label" for="langSelect" data-i18n="set.lang.title">Language</label>
+                <select class="input" id="langSelect"></select>
+                <p class="field__hint" id="langHint"></p>
+              </div>
+              <div class="safety">
+                <svg><use href="#i-info"/></svg>
+                <p data-i18n="set.lang.fallback">Some languages are not translated yet; those screens appear in English.</p>
+              </div>
+            </article>
+
+            <article class="card">
+              <header class="card__head"><h3><svg><use href="#i-info"/></svg> <span data-i18n="set.about.title">Application info</span></h3></header>
               <dl class="kv" id="aboutList"></dl>
               <hr class="rule">
               <div class="setting">
                 <div class="setting__text">
-                  <strong>Veri klasörü</strong>
+                  <strong data-i18n="set.about.dataDir">Data folder</strong>
                   <span id="dataDirPath" class="mono">—</span>
                 </div>
                 <button class="btn btn--ghost btn--sm" id="openDataDir2">
-                  <svg><use href="#i-external"/></svg><span>Aç</span>
+                  <svg><use href="#i-external"/></svg><span data-i18n="btn.open">Open</span>
                 </button>
               </div>
               <div class="safety">
                 <svg><use href="#i-shield"/></svg>
-                <p>
-                  Silme işlemi yalnızca tarama kategorilerinde tanımlı köklerin altında çalışır.
-                  Windows, Program Files ve geri dönüşüm kutusunun sistem bölümü koda gömülü
-                  yasak listesiyle korunur.
+                <p data-i18n="set.about.safety">
+                  Deletion only happens under the roots defined by the scan categories. Windows,
+                  Program Files and the Recycle Bin's system area are protected by a deny-list
+                  compiled into the code.
                 </p>
               </div>
             </article>
@@ -546,19 +559,19 @@
   <div class="dock" id="dock" hidden>
     <div class="dock__info">
       <strong id="dockSize">0 B</strong>
-      <span id="dockMeta">seçim yok</span>
+      <span id="dockMeta" data-i18n="dock.none">no selection</span>
     </div>
     <div class="dock__risk" id="dockRisk"></div>
     <div class="dock__spacer"></div>
     <button class="btn btn--ghost btn--sm" id="dockPreview">
-      <svg><use href="#i-info"/></svg><span>Önizle</span>
+      <svg><use href="#i-info"/></svg><span data-i18n="btn.preview">Preview</span>
     </button>
     <div class="segmented" id="dockMode">
-      <button class="is-active" data-mode="quarantine">Karantina</button>
-      <button data-mode="delete">Kalıcı sil</button>
+      <button class="is-active" data-mode="quarantine" data-i18n="mode.quarantineShort">Quarantine</button>
+      <button data-mode="delete" data-i18n="mode.deleteShort">Delete permanently</button>
     </div>
     <button class="btn btn--primary" id="dockClean">
-      <svg><use href="#i-sparkles"/></svg><span>Temizle</span>
+      <svg><use href="#i-sparkles"/></svg><span data-i18n="btn.clean">Clean</span>
     </button>
   </div>
 </div>
@@ -572,14 +585,14 @@
     <header class="modal__head">
       <span class="modal__icon" id="modalIcon"><svg><use href="#i-alert"/></svg></span>
       <div>
-        <h3 id="modalTitle">Onay</h3>
+        <h3 id="modalTitle">Confirm</h3>
         <p id="modalText"></p>
       </div>
     </header>
     <div class="modal__body" id="modalBody"></div>
     <footer class="modal__foot">
-      <button class="btn btn--ghost" id="modalCancel">Vazgeç</button>
-      <button class="btn btn--primary" id="modalConfirm">Onayla</button>
+      <button class="btn btn--ghost" id="modalCancel" data-i18n="btn.cancel">Cancel</button>
+      <button class="btn btn--primary" id="modalConfirm" data-i18n="btn.confirm">Approve</button>
     </footer>
   </div>
 </div>

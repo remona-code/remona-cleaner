@@ -5,8 +5,8 @@
  *
  * Kategorileri dolaşıp dosya envanteri çıkarır. Sonuç iki katmanlıdır:
  *
- *   items  – arayüze gönderilen, en büyük N dosya (gösterim için)
- *   _full  – aynı kategorinin tam yol listesi (temizleyici için, bellekte kalır)
+ *   items  - arayüze gönderilen, en büyük N dosya (gösterim için)
+ *   _full  - aynı kategorinin tam yol listesi (temizleyici için, bellekte kalır)
  *
  * `_full` listeleri hiçbir zaman arayüze gönderilmez; temizleyici seçimi
  * kategori/kimlik üzerinden alır, yol üzerinden almaz.
@@ -16,6 +16,7 @@ const path = require('path');
 
 const config = require('./config');
 const trash = require('./trash');
+const i18n = require('../i18n');
 const {
   ageDays,
   diskUsage,
@@ -80,10 +81,11 @@ async function diskInfo() {
 function emptyCategory(cat, note = '') {
   return {
     id: cat.id,
-    name: cat.name,
+    ...config.categoryKeys(cat.id),
+    name: config.categoryName(cat.id),
     icon: cat.icon,
     risk: cat.risk,
-    description: cat.description,
+    description: config.categoryDesc(cat.id),
     size: 0,
     size_h: humanSize(0),
     file_count: 0,
@@ -115,10 +117,11 @@ function finalize(cat, items, full) {
   const sorted = [...items].sort((a, b) => b.size - a.size);
   return {
     id: cat.id,
-    name: cat.name,
+    ...config.categoryKeys(cat.id),
+    name: config.categoryName(cat.id),
     icon: cat.icon,
     risk: cat.risk,
-    description: cat.description,
+    description: config.categoryDesc(cat.id),
     size: totalSize,
     size_h: humanSize(totalSize),
     file_count: full.length,
@@ -141,25 +144,30 @@ async function scan({ deep = false, onProgress = noop } = {}) {
     const cat = config.CATEGORIES[index];
     onProgress({
       percent: Math.round((index / Math.max(total, 1)) * 92),
-      stage: `${cat.name} taranıyor…`,
+      stage: i18n.t('progress.scanning', { name: config.categoryName(cat.id) }),
       category: cat.id,
     });
 
     if (cat.deep_only && !deep) {
-      categories.push(emptyCategory(cat, 'Derin tarama açık değil'));
+      categories.push(emptyCategory(cat, i18n.t('note.deepOff')));
       continue;
     }
 
     try {
       categories.push(await scanCategory(cat, startedMs, deep));
     } catch (err) {
-      categories.push(emptyCategory(cat, `Taranamadı: ${err && err.message ? err.message : err}`));
+      categories.push(
+        emptyCategory(
+          cat,
+          i18n.t('note.scanFailed', { error: err && err.message ? err.message : err })
+        )
+      );
     }
 
     await yieldToLoop();
   }
 
-  onProgress({ percent: 94, stage: 'Disk bilgisi okunuyor…', category: '' });
+  onProgress({ percent: 94, stage: i18n.t('progress.disk'), category: '' });
   const disk = await diskInfo();
 
   const totals = { all: 0, file_count: 0, safe: 0, caution: 0, risky: 0 };
@@ -170,7 +178,7 @@ async function scan({ deep = false, onProgress = noop } = {}) {
   }
 
   const finishedMs = Date.now();
-  onProgress({ percent: 100, stage: 'Tarama tamamlandı', category: '' });
+  onProgress({ percent: 100, stage: i18n.t('progress.done'), category: '' });
 
   return {
     started_at: started,
@@ -199,13 +207,13 @@ async function scanCategory(cat, nowMs, deep) {
   if (cat.id === 'recycle_bin') return scanRecycle(cat, nowMs);
   if (cat.id === 'large_files') return scanLarge(cat, nowMs);
   if (cat.id === 'duplicates') return scanDuplicates(cat, nowMs);
-  return emptyCategory(cat, 'Bilinmeyen tarama modu');
+  return emptyCategory(cat, i18n.t('note.unknownMode'));
 }
 
 async function scanWalk(cat, nowMs) {
   const roots = await expandRoots(cat.roots);
   if (!roots.length) {
-    return emptyCategory(cat, 'Bu bilgisayarda bulunamadı');
+    return emptyCategory(cat, i18n.t('note.notFound'));
   }
 
   const full = [];
@@ -222,7 +230,7 @@ async function scanWalk(cat, nowMs) {
     }
   }
 
-  if (!full.length) return emptyCategory(cat, 'Bu bilgisayarda bulunamadı');
+  if (!full.length) return emptyCategory(cat, i18n.t('note.notFound'));
   return finalize(cat, items, full);
 }
 
@@ -231,7 +239,7 @@ async function scanGlob(cat, nowMs) {
   for await (const file of globFiles(cat.roots)) {
     items.push(makeItem(file.path, file.size, file.mtime, cat, nowMs));
   }
-  if (!items.length) return emptyCategory(cat, 'Bu bilgisayarda bulunamadı');
+  if (!items.length) return emptyCategory(cat, i18n.t('note.notFound'));
   return finalize(
     cat,
     items,
@@ -242,15 +250,15 @@ async function scanGlob(cat, nowMs) {
 async function scanRecycle(cat, nowMs) {
   const info = await trash.stats();
   if (!info.ok) {
-    return emptyCategory(cat, info.error || 'Geri dönüşüm kutusu okunamadı');
+    return emptyCategory(cat, info.error || i18n.t('note.recycleUnreadable'));
   }
   if (!info.count) {
-    return emptyCategory(cat, 'Geri dönüşüm kutusu boş');
+    return emptyCategory(cat, i18n.t('note.recycleEmpty'));
   }
   const item = {
     id: 'recycle_bin:all',
-    path: 'Geri Dönüşüm Kutusu',
-    name: `${info.count} öğe`,
+    path: config.categoryName('recycle_bin'),
+    name: i18n.t('note.recycleItems', { count: info.count }),
     size: info.size,
     size_h: humanSize(info.size),
     modified: nowMs / 1000,
@@ -259,14 +267,15 @@ async function scanRecycle(cat, nowMs) {
     category: cat.id,
     risk: cat.risk,
     special: 'recycle_bin',
-    note: 'Boşaltıldığında dosyalar kurtarılamaz',
+    note: i18n.t('note.recycleWarn'),
   };
   return {
     id: cat.id,
-    name: cat.name,
+    ...config.categoryKeys(cat.id),
+    name: config.categoryName(cat.id),
     icon: cat.icon,
     risk: cat.risk,
-    description: cat.description,
+    description: config.categoryDesc(cat.id),
     size: info.size,
     size_h: humanSize(info.size),
     file_count: info.count,
@@ -285,7 +294,10 @@ async function scanLarge(cat, nowMs) {
     if (file.size >= config.LARGE_FILE_BYTES) candidates.push(file);
   }
   if (!candidates.length) {
-    return emptyCategory(cat, `${humanSize(config.LARGE_FILE_BYTES)} üzerinde dosya yok`);
+    return emptyCategory(
+      cat,
+      i18n.t('note.noLarge', { size: config.LARGE_FILE_LABEL })
+    );
   }
   candidates.sort((a, b) => b.size - a.size);
   const full = candidates.map((f) => ({ path: f.path, size: f.size }));
@@ -309,7 +321,7 @@ async function scanDuplicates(cat, nowMs) {
     if (entries.length >= 2) candidates.push(...entries);
   }
   if (!candidates.length) {
-    return emptyCategory(cat, 'Kopya dosya bulunamadı');
+    return emptyCategory(cat, i18n.t('note.noDup'));
   }
 
   const hashes = await mapPool(candidates, HASH_CONCURRENCY, async (file) => {
@@ -340,13 +352,13 @@ async function scanDuplicates(cat, nowMs) {
         makeItem(file.path, file.size, file.mtime, cat, nowMs, {
           duplicate_of: keeper,
           group_size: entries.length,
-          detail: `${entries.length} kopyadan biri · aslı: ${keeper}`,
+          detail: i18n.t('note.dupDetail', { count: entries.length, path: keeper }),
         })
       );
     }
   }
 
-  if (!items.length) return emptyCategory(cat, 'Kopya dosya bulunamadı');
+  if (!items.length) return emptyCategory(cat, i18n.t('note.noDup'));
 
   items.sort((a, b) => b.size - a.size);
   const result = finalize(
@@ -354,7 +366,7 @@ async function scanDuplicates(cat, nowMs) {
     items,
     items.map((i) => ({ path: i.path, size: i.size }))
   );
-  result.note = `${duplicateGroups} kopya grubu · her gruptan yalnızca aslı korunur`;
+  result.note = i18n.t('note.dupGroups', { count: duplicateGroups });
   result.savings = savings;
   return result;
 }
@@ -369,6 +381,27 @@ function publicView(result) {
   };
 }
 
+/**
+ * Kategori metinlerini seçili dilde yeniden üretir.
+ *
+ * Görünüm diske yazıldığı için içinde tarandığı andaki dilde biçimlenmiş adlar
+ * durur. Kimlik sabit olduğundan metin her açılışta katalogdan yeniden
+ * yazılır; eski kayıtlarda anahtar bulunmasa da doğru dil görünür.
+ */
+function localizeView(view) {
+  if (!view || !Array.isArray(view.categories)) return view;
+  const categories = view.categories.map((cat) => {
+    if (!i18n.has(`cat.${cat.id}.name`)) return cat;
+    return {
+      ...cat,
+      ...config.categoryKeys(cat.id),
+      name: config.categoryName(cat.id),
+      description: config.categoryDesc(cat.id),
+    };
+  });
+  return { ...view, categories };
+}
+
 /** Kategorileri yalnızca kimlikle eşleştirmek için hafif dizin. */
 function indexCategories(result) {
   const map = new Map();
@@ -380,6 +413,7 @@ module.exports = {
   scan,
   diskInfo,
   publicView,
+  localizeView,
   indexCategories,
   scanCategory,
   emptyCategory,

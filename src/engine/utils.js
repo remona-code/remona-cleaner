@@ -11,23 +11,15 @@ const fsp = require('fs/promises');
 const path = require('path');
 
 const config = require('./config');
+const i18n = require('../i18n');
 
 const HOUR = 3600;
 const DAY = 86400;
 
 // ------------------------------------------------------------------ biçim
-/** 1536 -> '1.5 KB' */
+/** 1536 -> '1.5 KB' (dile duyarlı ondalık ayracı: 1,5 KB) */
 function humanSize(num) {
-  let n = Number(num) || 0;
-  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
-  for (let i = 0; i < units.length; i += 1) {
-    const unit = units[i];
-    if (Math.abs(n) < 1024 || unit === 'TB') {
-      return unit === 'B' ? `${Math.trunc(n)} ${unit}` : `${n.toFixed(1)} ${unit}`;
-    }
-    n /= 1024;
-  }
-  return `${n.toFixed(1)} TB`;
+  return i18n.humanSize(num);
 }
 
 // ------------------------------------------------------------------ yollar
@@ -245,27 +237,30 @@ function isPathSafeToDelete(target, allowedRoots) {
   try {
     abs = path.resolve(String(target));
   } catch {
-    return [false, 'Geçersiz yol'];
+    return [false, i18n.t('guard.invalidPath')];
   }
   const low = abs.toLowerCase();
 
   for (const fragment of config.DENY_FRAGMENTS) {
     if (low.includes(fragment)) {
-      return [false, `Korunan sistem bileşeni: ${fragment.replace(/\\/g, '')}`];
+      return [
+        false,
+        i18n.t('guard.component', { fragment: fragment.replace(/\\/g, '') }),
+      ];
     }
   }
 
   if (!allowedRoots.some((root) => isUnder(abs, root))) {
-    return [false, 'İzin verilen tarama köklerinin dışında'];
+    return [false, i18n.t('guard.outside')];
   }
 
   if (norm(abs) === norm(config.SYSTEM_DRIVE) || norm(abs) === norm(config.USER_HOME)) {
-    return [false, 'Kök klasör silinemez'];
+    return [false, i18n.t('guard.root')];
   }
 
   for (const dir of config.PROTECTED_USER_DIRS) {
     if (norm(abs) === norm(path.join(config.USER_HOME, dir))) {
-      return [false, `Korumalı klasör: ${dir}`];
+      return [false, i18n.t('guard.folder', { dir })];
     }
   }
 
@@ -278,24 +273,16 @@ function ageDays(mtime, nowMs = Date.now()) {
 }
 
 function fmtDate(mtime) {
-  if (!mtime) return '-';
-  const d = new Date(mtime * 1000);
-  if (Number.isNaN(d.getTime())) return '-';
-  const pad = (n) => String(n).padStart(2, '0');
-  return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}`;
+  return i18n.formatDate(mtime);
 }
 
 function fmtDateTime(mtime) {
-  if (!mtime) return '-';
-  const d = new Date(mtime * 1000);
-  if (Number.isNaN(d.getTime())) return '-';
-  const pad = (n) => String(n).padStart(2, '0');
-  return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  return i18n.formatDateTime(mtime);
 }
 
-/** 1.234.567 -> '1.234.567' (Türkçe binlik ayraç) */
+/** 1234567 -> '1,234,567' (en) · '1.234.567' (tr) */
 function fmtNumber(value) {
-  return String(Math.round(Number(value) || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  return i18n.number(value);
 }
 
 // ------------------------------------------------------------------ taşıma

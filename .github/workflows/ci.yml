@@ -40,5 +40,12 @@ jobs:
           node --check src/engine/cleaner.js
           node --check src/engine/scanner.js
 
+      - name: Çeviri ve arayüz denetimi
+        # Eksik anahtar kullanıcıya ham `cat.foo.name` olarak görünür; tanımsız
+        # bir id ise arayüzü yarıda bırakır. İkisi de burada yakalanır.
+        run: |
+          node scripts/i18n-audit.js
+          node scripts/ui-audit.js
+
       - name: Testler
         run: npm test

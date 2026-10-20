@@ -1,0 +1,514 @@
+{
+  "app": {
+    "title": "reMona — AICleaner · Nettoyeur de disque avec IA"
+  },
+  "common": {
+    "file": "fichier",
+    "items": "{count} éléments"
+  },
+  "win": {
+    "minimize": "Réduire",
+    "maximize": "Agrandir",
+    "restore": "Restaurer",
+    "close": "Fermer"
+  },
+  "nav": {
+    "dashboard": "Tableau de bord",
+    "categories": "Catégories",
+    "quarantine": "Quarantaine",
+    "history": "Historique",
+    "assistant": "Assistant IA",
+    "settings": "Paramètres"
+  },
+  "view": {
+    "dashboard": {
+      "title": "Tableau de bord",
+      "subtitle": "Analysez le disque, l'IA choisit ce qui est sûr."
+    },
+    "categories": {
+      "title": "Catégories",
+      "subtitle": "Examinez les résultats et décidez de ce qui sera supprimé."
+    },
+    "quarantine": {
+      "title": "Quarantaine",
+      "subtitle": "Les fichiers nettoyés sont conservés ici au lieu d'être supprimés."
+    },
+    "history": {
+      "title": "Historique",
+      "subtitle": "Le journal de chaque nettoyage effectué."
+    },
+    "assistant": {
+      "title": "Assistant IA",
+      "subtitle": "Fixez un objectif ou posez votre question en langage courant."
+    },
+    "settings": {
+      "title": "Paramètres",
+      "subtitle": "Comportement du nettoyage et informations sur l'application."
+    }
+  },
+  "engine": {
+    "rulesTag": "moteur de règles",
+    "rulesName": "Moteur de règles local",
+    "searching": "Recherche d'un LLM…",
+    "ollama": "LLM local (Ollama)",
+    "remote": "LLM distant"
+  },
+  "dash": {
+    "eyebrow": "reMona AI · analyse par IA",
+    "readyTitle": "Analysez le système, le gain est prêt",
+    "readyText": "Lancez une analyse pour commencer. L'IA évalue les caches, les fichiers temporaires et les doublons, puis indique ce qui peut être supprimé sans risque.",
+    "doneTitle": "{size} peuvent être récupérés sans risque",
+    "cleanTitle": "Votre système semble propre",
+    "afterClean": "Nettoyage terminé. Relancez une analyse pour actualiser ces chiffres.",
+    "reclaimTitle": "Que suggère l'IA ?",
+    "reclaimTitleFor": "L'IA demande une validation pour {size}",
+    "reclaimText": "{count} catégories ont dépassé le seuil de sécurité (confiance ≥ 80 %). Les groupes risqués (anciens téléchargements, fichiers volumineux, doublons) ont été écartés.",
+    "insightCount": "{count} constats"
+  },
+  "disk": {
+    "used": "disque utilisé",
+    "after": "après nettoyage",
+    "freeAfter": "{free} libres → {after}"
+  },
+  "stat": {
+    "total": "Déchets totaux",
+    "safe": "Gain sans risque",
+    "count": "Nombre de fichiers",
+    "vault": "En quarantaine",
+    "totalWaiting": "en attente d'une analyse",
+    "totalScanned": "analysé en {sec} s",
+    "safeMeta": "aucune perte de données",
+    "countMeta": "éléments trouvés",
+    "vaultMeta": "récupérable",
+    "vaultSessions": "{count} sessions · récupérable"
+  },
+  "card": {
+    "insights": "Analyses de l'IA",
+    "breakdown": "Répartition par catégorie",
+    "all": "Tout"
+  },
+  "empty": {
+    "insights": "L'évaluation de l'IA apparaîtra ici une fois l'analyse terminée.",
+    "noData": "Pas encore de données. Lancez une analyse.",
+    "catWaitingTitle": "En attente d'une analyse",
+    "catWaitingText": "Lancez une analyse depuis le tableau de bord et les catégories seront listées ici.",
+    "noMatchTitle": "Aucune catégorie correspondante",
+    "noMatchText": "Modifiez le filtre ou le terme de recherche.",
+    "vaultTitle": "La quarantaine est vide",
+    "vaultText": "Les fichiers déplacés en quarantaine sont listés ici et peuvent être restaurés.",
+    "historyTitle": "Aucun nettoyage pour l'instant",
+    "historyText": "Chaque nettoyage terminé est enregistré ici."
+  },
+  "btn": {
+    "scan": "Lancer l'analyse",
+    "scanning": "Analyse…",
+    "aiSelect": "Retenir la suggestion de l'IA",
+    "selectRecommended": "Sélectionner les recommandés",
+    "selectSafe": "Sélectionner les sûrs",
+    "clearSelection": "Vider la sélection",
+    "preview": "Aperçu",
+    "clean": "Nettoyer",
+    "open": "Ouvrir",
+    "restore": "Restaurer",
+    "deletePermanent": "Supprimer définitivement",
+    "cancel": "Annuler",
+    "confirm": "Valider",
+    "gotIt": "Compris",
+    "close": "Fermer",
+    "save": "Enregistrer",
+    "test": "Tester la connexion",
+    "removeKey": "Supprimer la clé",
+    "remove": "Supprimer",
+    "fetchModels": "Récupérer les modèles"
+  },
+  "switch": {
+    "deep": "Analyse approfondie",
+    "deepTitle": "L'analyse approfondie recherche aussi les fichiers volumineux et les doublons (plus long)"
+  },
+  "risk": {
+    "all": "Tout",
+    "safe": "Sûr",
+    "caution": "Prudence",
+    "risky": "Risqué"
+  },
+  "progress": {
+    "preparing": "Préparation…",
+    "starting": "Démarrage…",
+    "failed": "Échec de l'analyse",
+    "scanning": "Analyse de {name}…",
+    "disk": "Lecture des informations du disque…",
+    "done": "Analyse terminée",
+    "cleanPreparing": "Préparation du nettoyage…",
+    "cleanDone": "Nettoyage terminé",
+    "recycle": "Vidage de la corbeille…",
+    "restoring": "Restauration…",
+    "restoreDone": "Restauration terminée",
+    "processing": "Traitement de {name}…"
+  },
+  "cat": {
+    "searchPlaceholder": "Rechercher une catégorie ou un fichier…",
+    "confidence": "Confiance de l'IA {percent} % · {verdict}",
+    "deepOnly": "analyse approfondie",
+    "files": "{count} fichiers",
+    "noFiles": "Aucun fichier dans cette catégorie.",
+    "selectCategory": "Sélectionner la catégorie",
+    "deselectCategory": "Désélectionner la catégorie",
+    "select": "Sélectionner",
+    "selectFile": "Sélectionner le fichier",
+    "file": "Fichier",
+    "size": "Taille",
+    "modified": "Modifié",
+    "today": "aujourd'hui",
+    "daysAgo": "{count} jours",
+    "reveal": "Afficher dans l'Explorateur",
+    "revealAria": "Afficher dans l'Explorateur",
+    "moreFiles": "+{count} autres fichiers (seuls les plus volumineux sont affichés)",
+    "user_temp": {
+      "name": "Fichiers temporaires de l'utilisateur",
+      "desc": "Restes d'installations et de mises à jour, fichiers temporaires laissés par les applications."
+    },
+    "windows_temp": {
+      "name": "Dossier temporaire de Windows",
+      "desc": "Fichiers temporaires de tout le système. Les fichiers verrouillés sont ignorés."
+    },
+    "browser_cache": {
+      "name": "Caches des navigateurs",
+      "desc": "Images de pages et caches de code. Suppression sans risque ; les sites s'ouvrent un peu plus lentement ensuite."
+    },
+    "windows_update": {
+      "name": "Restes de Windows Update",
+      "desc": "Fichiers téléchargés des mises à jour installées. Des droits d'administrateur peuvent être nécessaires."
+    },
+    "thumbnails": {
+      "name": "Cache des vignettes",
+      "desc": "Aperçus de fichiers affichés dans l'Explorateur. Ils sont reconstruits automatiquement."
+    },
+    "prefetch": {
+      "name": "Fichiers Prefetch",
+      "desc": "Un cache qui accélère le lancement des applications. Le supprimer ralentit les premiers lancements."
+    },
+    "crash_dumps": {
+      "name": "Vidages de plantage",
+      "desc": "Enregistrements d'erreurs d'applications plantées. Inutiles sauf si vous déboguez."
+    },
+    "logs": {
+      "name": "Journaux système et d'applications",
+      "desc": "Anciens journaux d'installation et de diagnostic."
+    },
+    "recycle_bin": {
+      "name": "Corbeille",
+      "desc": "Fichiers que vous avez mis à la corbeille. Une fois vidée, ils ne peuvent plus être récupérés."
+    },
+    "downloads_old": {
+      "name": "Anciens téléchargements",
+      "desc": "Téléchargements inchangés depuis plus de {days} jours. Ce qu'ils contiennent vous appartient."
+    },
+    "large_files": {
+      "name": "Fichiers volumineux",
+      "desc": "Fichiers de plus de {size}. Le gain le plus important, mais aussi celui qui demande le plus d'attention."
+    },
+    "duplicates": {
+      "name": "Fichiers en double",
+      "desc": "Fichiers au contenu identique. Supprimer une copie est sûr, les supprimer toutes ne l'est pas."
+    }
+  },
+  "toast": {
+    "revealFailed": "Impossible d'ouvrir",
+    "partialTitle": "Sélection partielle",
+    "partialText": "Cette catégorie contient {count} fichiers supplémentaires non affichés ; une sélection fichier par fichier ne traite que ce qui est listé.",
+    "scanDoneTitle": "Analyse terminée",
+    "scanDoneText": "{size} de déchets trouvés · {count} fichiers · {sec} s",
+    "scanFailed": "Échec de l'analyse",
+    "scanError": "Erreur d'analyse",
+    "previewFailed": "Impossible de générer l'aperçu",
+    "cleanFailed": "Échec du nettoyage",
+    "finishedTitle": "Nettoyage terminé",
+    "finishedText": "{size} récupérés",
+    "noSuggestionTitle": "Aucune suggestion",
+    "noSuggestionText": "L'IA n'a trouvé aucune catégorie au-dessus du seuil de sécurité.",
+    "aiSelectedTitle": "Suggestion de l'IA retenue",
+    "aiSelectedText": "{count} catégories · {size}",
+    "aiPickedTitle": "L'IA a fait sa sélection",
+    "aiPickedText": "{count} catégories · {size}",
+    "restoredTitle": "Restaurés",
+    "restoredPartialTitle": "Partiellement restaurés",
+    "restoreFailed": "Échec de la restauration",
+    "restoreText": "{count} fichiers · {size}",
+    "restoreFailedText": " · {count} fichiers en échec",
+    "purgeFailed": "Impossible de supprimer",
+    "purgeOk": "Session de quarantaine supprimée",
+    "aiSavedTitle": "Paramètres IA enregistrés",
+    "aiSavedText": "Le nouveau fournisseur sera utilisé dès votre prochaine question.",
+    "connectedTitle": "Connexion réussie",
+    "startupTitle": "Erreur au démarrage",
+    "devTitle": "Mode développement",
+    "devText": "Appuyez sur F12 pour ouvrir les DevTools."
+  },
+  "vault": {
+    "pending": "En attente en quarantaine",
+    "sessions": "Sessions",
+    "files": "Fichiers",
+    "note": "Les fichiers en quarantaine ne sont pas supprimés, mais déplacés. Vous pouvez les restaurer à tout moment.",
+    "sessionLine": "{count} fichiers · {size}",
+    "restoreTitle": "Restaurer ces fichiers ?",
+    "restoreText": "{count} fichiers ({size}) seront replacés à leur emplacement d'origine.",
+    "purgeTitle": "Supprimer définitivement ?",
+    "purgeText": "{count} fichiers ({size}) seront retirés définitivement de la quarantaine.",
+    "purgeWarn": "Cette action est irréversible. Les fichiers sont effacés du disque et nécessitent un outil de récupération."
+  },
+  "mode": {
+    "quarantine": "quarantaine",
+    "permanentDelete": "suppression définitive",
+    "quarantineShort": "Quarantaine",
+    "deleteShort": "Suppression définitive"
+  },
+  "hist": {
+    "filesCleaned": "{count} fichiers nettoyés",
+    "permanent": "supprimés définitivement",
+    "quarantined": "déplacés en quarantaine",
+    "errors": "{count} erreurs",
+    "reclaimed": "récupérés"
+  },
+  "asst": {
+    "title": "Sélection intelligente par objectif",
+    "desc": "Indiquez l'espace à libérer ; l'IA atteint l'objectif en ne choisissant que des catégories sûres. Les groupes risqués ne sont jamais sélectionnés automatiquement.",
+    "pick": "Laisser l'IA choisir",
+    "engine": "Conseiller",
+    "greeting": "Bonjour. Après une analyse, je peux répondre à des questions comme « que puis-je supprimer ? » ou « qu'est-ce qui prend le plus de place ? ».",
+    "inputPlaceholder": "Posez une question…",
+    "send": "Envoyer",
+    "engineMeta": "moteur : {engine}",
+    "suggestWhat": "Que puis-je supprimer ?",
+    "suggestWhy": "Pourquoi mon disque est-il plein ?",
+    "suggestDup": "Les doublons sont-ils sûrs ?",
+    "suggestRisky": "Lesquels sont risqués ?",
+    "noAnswer": "Aucune réponse reçue."
+  },
+  "pick": {
+    "selected": "{size} sélectionnés",
+    "targetNote": " (objectif {size}). ",
+    "reached": "Objectif atteint ; la sélection ne contient que des catégories sûres.",
+    "shortfall": "{size} de l'objectif n'ont pas pu être atteints — le reste se trouve dans des groupes risqués.",
+    "nothing": "L'IA n'a trouvé aucune catégorie au-dessus du seuil de sécurité. Activez l'analyse approfondie et réessayez, ou examinez les catégories manuellement.",
+    "needScan": "Vous devez d'abord lancer une analyse."
+  },
+  "set": {
+    "ai": {
+      "title": "Fournisseur d'IA",
+      "checking": "vérification…",
+      "lede": "Laissez un véritable modèle de langage produire les réponses à la place du moteur de règles. Saisissez votre clé OpenAI et choisissez un modèle ; la clé est conservée dans le coffre chiffré du système et n'est plus jamais renvoyée à l'interface. Tout point d'accès compatible OpenAI fonctionne.",
+      "provider": "Fournisseur",
+      "apiKey": "Clé d'API",
+      "showKey": "Afficher la clé",
+      "hideKey": "Masquer la clé",
+      "keyNone": "Aucune clé pour l'instant.",
+      "keySaved": "Une clé est enregistrée. Saisissez-en une nouvelle pour la remplacer, ou utilisez « Supprimer la clé ».",
+      "keyEnv": "La clé est lue depuis une variable d'environnement. Vous pouvez la remplacer en saisissant une nouvelle clé ici.",
+      "keyCreate": "Aucune clé pour l'instant. Vous pouvez en créer une sur platform.openai.com.",
+      "removeTitle": "Supprimer la clé d'API ?",
+      "removeText": "La clé est effacée du disque et l'assistant revient au moteur de règles.",
+      "endpoint": "Point d'accès",
+      "model": "Modèle",
+      "waitingKey": "en attente de clé"
+    },
+    "clean": {
+      "title": "Comportement du nettoyage",
+      "quarantineTitle": "Déplacer en quarantaine",
+      "quarantineText": "Les fichiers ne sont pas supprimés ; ils sont conservés pour pouvoir être restaurés.",
+      "deleteTitle": "Supprimer définitivement",
+      "deleteText": "Irréversible. Les fichiers ne passent pas non plus par la corbeille.",
+      "deepTitle": "Analyse approfondie par défaut",
+      "deepText": "Les fichiers volumineux et les doublons sont recherchés à chaque analyse.",
+      "autoTitle": "Sélectionner automatiquement les catégories sûres",
+      "autoText": "Les groupes sans risque sont cochés à la fin de l'analyse.",
+      "motionTitle": "Réduire les animations",
+      "motionText": "Simplifie les animations pour que l'application reste fluide sur du matériel modeste."
+    },
+    "lang": {
+      "title": "Langue",
+      "text": "Langue de l'interface. Laissez « Valeur par défaut du système » pour suivre Windows.",
+      "system": "Valeur par défaut du système (Windows)",
+      "detected": "Détecté depuis Windows : {language}",
+      "fallback": "Certaines langues ne sont pas encore traduites ; ces écrans s'affichent en anglais."
+    },
+    "about": {
+      "title": "Informations sur l'application",
+      "product": "Produit",
+      "version": "Version",
+      "electron": "Electron",
+      "chromium": "Chromium",
+      "node": "Node",
+      "platform": "Plateforme",
+      "drive": "Lecteur système",
+      "dataDir": "Dossier de données",
+      "safety": "La suppression n'a lieu que sous les racines définies par les catégories d'analyse. Windows, Program Files et la zone système de la corbeille sont protégés par une liste d'exclusion intégrée au code."
+    }
+  },
+  "provider": {
+    "auto": "Automatique",
+    "openai": "OpenAI",
+    "ollama": "Ollama (local)",
+    "rules": "Règles uniquement",
+    "noteRules": "règles intégrées, aucun modèle requis",
+    "noteRulesOnly": "règles uniquement, selon la configuration",
+    "noteOpenAi": "répond avec le modèle OpenAI",
+    "noteOpenAiNoKey": "OpenAI sélectionné mais aucune clé — ajoutez-la dans les paramètres",
+    "noteOllama": "répond avec le modèle local",
+    "noteOllamaDown": "Ollama injoignable — les règles sont utilisées",
+    "noteNoLocal": "aucun modèle trouvé — les règles sont utilisées"
+  },
+  "status": {
+    "saving": "Enregistrement…",
+    "saved": "Paramètres enregistrés.",
+    "saveFailed": "Les paramètres n'ont pas pu être enregistrés.",
+    "fetching": "Récupération de la liste des modèles…",
+    "modelsFound": "{count} modèles trouvés — choisissez-en un dans la liste.",
+    "noModels": "Aucun modèle de conversation utilisable n'a été trouvé pour cette clé.",
+    "modelsFailed": "Impossible de récupérer la liste des modèles.",
+    "keyNotSaved": "La clé n'a pas pu être enregistrée, la liste des modèles n'a donc pas été récupérée.",
+    "keyNotSavedShort": "La clé n'a pas pu être enregistrée.",
+    "enterModel": "Saisissez d'abord un nom de modèle.",
+    "testing": "Test de la connexion…",
+    "testFailed": "Le test n'a pas pu s'exécuter.",
+    "connectFailed": "Connexion impossible.",
+    "replied": "{model} a répondu{latency}",
+    "latency": " · {ms} ms",
+    "keyRemoved": "Clé supprimée.",
+    "keyRemoveFailed": "La clé n'a pas pu être supprimée."
+  },
+  "ai": {
+    "noKey": "Aucune clé d'API OpenAI n'a été saisie. Ajoutez-en une dans Paramètres → Fournisseur d'IA.",
+    "timeout": "La requête a expiré. Vérifiez l'adresse du point d'accès et votre connexion.",
+    "unreachable": "Serveur injoignable : {error}",
+    "emptyReply": "Le modèle a renvoyé une réponse vide.",
+    "noModel": "Le nom du modèle est vide. Choisissez d'abord un modèle.",
+    "askEmpty": "Posez une question ; par exemple « que puis-je supprimer ? »",
+    "systemPrompt": "Tu es le conseiller de reMona (AICleaner), un nettoyeur de disque pour Windows. Réponds de façon brève et claire, en quatre phrases au maximum. Ne recommande jamais de supprimer des fichiers système ; pour les catégories risquées, laisse le choix à l'utilisateur. Appuie-toi uniquement sur les données d'analyse fournies.",
+    "languageLine": "Réponds en {language}.",
+    "testPing": "Test de connexion.",
+    "testRequest": "Réponds par le seul mot \"prêt\"."
+  },
+  "http": {
+    "e401": "La clé d'API a été refusée (401). Vérifiez la clé.",
+    "e403": "Cette clé n'est pas autorisée à accéder au modèle demandé (403).",
+    "e404": "Point d'accès ou modèle introuvable (404). {detail}",
+    "e429": "Limite de débit ou quota dépassé (429). Réessayez plus tard.",
+    "e413": "Le corps de la requête est trop volumineux (413).",
+    "e5xx": "Erreur côté fournisseur ({status}). Réessayez plus tard.",
+    "default": "La requête a échoué (HTTP {status}). {detail}",
+    "fallback": "La requête a échoué."
+  },
+  "verdict": {
+    "delete": "Peut être supprimé",
+    "review": "À vérifier",
+    "avoid": "Ne pas toucher",
+    "empty": "Vide"
+  },
+  "reason": {
+    "prefetch": "Le gain est faible (généralement moins de 200 Mo) et le supprimer ralentit le lancement des applications.",
+    "downloads": "Le contenu peut vous appartenir. L'IA ne fait que suggérer ; c'est vous qui choisissez les fichiers.",
+    "recycle": "Ce sont des fichiers que vous avez déjà décidé de supprimer ; le vidage est irréversible.",
+    "duplicates": "L'original de chaque groupe est conservé ; seules les copies supplémentaires sont marquées.",
+    "browser": "Les données de session et les mots de passe ne sont pas touchés, seul le cache est vidé.",
+    "large": "La taille seule n'est pas une raison de supprimer. Regardez ce qu'est le fichier.",
+    "empty": "Rien à supprimer"
+  },
+  "insight": {
+    "cleanTitle": "Cela semble propre",
+    "cleanText": "Aucun fichier digne d'être nettoyé n'a été trouvé dans les emplacements analysés.",
+    "biggestTitle": "Gain le plus important : {name}",
+    "biggestText": "{size} peuvent être récupérés — {percent} % de tous les déchets. Confiance de l'IA {confidence} %.",
+    "diskFullTitle": "L'utilisation du disque est critique",
+    "diskFullText": "{drive} est rempli à {percent} %, seulement {free} libres. Priorisez le nettoyage recommandé.",
+    "safeTitle": "Gain sans risque prêt",
+    "safeText": "{size} de caches et de fichiers temporaires ; les supprimer ne cause aucune perte de données ({count} catégories).",
+    "riskyTitle": "Validation manuelle requise",
+    "riskyText": "{names} peut contenir vos fichiers personnels. L'IA ne les ajoute jamais à la sélection par défaut ; ne supprimez que ce que vous avez vérifié.",
+    "prefetchTitle": "Prefetch : gain faible",
+    "prefetchText": "{size} libèrent de l'espace mais ralentissent les lancements suivants. L'IA note cette catégorie bas ({confidence} %).",
+    "dupsTitle": "Fichiers en double détectés",
+    "dupsText": "{size} de contenu identique. {count} copies supplémentaires sont marquées tandis que les originaux sont conservés.",
+    "staleTitle": "Fichiers intacts depuis des années",
+    "staleText": "Tous les fichiers de {names} n'ont pas changé depuis plus d'un an ; les supprimer est très probablement sûr."
+  },
+  "summary": {
+    "nothing": "Aucun fichier à nettoyer n'a été trouvé sur votre système.",
+    "text": "{size} de déchets trouvés au total ({count} fichiers). L'IA recommande sans risque {recommended}. Les {rest} restants nécessitent votre validation."
+  },
+  "note": {
+    "deepOff": "L'analyse approfondie est désactivée",
+    "notFound": "Introuvable sur cet ordinateur",
+    "scanFailed": "Analyse impossible : {error}",
+    "unknownMode": "Mode d'analyse inconnu",
+    "recycleUnreadable": "La corbeille n'a pas pu être lue",
+    "recycleEmpty": "La corbeille est vide",
+    "recycleItems": "{count} éléments",
+    "recycleWarn": "Une fois vidés, les fichiers ne peuvent plus être récupérés",
+    "noLarge": "Aucun fichier de plus de {size}",
+    "noDup": "Aucun fichier en double trouvé",
+    "dupGroups": "{count} groupes de doublons · seul l'original de chaque groupe est conservé",
+    "dupDetail": "une de {count} copies · original : {path}"
+  },
+  "guard": {
+    "invalidPath": "Chemin invalide",
+    "component": "Composant système protégé : {fragment}",
+    "outside": "En dehors des racines d'analyse autorisées",
+    "root": "Le dossier racine ne peut pas être supprimé",
+    "folder": "Dossier protégé : {dir}"
+  },
+  "err": {
+    "noScan": "Lancez d'abord une analyse",
+    "invalidSession": "Nom de session invalide",
+    "invalidSessionPath": "Chemin de session invalide",
+    "sessionMissing": "Aucune session de quarantaine de ce type",
+    "sessionNotFound": "Session introuvable",
+    "invalidRow": "Enregistrement de quarantaine invalide",
+    "quarantineFileMissing": "Fichier de quarantaine introuvable",
+    "revealNotInScan": "Ce chemin ne fait pas partie de l'analyse en cours",
+    "scanRunning": "Une analyse est déjà en cours",
+    "cleanRunning": "Un nettoyage est déjà en cours",
+    "unknown": "Erreur inconnue",
+    "restoredSuffix": " (restauré)"
+  },
+  "prev": {
+    "title": "Aperçu du nettoyage",
+    "text": "Rien n'a été modifié. Ceci montre seulement ce qui se passerait.",
+    "files": "Fichiers à supprimer",
+    "size": "Espace à récupérer",
+    "cats": "Catégories (complètes)",
+    "items": "Sélectionnés individuellement",
+    "skipped": "Ignorés par le garde-fou de sécurité",
+    "blocked": "Bloqués sur des chemins protégés"
+  },
+  "clean": {
+    "title": "Lancer le nettoyage ?",
+    "text": "Les fichiers sélectionnés passent par le garde-fou de sécurité avant tout traitement.",
+    "method": "Méthode",
+    "permanent": "Suppression définitive",
+    "quarantine": "Déplacer en quarantaine",
+    "riskCats": "{risk} catégories",
+    "warnDelete": "La suppression définitive est sélectionnée. Les fichiers ne passeront pas en quarantaine et ne pourront pas être restaurés.",
+    "safeNote": "Les fichiers sont déplacés en quarantaine ; vous pouvez les restaurer à tout moment.",
+    "doneTitle": "Nettoyage terminé",
+    "doneText": "{size} récupérés.",
+    "processed": "Fichiers traités",
+    "reclaimed": "Espace gagné",
+    "skipped": "{count} fichiers ont été ignorés (verrouillés ou chemin protégé). Voir la liste ci-dessous pour le détail.",
+    "restorable": "Les fichiers sont en quarantaine. Vous pouvez les restaurer depuis l'onglet Quarantaine."
+  },
+  "rule": {
+    "noScan": "Lancez d'abord une analyse ; je pourrai alors dire quels fichiers peuvent être supprimés.",
+    "safeList": "Vous pouvez nettoyer sans risque {count} catégories : {names}. Cela libère {size} sans risque de perte de données. Les autres groupes peuvent contenir des fichiers personnels — supprimez-les en les sélectionnant.",
+    "noSafe": "Il ne reste plus de catégories sans risque. Les déchets totaux sont de {size} ; vous pouvez supprimer le reste après vérification.",
+    "disk": "{drive} est rempli à {percent} % : {used} utilisés, {free} libres. L'analyse a trouvé {junk} de déchets ; nettoyer la partie sans risque augmente l'espace libre.",
+    "category": "{name} : {size}, {count} fichiers. Niveau de risque {risk} — raison : {reason}",
+    "trust": "Catégories sûres : caches des navigateurs, cache des vignettes, fichiers temporaires et vidages de plantage. Risquées : anciens téléchargements, fichiers volumineux et doublons — examinez-les un par un.",
+    "duplicates": "{size} de doublons trouvés. Les originaux sont conservés ; {count} copies supplémentaires peuvent être supprimées.",
+    "noDuplicates": "Aucun fichier en double n'a été trouvé (activez l'analyse approfondie et réessayez si elle était désactivée).",
+    "summary": "Résumé : {junk} de déchets trouvés, dont {safe} sans risque. Demandez-moi « que puis-je supprimer ? » et je vous suggérerai catégorie par catégorie."
+  },
+  "dock": {
+    "none": "aucune sélection",
+    "files": "{files} fichiers · {cats} catégories entières"
+  }
+}

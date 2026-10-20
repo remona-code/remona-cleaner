@@ -43,7 +43,8 @@ Taranan kategoriler:
 ## Üç katmanlı yapay zeka
 
 1. **Kural motoru (her zaman açık).** Kategori riski, dosya yaşı, boyut ve disk
-   doluluğundan 0-100 arası bir güven skoru üretir; Türkçe içgörüler yazar.
+   doluluğundan 0-100 arası bir güven skoru üretir; içgörüleri seçili arayüz
+   dilinde yazar.
    İnternet gerektirmez, her zaman çalışır.
 2. **Akıllı seçim.** "Şu kadar GB boşalt" hedefi verildiğinde en güvenli ve en
    verimli kategorileri sıralayıp hedefe ulaşmaya çalışır.
@@ -73,6 +74,43 @@ set AICLEANER_OPENAI_MODEL=gpt-4o-mini
 set OPENAI_API_KEY=sk-...
 set AICLEANER_OLLAMA_URL=http://127.0.0.1:11434
 set AICLEANER_OLLAMA_MODEL=llama3.2
+```
+
+## Diller
+
+Arayüzün kaynak dili **İngilizce**'dir (`src/i18n/locales/en.json`); diğer
+diller onun üzerine yama gibi biner. Hazır gelen çeviriler: **Türkçe, Almanca,
+Fransızca, İspanyolca** — her biri 385 anahtarın tamamını taşır.
+
+- **Otomatik seçim.** Dil, Windows'un görüntüleme dilinden okunur
+  (`Ayarlar → Dil → Sistem varsayılanı`). Desteklenmeyen bir Windows dili
+  (ör. Fince) arayüzü tamamen İngilizce açar; hiçbir ekran boş kalmaz.
+- **Elle seçim.** Ayarlar → Dil listesinde yalnızca kataloğu bulunan diller
+  görünür. Seçim `settings.json` içine yazılır.
+- **Eksik anahtar yedeği.** Bir çeviride anahtar yoksa İngilizce karşılığı, o da
+  yoksa anahtarın kendisi gösterilir. Bu yüzden yarım bir çeviri uygulamayı
+  bozmaz; yalnızca o satırlar İngilizce görünür.
+- **Sayı ve tarih** de dile uyar: `1.234,5 GB` (tr) ↔ `1,234.5 GB` (en).
+- **Motor metinleri** (kategori adları, içgörüler, kural yanıtları) de çevrilir;
+  kaydedilmiş bir tarama başka dilde açıldığında adlar yeniden üretilir.
+
+Yeni bir dil eklemek için `src/i18n/locales/en.json` dosyasını
+`<kod>.json` olarak kopyalayıp metinleri çevirin; dil zaten
+`src/i18n/index.js` içindeki listede tanımlıdır (ör. `pl`, `ru`, `zh`, `ja`).
+Katalog yoksa dil listeye girmez ve o dil İngilizce'ye düşer.
+
+Çeviri ve arayüz tutarlılığını doğrulama:
+
+```bat
+npm run check        :: i18n:audit + ui:audit
+npm run i18n:audit   :: eksik anahtar, yer tutucu uyuşmazlığı, dil kapsamı
+npm run ui:audit     :: app.js'in kullandığı her id index.html'de var mı
+```
+
+Bir dili ekran görüntüsüyle doğrulamak için (ayara yazmadan):
+
+```bat
+npx electron . --locale=de --capture=ekran.png
 ```
 
 ## Kurulum ve çalıştırma

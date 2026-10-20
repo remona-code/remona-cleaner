@@ -26,6 +26,7 @@ const utils = require('../src/engine/utils');
 const scanner = require('../src/engine/scanner');
 const cleaner = require('../src/engine/cleaner');
 const ai = require('../src/engine/ai');
+const i18n = require('../src/i18n');
 
 const { humanSize, isPathSafeToDelete, isUnder, norm, walkFiles } = utils;
 
@@ -152,14 +153,14 @@ describe('silme güvenlik kapısı', () => {
     ]) {
       const [allowed, reason] = isPathSafeToDelete(target, roots);
       assert.equal(allowed, false, `${target} reddedilmeliydi`);
-      assert.match(reason, /Korunan sistem bileşeni/);
+      assert.match(reason, /Protected system component/);
     }
   });
 
   it('izin verilen köklerin dışındaki dosyaları reddeder', async () => {
     const [allowed, reason] = isPathSafeToDelete('D:\\kisisel\\arsiv.zip', [config.TEMP]);
     assert.equal(allowed, false);
-    assert.match(reason, /dışında/);
+    assert.match(reason, /Outside the allowed scan roots/);
   });
 
   it('kök sürücüyü ve kullanıcı kökünü reddeder', async () => {
@@ -239,7 +240,11 @@ describe('yapılandırma tutarlılığı', () => {
   it('her kategori zorunlu alanları taşır', () => {
     for (const cat of config.CATEGORIES) {
       assert.ok(cat.id, 'kategori kimliği eksik');
-      assert.ok(cat.name, `${cat.id} adı eksik`);
+      // Ad ve açıklama artık katalogdan gelir; ham anahtar görünmesi hatadır.
+      const name = config.categoryName(cat.id);
+      assert.ok(name && name !== `cat.${cat.id}.name`, `${cat.id} adı çevrilmemiş`);
+      const desc = config.categoryDesc(cat.id);
+      assert.ok(desc && desc !== `cat.${cat.id}.desc`, `${cat.id} açıklaması çevrilmemiş`);
       assert.ok(['safe', 'caution', 'risky'].includes(cat.risk), `${cat.id} riski geçersiz`);
       assert.ok(['walk', 'glob', 'special'].includes(cat.mode), `${cat.id} modu geçersiz`);
       assert.ok(Array.isArray(cat.roots), `${cat.id} kök listesi eksik`);
@@ -283,6 +288,28 @@ describe('tarayıcı', () => {
     const view = scanner.publicView(fake);
     assert.equal(view.categories[0]._full, undefined);
     assert.ok(view.categories[0].items.length === 1);
+    // Kaydedilen görünüm başka dilde açılabilir: metin anahtarı taşınmalı.
+    assert.equal(view.categories[0].name_key, 'cat.user_temp.name');
+  });
+
+  it('localizeView eski kayıttaki adları seçili dilde yeniden üretir', () => {
+    i18n.setLocale('de');
+    try {
+      // Diskten gelen eski kayıt: anahtar yok, ad tarandığı dilde sabitlenmiş.
+      const stored = {
+        categories: [{ id: 'user_temp', name: 'Kullanıcı Geçici', size: 10, description: 'eski' }],
+        totals: { all: 10 },
+      };
+      const view = scanner.localizeView(stored);
+      assert.equal(view.categories[0].name, 'Temporäre Dateien des Benutzers');
+      assert.match(view.categories[0].description, /Reste von Installationen/);
+      assert.equal(view.totals.all, 10);
+      // Bilinmeyen kimlik olduğu gibi bırakılır (ham anahtar ekrana basılmaz).
+      const unknown = scanner.localizeView({ categories: [{ id: 'yok', name: 'X' }] });
+      assert.equal(unknown.categories[0].name, 'X');
+    } finally {
+      i18n.setLocale('en');
+    }
   });
 
   it('disk bilgisini okur', async () => {
@@ -338,7 +365,7 @@ describe('AI danışmanı', () => {
     const answer = await ai.ruleAnswer('ne silmeliyim', scanner.publicView(makeScan(tempCategory, files())));
     assert.ok(typeof answer === 'string' && answer.length > 0);
     const empty = await ai.ruleAnswer('ne silmeliyim', null);
-    assert.match(empty, /tarama/i);
+    assert.match(empty, /scan/i);
   });
 });
 
@@ -449,7 +476,7 @@ describe('temizleyici', () => {
   it('tarama sonucu olmadan temizlik istemez', async () => {
     const report = await cleaner.clean({ scanResult: null, categoryIds: ['user_temp'] });
     assert.equal(report.ok, false);
-    assert.match(report.error, /tarama/i);
+    assert.match(report.error, /scan/i);
   });
 
   it('geçmiş kaydını tutar', async () => {
@@ -469,7 +496,8 @@ describe('ayar deposu', () => {
     await store.saveSettings({ clean_mode: 'delete' });
     const settings = await store.getSettings();
     assert.equal(settings.clean_mode, 'delete');
-    assert.equal(settings.language, 'tr');
+    // Varsayılan "auto": arayüz Windows dilini izler.
+    assert.equal(settings.language, 'auto');
     assert.equal(typeof settings.deep_scan, 'boolean');
     await store.saveSettings({ clean_mode: 'quarantine' });
   });
@@ -588,11 +616,11 @@ describe('OpenAI sağlayıcısı', () => {
 
     const models = await ai.listModels();
     assert.equal(models.ok, false);
-    assert.match(models.error, /API anahtarı/);
+    assert.match(models.error, /API key/);
 
     const probe = await ai.testConnection('gpt-4o-mini');
     assert.equal(probe.ok, false);
-    assert.match(probe.error, /API anahtarı/);
+    assert.match(probe.error, /API key/);
   });
 
   it('sağlayıcı "rules" iken kural motorunu bildirir', async () => {
@@ -625,6 +653,88 @@ describe('OpenAI sağlayıcısı', () => {
     const status = await ai.providerStatus({ refresh: true });
     assert.equal(status.engine, 'local-rules');
     assert.equal(status.configured, 'openai');
-    assert.match(status.note, /anahtar/i);
+    assert.match(status.note, /key/i);
+  });
+});
+
+// ================================================================== çok dillilik
+describe('çok dillilik', () => {
+  const PARTIAL = path.join(i18n.LOCALES_DIR, 'zz.json');
+
+  after(async () => {
+    await fsp.rm(PARTIAL, { force: true });
+    i18n.setLocale('en');
+  });
+
+  it('bilinmeyen dili İngilizceye düşürür', () => {
+    assert.equal(i18n.resolveLocale('fi-FI'), 'en');
+    assert.equal(i18n.resolveLocale('xx'), 'en');
+    assert.equal(i18n.resolveLocale(''), 'en');
+    assert.equal(i18n.resolveLocale('auto'), 'en');
+    assert.equal(i18n.detectLocale('fi'), 'en');
+  });
+
+  it('bölgesel varyantı ana dile indirger', () => {
+    assert.equal(i18n.resolveLocale('tr-TR'), 'tr');
+    assert.equal(i18n.resolveLocale('de-AT'), 'de');
+    assert.equal(i18n.resolveLocale('es-419'), 'es');
+    assert.equal(i18n.resolveLocale('fr_CA'), 'fr');
+  });
+
+  it('seçili dilde anahtar yoksa İngilizce, o da yoksa anahtar döner', async () => {
+    // Yarım bir katalog: yalnızca tek anahtar içeriyor.
+    await fsp.writeFile(PARTIAL, JSON.stringify({ nav: { dashboard: 'Panel ZZ' } }), 'utf8');
+
+    assert.equal(i18n.tIn('zz', 'nav.dashboard'), 'Panel ZZ');
+    assert.equal(i18n.tIn('zz', 'nav.settings'), 'Settings');
+    assert.equal(i18n.tIn('zz', 'hic.olmayan.anahtar'), 'hic.olmayan.anahtar');
+  });
+
+  it('yer tutucuları doldurur, bilinmeyeni olduğu gibi bırakır', () => {
+    i18n.setLocale('en');
+    assert.equal(i18n.t('cat.files', { count: 12 }), '12 files');
+    assert.equal(i18n.t('cat.files', {}), '{count} files');
+    assert.equal(i18n.interpolate('a {x} b {y}', { x: 1 }), 'a 1 b {y}');
+  });
+
+  it('yayınlanan her dil bütün anahtarları ve aynı yer tutucuları taşır', () => {
+    const base = i18n.loadCatalog('en');
+    const keys = Object.keys(base);
+    const locales = i18n.availableLocales().filter((meta) => meta.code !== 'en');
+    assert.ok(locales.length >= 4, 'en az dört çeviri bekleniyordu');
+
+    for (const meta of locales) {
+      const dict = i18n.loadCatalog(meta.code);
+      const missing = keys.filter((key) => !(key in dict));
+      assert.deepEqual(missing, [], `${meta.code} eksik anahtar taşıyor`);
+      for (const key of keys) {
+        const want = (String(base[key]).match(/\{\w+\}/g) || []).sort().join(',');
+        const got = (String(dict[key]).match(/\{\w+\}/g) || []).sort().join(',');
+        assert.equal(got, want, `${meta.code}:${key} yer tutucuları uyuşmuyor`);
+        assert.ok(String(dict[key]).trim(), `${meta.code}:${key} boş`);
+      }
+    }
+  });
+
+  it('paket İngilizce üzerine seçili dili bindirir', () => {
+    const bundle = i18n.bundle('tr');
+    assert.equal(bundle.locale, 'tr');
+    assert.equal(bundle.fallback, 'en');
+    assert.equal(bundle.dict['nav.dashboard'], 'Panel');
+    // İngilizce'de olup seçili dilde olmayan anahtar da pakette bulunur.
+    assert.equal(Object.keys(bundle.dict).length, Object.keys(i18n.loadCatalog('en')).length);
+  });
+
+  it('sayı ve boyut biçimlerini dile uyarlar', () => {
+    assert.equal(i18n.number(1234567, 'en'), '1,234,567');
+    assert.equal(i18n.number(1234567, 'tr'), '1.234.567');
+    assert.equal(i18n.humanSize(1536, 'en'), '1.5 KB');
+    assert.equal(i18n.humanSize(1536, 'tr'), '1,5 KB');
+  });
+
+  it('sağdan sola dilleri işaretler', () => {
+    assert.equal(i18n.isRtl('ar'), true);
+    assert.equal(i18n.isRtl('fa'), true);
+    assert.equal(i18n.isRtl('tr'), false);
   });
 });

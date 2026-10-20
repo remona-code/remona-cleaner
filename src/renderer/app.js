@@ -2,10 +2,95 @@
    reMona (AICleaner) — arayüz mantığı
    Renderer hiçbir dosya sistemine erişemez; tüm işler preload köprüsü
    (window.aicleaner) üzerinden ana süreçte yürütülür.
+
+   Metinler burada sabit değildir: ana süreç İngilizce katalog üzerine seçili
+   dili bindirip tek bir sözlük gönderir. Bir anahtar eksikse sözlükte İngilizce
+   karşılığı durur, hiç yoksa anahtarın kendisi görünür — yani çevrilmemiş bir
+   dil uygulamayı bozmaz, yalnızca İngilizce görünür.
    ========================================================================== */
 'use strict';
 
 const api = window.aicleaner;
+
+/* --------------------------------------------------------------- çok dillilik */
+/** Ana süreçten gelen düz sözlük: { 'nav.dashboard': 'Dashboard', ... } */
+let dict = {};
+/** Etkin dil kodu (Intl biçimleri için de kullanılır). */
+let locale = 'en';
+/** Sağdan sola yazılan bir dil mi (ar, fa). */
+let rtl = false;
+
+/** Anahtarı çevirir; `{ad}` yer tutucuları `vars` ile doldurulur. */
+function t(key, vars) {
+  const name = String(key || '');
+  const text = Object.prototype.hasOwnProperty.call(dict, name) ? dict[name] : name;
+  if (vars === undefined || vars === null) return String(text);
+  return String(text).replace(/\{(\w+)\}/g, (match, token) =>
+    Object.prototype.hasOwnProperty.call(vars, token) ? String(vars[token]) : match
+  );
+}
+
+/** Dile duyarlı ondalık/biçim: tr "1.234,5" · en "1,234.5" */
+function intlNumber(value, fractionDigits) {
+  const digits = fractionDigits || 0;
+  const n = Number(value) || 0;
+  try {
+    return new Intl.NumberFormat(locale, {
+      minimumFractionDigits: digits,
+      maximumFractionDigits: digits,
+    }).format(n);
+  } catch {
+    return n.toFixed(digits);
+  }
+}
+
+const fmtNum = (value) => intlNumber(Math.round(Number(value) || 0), 0);
+const fmtDec = (value) => intlNumber(Number(value) || 0, 1);
+
+/** 1536 -> '1.5 KB' (motorun humanSize biçimiyle aynı, dile duyarlı) */
+function human(bytes) {
+  let n = Number(bytes) || 0;
+  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+  for (let i = 0; i < units.length; i += 1) {
+    if (Math.abs(n) < 1024 || units[i] === 'TB') {
+      if (units[i] === 'B') return `${fmtNum(Math.trunc(n))} ${units[i]}`;
+      return `${fmtDec(n)} ${units[i]}`;
+    }
+    n /= 1024;
+  }
+  return `${fmtDec(n)} TB`;
+}
+
+/** Saniye zaman damgası -> dile uyarlanmış tarih-saat. */
+function fmtDate(seconds) {
+  const value = Number(seconds);
+  if (!value) return '-';
+  const date = new Date(value * 1000);
+  if (Number.isNaN(date.getTime())) return '-';
+  try {
+    return new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short' }).format(date);
+  } catch {
+    return date.toISOString().slice(0, 16).replace('T', ' ');
+  }
+}
+
+/** HTML'deki data-i18n* özniteliklerini sözlükten doldurur. */
+function applyStaticTranslations(root = document) {
+  for (const node of $$('[data-i18n]', root)) node.textContent = t(node.dataset.i18n);
+  for (const node of $$('[data-i18n-title]', root)) node.title = t(node.dataset.i18nTitle);
+  for (const node of $$('[data-i18n-ph]', root)) node.placeholder = t(node.dataset.i18nPh);
+  for (const node of $$('[data-i18n-aria]', root)) node.setAttribute('aria-label', t(node.dataset.i18nAria));
+}
+
+/** Sözlük paketini uygular (dil kodu, yön, sözlük). */
+function applyBundle(data) {
+  if (!data) return;
+  dict = data.dict || {};
+  locale = data.locale || 'en';
+  rtl = Boolean(data.rtl);
+  document.documentElement.lang = locale;
+  document.documentElement.dir = rtl ? 'rtl' : 'ltr';
+}
 
 /* --------------------------------------------------------------- yardımcı */
 const $ = (selector, root = document) => root.querySelector(selector);
@@ -39,21 +124,6 @@ function icon(name, cls = '') {
   return svg;
 }
 
-/** 1536 -> '1.5 KB' (motorun humanSize biçimiyle aynı) */
-function human(bytes) {
-  let n = Number(bytes) || 0;
-  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
-  for (let i = 0; i < units.length; i += 1) {
-    if (Math.abs(n) < 1024 || units[i] === 'TB') {
-      return units[i] === 'B' ? `${Math.trunc(n)} ${units[i]}` : `${n.toFixed(1)} ${units[i]}`;
-    }
-    n /= 1024;
-  }
-  return `${n.toFixed(1)} TB`;
-}
-
-const fmtNum = (value) => String(Math.round(Number(value) || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-
 const CAT_ICON = {
   flask: 'i-flask',
   windows: 'i-windows',
@@ -69,7 +139,26 @@ const CAT_ICON = {
   copy: 'i-copy',
 };
 
-const RISK_LABEL = { safe: 'Güvenli', caution: 'Dikkatli', risky: 'Riskli' };
+/** Risk anahtarı -> çevrilmiş etiket. */
+const riskLabel = (key) => t(`risk.${key}`);
+
+/**
+ * Kategori metni. Tarama sonucu diske yazıldığı için içinde sabitlenmiş bir
+ * ad taşıyabilir; anahtar varsa metin seçili dilde yeniden üretilir, yoksa
+ * (eski kayıtlarda) saklanan metne düşülür.
+ */
+function catName(cat) {
+  if (cat.name_key && Object.prototype.hasOwnProperty.call(dict, cat.name_key)) return t(cat.name_key);
+  return cat.name;
+}
+
+function catDesc(cat) {
+  if (cat.desc_key && Object.prototype.hasOwnProperty.call(dict, cat.desc_key)) {
+    return t(cat.desc_key, cat.desc_vars);
+  }
+  return cat.description;
+}
+
 const INSIGHT_ICON = { win: 'i-check-circle', warn: 'i-alert', ok: 'i-shield', info: 'i-info' };
 
 /* --------------------------------------------------------------- durum */
@@ -94,6 +183,11 @@ const state = {
   catNames: {},
   deep: false,
   chatBusy: false,
+  aiProvider: 'auto',
+  aiConfig: null,
+  language: 'auto',
+  locales: [],
+  systemLocale: '',
 };
 
 /* --------------------------------------------------------------- bildirim */
@@ -116,7 +210,7 @@ function toast({ kind = 'info', title, text, timeout = 5200 }) {
 }
 
 /* --------------------------------------------------------------- modal */
-function ask({ title, text, iconName = 'i-alert', danger = false, confirmLabel = 'Onayla', body = null }) {
+function ask({ title, text, iconName = 'i-alert', danger = false, confirmLabel = null, body = null }) {
   return new Promise((resolve) => {
     const modal = $('#modal');
     $('#modalTitle').textContent = title;
@@ -130,7 +224,7 @@ function ask({ title, text, iconName = 'i-alert', danger = false, confirmLabel =
     bodyNode.replaceChildren(...(body ? [].concat(body) : []));
 
     const confirmBtn = $('#modalConfirm');
-    confirmBtn.textContent = confirmLabel;
+    confirmBtn.textContent = confirmLabel || t('btn.confirm');
     confirmBtn.className = danger ? 'btn btn--danger' : 'btn btn--primary';
 
     const close = (value) => {
@@ -159,23 +253,15 @@ function ask({ title, text, iconName = 'i-alert', danger = false, confirmLabel =
 }
 
 /* --------------------------------------------------------------- gezinme */
-const VIEW_META = {
-  dashboard: ['Panel', 'Diskinizi tarayın, AI güvenli olanı seçsin.'],
-  categories: ['Kategoriler', 'Bulunan dosyaları inceleyin ve ne silineceğine karar verin.'],
-  quarantine: ['Karantina', 'Temizlenen dosyalar silinmeden burada saklanır.'],
-  history: ['Geçmiş', 'Yapılan temizliklerin kaydı.'],
-  assistant: ['AI Asistan', 'Hedef belirleyin veya doğal dille sorun.'],
-  settings: ['Ayarlar', 'Temizleme davranışı ve uygulama bilgisi.'],
-};
+const VIEWS = ['dashboard', 'categories', 'quarantine', 'history', 'assistant', 'settings'];
 
 function go(view) {
-  if (!VIEW_META[view]) return;
+  if (!VIEWS.includes(view)) return;
   state.view = view;
   $$('.nav__item').forEach((item) => item.classList.toggle('is-active', item.dataset.view === view));
   $$('.view').forEach((section) => section.classList.toggle('is-active', section.dataset.view === view));
-  const [title, subtitle] = VIEW_META[view];
-  $('#viewTitle').textContent = title;
-  $('#viewSubtitle').textContent = subtitle;
+  $('#viewTitle').textContent = t(`view.${view}.title`);
+  $('#viewSubtitle').textContent = t(`view.${view}.subtitle`);
   $('#scroller').scrollTop = 0;
 }
 
@@ -225,14 +311,17 @@ function renderDock() {
   dock.hidden = false;
 
   $('#dockSize').textContent = human(bytes);
-  $('#dockMeta').textContent = `${fmtNum(files)} dosya · ${state.selectedCategories.size} kategori tamamı`;
+  $('#dockMeta').textContent = t('dock.files', {
+    files: fmtNum(files),
+    cats: fmtNum(state.selectedCategories.size),
+  });
   $('#dockClean').disabled = state.cleaning;
 
   const chips = $('#dockRisk');
   chips.replaceChildren(
     ...['safe', 'caution', 'risky']
       .filter((key) => risk[key] > 0)
-      .map((key) => el('span', { class: `pill pill--${key}`, text: `${RISK_LABEL[key]} ${human(risk[key])}` }))
+      .map((key) => el('span', { class: `pill pill--${key}`, text: `${riskLabel(key)} ${human(risk[key])}` }))
   );
 
   $$('#dockMode button').forEach((btn) => btn.classList.toggle('is-active', btn.dataset.mode === state.cleanMode));
@@ -268,7 +357,7 @@ function renderRing() {
   }
 
   const percent = Number(disk.percent) || 0;
-  $('#diskPercent').textContent = percent.toFixed(0);
+  $('#diskPercent').textContent = fmtNum(percent);
   $('#ringDisk').style.strokeDashoffset = String(CIRC_DISK * (1 - Math.min(1, percent / 100)));
 
   // İç halka: atığın "boş alana katkısı" — temizlikten sonra boş alan ne kadar büyür?
@@ -276,8 +365,8 @@ function renderRing() {
   $('#ringReclaim').style.strokeDashoffset = String(CIRC_RECLAIM * (1 - reclaimShare));
 
   const after = disk.free + total;
-  $('#diskFree').textContent = `${disk.free_h} boş → ${human(after)}`;
-  $('#diskLabel').textContent = total ? 'temizlik sonrası' : 'disk dolu';
+  $('#diskFree').textContent = t('disk.freeAfter', { free: human(disk.free), after: human(after) });
+  $('#diskLabel').textContent = total ? t('disk.after') : t('disk.used');
 }
 
 function animateValue(node, toBytes) {
@@ -311,29 +400,30 @@ function renderDashboard() {
   animateValue($('#statSafe'), totals ? totals.safe : 0);
   animateValue($('#statVault'), state.vaultUsage ? state.vaultUsage.size : 0);
 
-  $('#statTotalMeta').textContent = scan ? `${scan.duration} sn'de tarandı` : 'tarama bekleniyor';
-  $('#statSafeMeta').textContent = totals && totals.safe ? 'veri kaybı yok' : 'veri kaybı yok';
+  $('#statTotalMeta').textContent = scan
+    ? t('stat.totalScanned', { sec: fmtNum(scan.duration) })
+    : t('stat.totalWaiting');
   $('#statCount').textContent = totals ? fmtNum(totals.file_count) : '—';
   $('#statVaultMeta').textContent = state.vaultUsage
-    ? `${state.vaultUsage.sessions} oturum · geri alınabilir`
-    : 'geri alınabilir';
+    ? t('stat.vaultSessions', { count: fmtNum(state.vaultUsage.sessions) })
+    : t('stat.vaultMeta');
 
   // hero metinleri
   if (analysis) {
     $('#heroTitle').textContent = analysis.potential.recommended
-      ? `${analysis.potential.recommended_h} güvenle geri kazanılabilir`
-      : 'Sistem temiz görünüyor';
+      ? t('dash.doneTitle', { size: human(analysis.potential.recommended) })
+      : t('dash.cleanTitle');
     $('#heroSummary').textContent = analysis.summary;
   } else {
-    $('#heroTitle').textContent = 'Sistemi tara, kazanç hazır';
-    $('#heroSummary').textContent =
-      'Başlamak için taramayı çalıştırın. AI; önbellekleri, geçici dosyaları ve kopyaları ' +
-      'değerlendirip hangi dosyaların güvenle silinebileceğini söyler.';
+    $('#heroTitle').textContent = t('dash.readyTitle');
+    $('#heroSummary').textContent = t('dash.readyText');
   }
 
   // içgörüler
   const insights = analysis ? analysis.insights : [];
-  $('#insightCount').textContent = insights.length ? `${insights.length} bulgu` : '—';
+  $('#insightCount').textContent = insights.length
+    ? t('dash.insightCount', { count: fmtNum(insights.length) })
+    : '—';
   $('#insights').replaceChildren(
     ...(insights.length
       ? insights.map((item, index) =>
@@ -348,7 +438,7 @@ function renderDashboard() {
       : [
           el('div', { class: 'empty' }, [
             icon('i-info'),
-            el('p', { text: 'Tarama yapıldığında AI değerlendirmesi burada görünür.' }),
+            el('p', { text: t('empty.insights') }),
           ]),
         ])
   );
@@ -364,9 +454,9 @@ function renderDashboard() {
           const row = el('div', { class: 'break', onclick: () => go('categories') }, [
             el('div', { class: 'break__name' }, [
               el('span', { class: `break__dot break__dot--${cat.risk}` }),
-              el('span', { text: cat.name }),
+              el('span', { text: catName(cat) }),
             ]),
-            el('span', { class: 'break__size', text: cat.size_h }),
+            el('span', { class: 'break__size', text: human(cat.size) }),
             el('div', { class: 'break__bar' }, [
               el('span', {
                 class: `break__fill break__fill--${cat.risk}`,
@@ -376,17 +466,17 @@ function renderDashboard() {
           ]);
           return row;
         })
-      : [el('div', { class: 'empty' }, [icon('i-info'), el('p', { text: 'Henüz veri yok. Taramayı çalıştırın.' })])])
+      : [el('div', { class: 'empty' }, [icon('i-info'), el('p', { text: t('empty.noData') })])])
   );
 
   // AI öneri kartı
   const reclaim = $('#reclaimCard');
   if (analysis && analysis.recommended_ids.length) {
     reclaim.hidden = false;
-    $('#reclaimTitle').textContent = `AI ${analysis.potential.recommended_h} için onay istiyor`;
-    $('#reclaimText').textContent =
-      `${analysis.recommended_ids.length} kategori güvenli eşiği geçti (güven ≥ %80). ` +
-      'Riskli gruplar (eski indirilenler, büyük dosyalar, kopyalar) seçime dahil edilmedi.';
+    $('#reclaimTitle').textContent = t('dash.reclaimTitleFor', { size: human(analysis.potential.recommended) });
+    $('#reclaimText').textContent = t('dash.reclaimText', {
+      count: fmtNum(analysis.recommended_ids.length),
+    });
   } else {
     reclaim.hidden = true;
   }
@@ -403,8 +493,8 @@ function renderCategories() {
     list.replaceChildren(
       el('div', { class: 'empty empty--lg' }, [
         icon('i-layers'),
-        el('h4', { text: 'Tarama bekleniyor' }),
-        el('p', { text: 'Panelden taramayı başlattığınızda kategoriler burada listelenir.' }),
+        el('h4', { text: t('empty.catWaitingTitle') }),
+        el('p', { text: t('empty.catWaitingText') }),
       ])
     );
     return;
@@ -414,8 +504,8 @@ function renderCategories() {
   const visible = scan.categories.filter((cat) => {
     if (state.riskFilter !== 'all' && cat.risk !== state.riskFilter) return false;
     if (!needle) return true;
-    if (cat.name.toLowerCase().includes(needle)) return true;
-    if (cat.description.toLowerCase().includes(needle)) return true;
+    if (catName(cat).toLowerCase().includes(needle)) return true;
+    if (catDesc(cat).toLowerCase().includes(needle)) return true;
     return (cat.items || []).some((item) => item.name.toLowerCase().includes(needle));
   });
 
@@ -423,8 +513,8 @@ function renderCategories() {
     list.replaceChildren(
       el('div', { class: 'empty empty--lg' }, [
         icon('i-search'),
-        el('h4', { text: 'Eşleşen kategori yok' }),
-        el('p', { text: 'Filtreyi veya arama terimini değiştirin.' }),
+        el('h4', { text: t('empty.noMatchTitle') }),
+        el('p', { text: t('empty.noMatchText') }),
       ])
     );
     return;
@@ -445,8 +535,8 @@ function renderCategoryCard(cat) {
 
   const checkbox = el('button', {
     class: `checkbox${selState === 'on' ? ' is-on' : selState === 'mixed' ? ' is-mixed' : ''}`,
-    title: selState === 'on' ? 'Seçimi kaldır' : 'Kategoriyi seç',
-    'aria-label': 'Seç',
+    title: selState === 'on' ? t('cat.deselectCategory') : t('cat.selectCategory'),
+    'aria-label': t('cat.select'),
     onclick: (event) => {
       event.stopPropagation();
       toggleCategory(cat);
@@ -478,20 +568,25 @@ function renderCategoryCard(cat) {
     el('span', { class: 'cat__icon' }, [icon(CAT_ICON[cat.icon] || 'i-layers')]),
     el('div', { class: 'cat__info' }, [
       el('div', { class: 'cat__title' }, [
-        el('strong', { text: cat.name }),
-        el('span', { class: `pill pill--${cat.risk}`, text: RISK_LABEL[cat.risk] }),
-        analysis && !isEmpty ? el('span', { class: 'pill pill--accent', text: `AI güveni %${confidence} · ${verdict}` }) : null,
-        cat.deep_only && !state.deep ? el('span', { class: 'pill pill--ghost', text: 'derin tarama' }) : null,
+        el('strong', { text: catName(cat) }),
+        el('span', { class: `pill pill--${cat.risk}`, text: riskLabel(cat.risk) }),
+        analysis && !isEmpty
+          ? el('span', {
+              class: 'pill pill--accent',
+              text: t('cat.confidence', { percent: fmtNum(confidence), verdict }),
+            })
+          : null,
+        cat.deep_only && !state.deep ? el('span', { class: 'pill pill--ghost', text: t('cat.deepOnly') }) : null,
       ]),
       el('div', { class: 'cat__desc' }, [
-        cat.note ? el('span', { class: 'cat__note', text: cat.note }) : cat.description,
+        cat.note ? el('span', { class: 'cat__note', text: cat.note }) : catDesc(cat),
       ]),
     ]),
     el('div', { class: 'cat__score' }, [
       scoreSvg,
       el('div', { class: 'cat__size' }, [
-        el('strong', { text: cat.size_h }),
-        el('span', { text: `${fmtNum(cat.file_count)} dosya` }),
+        el('strong', { text: human(cat.size) }),
+        el('span', { text: t('cat.files', { count: fmtNum(cat.file_count) }) }),
       ]),
     ]),
     icon('i-chevron', 'cat__chevron'),
@@ -508,7 +603,7 @@ function renderCategoryCard(cat) {
   } else if (isOpen) {
     card.append(
       el('div', { class: 'cat__body' }, [
-        el('div', { class: 'empty' }, [icon('i-info'), el('p', { text: cat.note || 'Bu kategoride dosya yok.' })]),
+        el('div', { class: 'empty' }, [icon('i-info'), el('p', { text: cat.note || t('cat.noFiles') })]),
       ])
     );
   }
@@ -519,9 +614,9 @@ function renderCategoryCard(cat) {
 function renderFiles(cat) {
   const head = el('div', { class: 'files__head' }, [
     el('span', { text: '' }),
-    el('span', { text: 'Dosya' }),
-    el('span', { text: 'Boyut' }),
-    el('span', { text: 'Değişim' }),
+    el('span', { text: t('cat.file') }),
+    el('span', { text: t('cat.size') }),
+    el('span', { text: t('cat.modified') }),
     el('span', { text: '' }),
   ]);
 
@@ -530,7 +625,7 @@ function renderFiles(cat) {
     const isOn = catSelected || state.selectedItems.has(item.id);
     const checkbox = el('button', {
       class: `checkbox${isOn ? ' is-on' : ''}`,
-      'aria-label': 'Dosyayı seç',
+      'aria-label': t('cat.selectFile'),
       onclick: (event) => {
         event.stopPropagation();
         toggleItem(cat, item);
@@ -543,16 +638,19 @@ function renderFiles(cat) {
         el('strong', { text: item.name }),
         el('span', { text: item.path }),
       ]),
-      el('span', { class: 'file__size', text: item.size_h }),
-      el('span', { class: 'file__age', text: item.age_days === 0 ? 'bugün' : `${item.age_days} gün` }),
+      el('span', { class: 'file__size', text: human(item.size) }),
+      el('span', {
+        class: 'file__age',
+        text: item.age_days === 0 ? t('cat.today') : t('cat.daysAgo', { count: fmtNum(item.age_days) }),
+      }),
       el('div', { class: 'file__act' }, [
         el('button', {
-          title: 'Gezgin\'de göster',
-          'aria-label': 'Gezginde göster',
+          title: t('cat.reveal'),
+          'aria-label': t('cat.revealAria'),
           onclick: (event) => {
             event.stopPropagation();
             api.app.reveal(item.path).then((res) => {
-              if (res && !res.ok) toast({ kind: 'warn', title: 'Açılamadı', text: res.error });
+              if (res && !res.ok) toast({ kind: 'warn', title: t('toast.revealFailed'), text: res.error });
             });
           },
         }, [icon('i-external')]),
@@ -564,7 +662,10 @@ function renderFiles(cat) {
 
   if (cat.items_truncated) {
     body.append(
-      el('div', { class: 'files__more', text: `+ ${fmtNum(cat.items_truncated)} dosya daha (yalnızca en büyükleri gösteriliyor)` })
+      el('div', {
+        class: 'files__more',
+        text: t('cat.moreFiles', { count: fmtNum(cat.items_truncated) }),
+      })
     );
   }
 
@@ -600,9 +701,8 @@ function toggleItem(cat, item) {
     if (cat.items_truncated) {
       toast({
         kind: 'warn',
-        title: 'Kısmi seçim',
-        text: `Bu kategoride gösterilmeyen ${fmtNum(cat.items_truncated)} dosya daha var; ` +
-              'tek tek seçim yapıldığında yalnızca listede görünenler işlenir.',
+        title: t('toast.partialTitle'),
+        text: t('toast.partialText', { count: fmtNum(cat.items_truncated) }),
       });
     }
   } else if (state.selectedItems.has(item.id)) {
@@ -616,7 +716,7 @@ function toggleItem(cat, item) {
 /* --------------------------------------------------------------- karantina */
 function renderVault() {
   const usage = state.vaultUsage;
-  $('#vaultSize').textContent = usage ? usage.size_h : '—';
+  $('#vaultSize').textContent = usage ? human(usage.size) : '—';
   $('#vaultSessions').textContent = usage ? fmtNum(usage.sessions) : '—';
   $('#vaultFiles').textContent = usage ? fmtNum(usage.files) : '—';
 
@@ -625,8 +725,8 @@ function renderVault() {
     list.replaceChildren(
       el('div', { class: 'empty empty--lg' }, [
         icon('i-shield'),
-        el('h4', { text: 'Karantina boş' }),
-        el('p', { text: 'Karantinaya taşınan dosyalar burada listelenir ve geri yüklenebilir.' }),
+        el('h4', { text: t('empty.vaultTitle') }),
+        el('p', { text: t('empty.vaultText') }),
       ])
     );
     return;
@@ -637,19 +737,23 @@ function renderVault() {
       el('div', { class: 'vault' }, [
         el('span', { class: 'vault__icon' }, [icon('i-shield')]),
         el('div', { class: 'vault__body' }, [
-          el('strong', { text: `${fmtNum(session.file_count)} dosya · ${session.size_h}` }),
-          el('div', { class: 'vault__meta', text: `${session.created_h} · ${session.mode === 'delete' ? 'kalıcı silme' : 'karantina'}` }),
+          el('strong', { text: t('vault.sessionLine', { count: fmtNum(session.file_count), size: human(session.size) }) }),
+          el('div', {
+            class: 'vault__meta',
+            text: `${session.created ? fmtDate(session.created) : session.created_h} · ` +
+                  (session.mode === 'delete' ? t('mode.permanentDelete') : t('mode.quarantine')),
+          }),
           el('div', { class: 'vault__sample' }, session.sample.map((name) => el('span', { text: name }))),
         ]),
         el('div', { class: 'vault__actions' }, [
           el('button', {
             class: 'btn btn--ghost btn--sm',
             onclick: () => restoreSession(session),
-          }, [icon('i-restore'), el('span', { text: 'Geri yükle' })]),
+          }, [icon('i-restore'), el('span', { text: t('btn.restore') })]),
           el('button', {
             class: 'btn btn--ghost btn--sm',
             onclick: () => purgeSession(session),
-          }, [icon('i-trash'), el('span', { text: 'Kalıcı sil' })]),
+          }, [icon('i-trash'), el('span', { text: t('btn.deletePermanent') })]),
         ]),
       ])
     )
@@ -673,48 +777,56 @@ async function refreshVault() {
 
 async function restoreSession(session) {
   const ok = await ask({
-    title: 'Geri yüklensin mi?',
-    text: `${fmtNum(session.file_count)} dosya (${session.size_h}) özgün konumlarına geri taşınacak.`,
+    title: t('vault.restoreTitle'),
+    text: t('vault.restoreText', { count: fmtNum(session.file_count), size: human(session.size) }),
     iconName: 'i-restore',
-    confirmLabel: 'Geri yükle',
+    confirmLabel: t('btn.restore'),
   });
   if (!ok) return;
 
   const res = await api.quarantine.restore(session.session);
   if (!res || !res.ok) {
-    toast({ kind: 'error', title: 'Geri yüklenemedi', text: (res && res.error) || 'Bilinmeyen hata' });
+    toast({ kind: 'error', title: t('toast.restoreFailed'), text: (res && res.error) || t('err.unknown') });
     return;
   }
   const report = res.data;
   toast({
     kind: report.failed.length ? 'warn' : 'success',
-    title: report.failed.length ? 'Kısmen geri yüklendi' : 'Geri yüklendi',
-    text: `${fmtNum(report.restored)} dosya · ${report.size_h}` +
-          (report.failed.length ? ` · ${report.failed.length} dosya başarısız` : ''),
+    title: report.failed.length ? t('toast.restoredPartialTitle') : t('toast.restoredTitle'),
+    text: t('toast.restoreText', { count: fmtNum(report.restored), size: human(report.size) }) +
+          (report.failed.length ? t('toast.restoreFailedText', { count: fmtNum(report.failed.length) }) : ''),
   });
   await refreshVault();
 }
 
 async function purgeSession(session) {
   const ok = await ask({
-    title: 'Kalıcı olarak silinsin mi?',
-    text: `${fmtNum(session.file_count)} dosya (${session.size_h}) karantinadan tamamen kaldırılacak.`,
+    title: t('vault.purgeTitle'),
+    text: t('vault.purgeText', { count: fmtNum(session.file_count), size: human(session.size) }),
     iconName: 'i-alert',
     danger: true,
-    confirmLabel: 'Kalıcı sil',
+    confirmLabel: t('btn.deletePermanent'),
     body: el('div', { class: 'warn-box' }, [
       icon('i-alert'),
-      el('p', { text: 'Bu işlem geri alınamaz. Dosyalar diskten tamamen silinir, kurtarma aracı gerekir.' }),
+      el('p', { text: t('vault.purgeWarn') }),
     ]),
   });
   if (!ok) return;
 
   const res = await api.quarantine.purge(session.session);
   if (!res || !res.ok || !res.data.ok) {
-    toast({ kind: 'error', title: 'Silinemedi', text: (res && (res.error || (res.data && res.data.error))) || 'Bilinmeyen hata' });
+    toast({
+      kind: 'error',
+      title: t('toast.purgeFailed'),
+      text: (res && (res.error || (res.data && res.data.error))) || t('err.unknown'),
+    });
     return;
   }
-  toast({ kind: 'success', title: 'Karantina oturumu silindi', text: session.created_h });
+  toast({
+    kind: 'success',
+    title: t('toast.purgeOk'),
+    text: session.created ? fmtDate(session.created) : session.created_h,
+  });
   await refreshVault();
 }
 
@@ -725,8 +837,8 @@ function renderHistory() {
     list.replaceChildren(
       el('div', { class: 'empty empty--lg' }, [
         icon('i-history'),
-        el('h4', { text: 'Henüz temizlik yapılmadı' }),
-        el('p', { text: 'Tamamlanan her temizlik burada kayıt altına alınır.' }),
+        el('h4', { text: t('empty.historyTitle') }),
+        el('p', { text: t('empty.historyText') }),
       ])
     );
     return;
@@ -736,21 +848,23 @@ function renderHistory() {
     ...state.history.map((row) => {
       const names = (row.categories || []).map((id) => state.catNames[id] || id).join(', ');
       return el('div', { class: 'hist' }, [
-        el('span', { class: 'hist__date', text: row.at_h || '-' }),
+        el('span', { class: 'hist__date', text: row.at ? fmtDate(row.at) : row.at_h || '-' }),
         el('div', { class: 'hist__body' }, [
           el('div', { class: 'hist__title' }, [
-            el('strong', { text: `${fmtNum(row.file_count)} dosya temizlendi` }),
+            el('strong', { text: t('hist.filesCleaned', { count: fmtNum(row.file_count) }) }),
             el('span', {
               class: `pill ${row.mode === 'delete' ? 'pill--risky' : 'pill--safe'}`,
-              text: row.mode === 'delete' ? 'kalıcı silindi' : 'karantinaya alındı',
+              text: row.mode === 'delete' ? t('hist.permanent') : t('hist.quarantined'),
             }),
-            row.error_count ? el('span', { class: 'pill pill--caution', text: `${row.error_count} hata` }) : null,
+            row.error_count
+              ? el('span', { class: 'pill pill--caution', text: t('hist.errors', { count: fmtNum(row.error_count) }) })
+              : null,
           ]),
           el('div', { class: 'hist__cats', text: names || '—' }),
         ]),
         el('div', { class: 'hist__right' }, [
-          el('strong', { text: row.bytes_h }),
-          el('span', { text: 'geri kazanıldı' }),
+          el('strong', { text: human(row.bytes) }),
+          el('span', { text: t('hist.reclaimed') }),
         ]),
       ]);
     })
@@ -796,11 +910,11 @@ async function sendQuestion(question) {
   state.chatBusy = false;
 
   if (!res || !res.ok) {
-    chatMessage('ai', (res && res.error) || 'Yanıt alınamadı.');
+    chatMessage('ai', (res && res.error) || t('asst.noAnswer'));
     return;
   }
   chatMessage('ai', res.data.answer);
-  $('#chat').append(el('div', { class: 'chat__msg chat__msg--meta', text: `motor: ${res.data.engine}` }));
+  $('#chat').append(el('div', { class: 'chat__msg chat__msg--meta', text: t('asst.engineMeta', { engine: res.data.engine }) }));
   $('#chat').scrollTop = $('#chat').scrollHeight;
 }
 
@@ -811,11 +925,11 @@ function renderProvider(provider) {
   card.classList.toggle('engine--rules', !isLlm);
   card.classList.toggle('engine--off', !provider.available);
   $('#engineName').textContent = isLlm
-    ? provider.engine === 'ollama' ? 'Yerel LLM (Ollama)' : 'Uzak LLM'
-    : 'Yerel kural motoru';
+    ? provider.engine === 'ollama' ? t('engine.ollama') : t('engine.remote')
+    : t('engine.rulesName');
   $('#engineNote').textContent = provider.note + (isLlm ? ` · ${provider.model}` : '');
-  $('#enginePill').textContent = isLlm ? provider.model : 'kural motoru';
-  $('#assistantEngine').textContent = isLlm ? provider.model : 'kural motoru';
+  $('#enginePill').textContent = isLlm ? provider.model : t('engine.rulesTag');
+  $('#assistantEngine').textContent = isLlm ? provider.model : t('engine.rulesTag');
 
   const pill = $('#aiStatusPill');
   if (pill) {
@@ -823,10 +937,10 @@ function renderProvider(provider) {
       pill.textContent = `${provider.engine === 'openai' ? 'OpenAI' : 'Ollama'} · ${provider.model}`;
       pill.className = 'pill pill--accent';
     } else if (provider.configured === 'openai') {
-      pill.textContent = 'anahtar bekleniyor';
+      pill.textContent = t('set.ai.waitingKey');
       pill.className = 'pill pill--caution';
     } else {
-      pill.textContent = 'kural motoru';
+      pill.textContent = t('engine.rulesTag');
       pill.className = 'pill pill--ghost';
     }
   }
@@ -842,6 +956,7 @@ function applySettings(settings) {
   state.settings = settings;
   state.cleanMode = settings.clean_mode;
   state.deep = settings.deep_scan;
+  state.language = settings.language || 'auto';
 
   $('#deepToggle').checked = settings.deep_scan;
   $('#setDeep').checked = settings.deep_scan;
@@ -856,12 +971,74 @@ function applySettings(settings) {
     markAiProvider(settings.ai_provider);
   }
 
+  renderLanguage();
   renderDock();
 }
 
 async function patchSettings(patch) {
   const res = await api.settings.set(patch);
   if (res && res.ok) applySettings(res.data);
+}
+
+/* --------------------------------------------------------------- dil seçici */
+/** Windows dilinin kendi adı: 'tr-TR' -> 'Türkçe'. */
+function systemLanguageLabel() {
+  const raw = String(state.systemLocale || '').toLowerCase().replace(/_/g, '-');
+  if (!raw) return localeMetaLabel(locale);
+  const short = raw.split('-')[0];
+  const exact = state.locales.find((meta) => meta.code === raw);
+  if (exact) return exact.native;
+  const base = state.locales.find((meta) => meta.code === short);
+  return base ? base.native : raw.toUpperCase();
+}
+
+function localeMetaLabel(code) {
+  const meta = state.locales.find((item) => item.code === code);
+  return meta ? meta.native : code;
+}
+
+function renderLanguage() {
+  const select = $('#langSelect');
+  if (!select) return;
+
+  const saved = state.language || 'auto';
+  const options = [el('option', { value: 'auto', text: t('set.lang.system') })];
+  for (const meta of state.locales) {
+    // Kendi dilini arayan kullanıcı için "Türkçe · Turkish" gibi iki ad verilir.
+    const label = meta.english && meta.english !== meta.native
+      ? `${meta.native} · ${meta.english}`
+      : meta.native;
+    options.push(el('option', { value: meta.code, text: label }));
+  }
+  select.replaceChildren(...options);
+
+  const known = saved === 'auto' || state.locales.some((meta) => meta.code === saved);
+  select.value = known ? (saved === 'auto' ? 'auto' : saved) : locale;
+
+  const hint = $('#langHint');
+  if (hint) hint.textContent = t('set.lang.detected', { language: systemLanguageLabel() });
+}
+
+/**
+ * Dil değişimini uygular. Motor metinleri (kategori adları, içgörüler, özet)
+ * tarama anında üretildiği için sözlükten ayrı durur; onlar ana süreçten
+ * yeniden istenir — böylece arayüz tek bir satırda bile eski dilde kalmaz.
+ */
+async function changeLanguage(code) {
+  const res = await api.i18n.set(code || 'auto');
+  if (!res || !res.ok) return;
+
+  applyBundle(res.data);
+  state.language = code || 'auto';
+  if (res.data.settings) applySettings(res.data.settings);
+
+  // Önce statik metinler, sonra dinamik görünüm: aksi hâlde statik çeviri
+  // tarama sayıları gibi hesaplanmış etiketleri "tarama bekleniyor"a çevirir.
+  applyStaticTranslations();
+  await reloadAll();
+
+  renderLanguage();
+  go(state.view);
 }
 
 /* --------------------------------------------------------------- AI sağlayıcısı */
@@ -900,17 +1077,15 @@ function applyAiConfig(cfg) {
   $('#aiKey').value = '';
   $('#aiKey').type = 'password';
   $('#aiKeyToggle').replaceChildren(icon('i-eye'));
-  $('#aiKeyToggle').title = 'Anahtarı göster';
+  $('#aiKeyToggle').title = t('set.ai.showKey');
+  $('#aiKeyToggle').setAttribute('aria-label', t('set.ai.showKey'));
 
   const hint = $('#aiKeyHint');
   if (cfg.has_key) {
-    hint.textContent =
-      cfg.key_source === 'env'
-        ? 'Anahtar ortam değişkeninden okunuyor. Buradan yeni bir anahtar girerek değiştirebilirsiniz.'
-        : 'Anahtar kayıtlı. Değiştirmek için yenisini yazın; kaldırmak için "Anahtarı kaldır" düğmesini kullanın.';
+    hint.textContent = cfg.key_source === 'env' ? t('set.ai.keyEnv') : t('set.ai.keySaved');
     hint.classList.add('field__hint--ok');
   } else {
-    hint.textContent = 'Henüz anahtar eklenmedi. platform.openai.com üzerinden bir anahtar oluşturabilirsiniz.';
+    hint.textContent = t('set.ai.keyCreate');
     hint.classList.remove('field__hint--ok');
   }
 
@@ -935,10 +1110,10 @@ async function saveAiConfig({ silent = false } = {}) {
   // Boş alan "değiştirme" demektir; anahtar silme ayrı düğmeyle yapılır.
   if (typedKey) patch.ai_openai_key = typedKey;
 
-  if (!silent) setAiStatus('busy', 'Kaydediliyor…');
+  if (!silent) setAiStatus('busy', t('status.saving'));
   const res = await api.settings.set(patch);
   if (!res || !res.ok) {
-    const message = (res && res.error) || 'Ayarlar kaydedilemedi.';
+    const message = (res && res.error) || t('status.saveFailed');
     setAiStatus('error', message);
     return false;
   }
@@ -948,11 +1123,11 @@ async function saveAiConfig({ silent = false } = {}) {
   await refreshProvider(true);
 
   if (!silent) {
-    setAiStatus('ok', 'Ayarlar kaydedildi.');
+    setAiStatus('ok', t('status.saved'));
     toast({
       kind: 'success',
-      title: 'AI ayarları kaydedildi',
-      text: 'Yeni sağlayıcı bir sonraki sorudan itibaren kullanılacak.',
+      title: t('toast.aiSavedTitle'),
+      text: t('toast.aiSavedText'),
       timeout: 4000,
     });
   }
@@ -962,35 +1137,35 @@ async function saveAiConfig({ silent = false } = {}) {
 async function loadAiModels() {
   const btn = $('#aiModelFetch');
   btn.disabled = true;
-  setAiStatus('busy', 'Model listesi alınıyor…');
+  setAiStatus('busy', t('status.fetching'));
 
   try {
     // Yazılmış ama kaydedilmemiş anahtar varsa önce onu kaydet.
     if ($('#aiKey').value.trim() && !(await saveAiConfig({ silent: true }))) {
-      setAiStatus('error', 'Anahtar kaydedilemedi, model listesi alınamadı.');
+      setAiStatus('error', t('status.keyNotSaved'));
       return;
     }
 
     const res = await api.ai.models();
     const data = res && res.ok ? res.data : null;
     if (!data) {
-      setAiStatus('error', (res && res.error) || 'Model listesi alınamadı.');
+      setAiStatus('error', (res && res.error) || t('status.modelsFailed'));
       return;
     }
     if (!data.ok) {
-      setAiStatus('error', data.error || 'Model listesi alınamadı.');
+      setAiStatus('error', data.error || t('status.modelsFailed'));
       return;
     }
 
     const models = data.models || [];
     if (!models.length) {
-      setAiStatus('warn', 'Bu anahtar için kullanılabilir sohbet modeli bulunamadı.');
+      setAiStatus('warn', t('status.noModels'));
       return;
     }
 
     $('#aiModelList').replaceChildren(...models.map((id) => el('option', { value: id })));
     if (!$('#aiModel').value.trim()) $('#aiModel').value = models[0];
-    setAiStatus('ok', `${models.length} model bulundu — listeden seçebilirsiniz.`);
+    setAiStatus('ok', t('status.modelsFound', { count: fmtNum(models.length) }));
   } finally {
     btn.disabled = false;
   }
@@ -999,36 +1174,43 @@ async function loadAiModels() {
 async function testAiConnection() {
   const model = $('#aiModel').value.trim();
   if (!model) {
-    setAiStatus('warn', 'Önce bir model adı girin.');
+    setAiStatus('warn', t('status.enterModel'));
     return;
   }
 
   const btn = $('#aiTest');
   btn.disabled = true;
-  setAiStatus('busy', 'Bağlantı deneniyor…');
+  setAiStatus('busy', t('status.testing'));
 
   try {
     // Test, kayıtlı anahtarla yapılır; yazılmış yeni anahtar varsa önce kaydedilir.
     if ($('#aiKey').value.trim() && !(await saveAiConfig({ silent: true }))) {
-      setAiStatus('error', 'Anahtar kaydedilemedi.');
+      setAiStatus('error', t('status.keyNotSavedShort'));
       return;
     }
 
     const res = await api.ai.test(model);
     const data = res && res.ok ? res.data : null;
     if (!data) {
-      setAiStatus('error', (res && res.error) || 'Test çalıştırılamadı.');
+      setAiStatus('error', (res && res.error) || t('status.testFailed'));
       return;
     }
     if (!data.ok) {
-      setAiStatus('error', data.error || 'Bağlantı kurulamadı.');
+      setAiStatus('error', data.error || t('status.connectFailed'));
       return;
     }
 
-    const latency = data.latency_ms != null ? ` · ${data.latency_ms} ms` : '';
-    setAiStatus('ok', `${data.model} yanıt verdi${latency}`);
+    const latency = data.latency_ms != null
+      ? t('status.latency', { ms: fmtNum(data.latency_ms) })
+      : '';
+    setAiStatus('ok', t('status.replied', { model: data.model, latency }));
     await refreshProvider(true);
-    toast({ kind: 'success', title: 'Bağlantı başarılı', text: `${data.model}${latency}`, timeout: 4000 });
+    toast({
+      kind: 'success',
+      title: t('toast.connectedTitle'),
+      text: `${data.model}${latency}`,
+      timeout: 4000,
+    });
   } finally {
     btn.disabled = false;
   }
@@ -1036,30 +1218,30 @@ async function testAiConnection() {
 
 async function clearAiKey() {
   const confirmed = await ask({
-    title: 'API anahtarı kaldırılsın mı?',
-    text: 'Anahtar diskten silinir ve AI asistanı kural motoruna döner.',
+    title: t('set.ai.removeTitle'),
+    text: t('set.ai.removeText'),
     iconName: 'i-key',
     danger: true,
-    confirmLabel: 'Kaldır',
+    confirmLabel: t('btn.remove'),
   });
   if (!confirmed) return;
 
   const res = await api.settings.set({ ai_openai_key: '' });
   if (!res || !res.ok) {
-    setAiStatus('error', 'Anahtar kaldırılamadı.');
+    setAiStatus('error', t('status.keyRemoveFailed'));
     return;
   }
   applySettings(res.data);
   await refreshAiConfig();
   await refreshProvider(true);
-  setAiStatus('ok', 'Anahtar kaldırıldı.');
+  setAiStatus('ok', t('status.keyRemoved'));
 }
 
 /* --------------------------------------------------------------- tarama */
 function setProgress(percent, stage) {
   $('#scanProgress').hidden = false;
   $('#progressFill').style.width = `${Math.max(0, Math.min(100, percent))}%`;
-  $('#progressPercent').textContent = `${Math.round(percent)}%`;
+  $('#progressPercent').textContent = `${fmtNum(percent)}%`;
   $('#progressStage').textContent = stage || '';
 }
 
@@ -1067,7 +1249,7 @@ function setScanning(active) {
   state.scanning = active;
   const btn = $('#scanBtn');
   btn.disabled = active;
-  $('span', btn).textContent = active ? 'Taranıyor…' : 'Taramayı başlat';
+  $('span', btn).textContent = active ? t('btn.scanning') : t('btn.scan');
   if (!active) setTimeout(() => { $('#scanProgress').hidden = true; }, 1400);
   renderDock();
 }
@@ -1075,15 +1257,15 @@ function setScanning(active) {
 async function startScan() {
   if (state.scanning) return;
   setScanning(true);
-  setProgress(2, 'Başlatılıyor…');
+  setProgress(2, t('progress.starting'));
   clearSelection();
 
   const res = await api.scan.start({ deep: $('#deepToggle').checked });
   setScanning(false);
 
   if (!res || !res.ok) {
-    setProgress(0, 'Tarama başarısız');
-    toast({ kind: 'error', title: 'Tarama başarısız', text: (res && res.error) || 'Bilinmeyen hata' });
+    setProgress(0, t('progress.failed'));
+    toast({ kind: 'error', title: t('toast.scanFailed'), text: (res && res.error) || t('err.unknown') });
     return;
   }
 
@@ -1095,8 +1277,12 @@ async function startScan() {
 
   toast({
     kind: 'success',
-    title: 'Tarama tamamlandı',
-    text: `${res.data.view.totals.all_h} atık bulundu · ${fmtNum(res.data.view.totals.file_count)} dosya · ${res.data.view.duration} sn`,
+    title: t('toast.scanDoneTitle'),
+    text: t('toast.scanDoneText', {
+      size: human(res.data.view.totals.all),
+      count: fmtNum(res.data.view.totals.file_count),
+      sec: fmtNum(res.data.view.duration),
+    }),
   });
 }
 
@@ -1139,36 +1325,40 @@ async function previewSelection() {
   ]);
 
   if (!previewRes || !previewRes.ok) {
-    toast({ kind: 'error', title: 'Önizleme alınamadı', text: (previewRes && previewRes.error) || '' });
+    toast({
+      kind: 'error',
+      title: t('toast.previewFailed'),
+      text: (previewRes && previewRes.error) || t('err.unknown'),
+    });
     return;
   }
 
   const preview = previewRes.data;
   const rows = [
-    el('div', {}, [el('dt', { text: 'Silinecek dosya' }), el('dd', { text: fmtNum(preview.file_count) })]),
-    el('div', {}, [el('dt', { text: 'Geri kazanılacak alan' }), el('dd', { text: preview.bytes_h })]),
-    el('div', {}, [el('dt', { text: 'Kategori (tamamı)' }), el('dd', { text: fmtNum(payload.categoryIds.length) })]),
-    el('div', {}, [el('dt', { text: 'Tek tek seçilen' }), el('dd', { text: fmtNum(payload.itemIds.length) })]),
+    el('div', {}, [el('dt', { text: t('prev.files') }), el('dd', { text: fmtNum(preview.file_count) })]),
+    el('div', {}, [el('dt', { text: t('prev.size') }), el('dd', { text: human(preview.bytes) })]),
+    el('div', {}, [el('dt', { text: t('prev.cats') }), el('dd', { text: fmtNum(payload.categoryIds.length) })]),
+    el('div', {}, [el('dt', { text: t('prev.items') }), el('dd', { text: fmtNum(payload.itemIds.length) })]),
   ];
 
   if (preview.error_count) {
     rows.push(el('div', {}, [
-      el('dt', { text: 'Güvenlik kapısında atlanan' }),
-      el('dd', { text: `${fmtNum(preview.error_count)} dosya` }),
+      el('dt', { text: t('prev.skipped') }),
+      el('dd', { text: t('cat.files', { count: fmtNum(preview.error_count) }) }),
     ]));
   }
   if (auditRes && auditRes.ok && auditRes.data.blocked) {
     rows.push(el('div', {}, [
-      el('dt', { text: 'Korunan yollarda engellenen' }),
+      el('dt', { text: t('prev.blocked') }),
       el('dd', { text: fmtNum(auditRes.data.blocked) }),
     ]));
   }
 
   await ask({
-    title: 'Temizlik önizlemesi',
-    text: 'Hiçbir değişiklik yapılmadı. Bu yalnızca ne olacağını gösterir.',
+    title: t('prev.title'),
+    text: t('prev.text'),
     iconName: 'i-info',
-    confirmLabel: 'Anladım',
+    confirmLabel: t('btn.gotIt'),
     body: el('dl', { class: 'summary-list' }, rows),
   });
 }
@@ -1182,14 +1372,17 @@ async function runClean() {
   const isDelete = state.cleanMode === 'delete';
 
   const rows = [
-    el('div', {}, [el('dt', { text: 'Dosya' }), el('dd', { text: fmtNum(totals.files) })]),
-    el('div', {}, [el('dt', { text: 'Alan' }), el('dd', { text: human(totals.bytes) })]),
-    el('div', {}, [el('dt', { text: 'Yöntem' }), el('dd', { text: isDelete ? 'Kalıcı silme' : 'Karantinaya taşıma' })]),
+    el('div', {}, [el('dt', { text: t('common.file') }), el('dd', { text: fmtNum(totals.files) })]),
+    el('div', {}, [el('dt', { text: t('prev.size') }), el('dd', { text: human(totals.bytes) })]),
+    el('div', {}, [
+      el('dt', { text: t('clean.method') }),
+      el('dd', { text: isDelete ? t('clean.permanent') : t('clean.quarantine') }),
+    ]),
   ];
   for (const key of ['safe', 'caution', 'risky']) {
     if (totals.risk[key] > 0) {
       rows.push(el('div', {}, [
-        el('dt', { text: `${RISK_LABEL[key]} kategoriler` }),
+        el('dt', { text: t('clean.riskCats', { risk: riskLabel(key) }) }),
         el('dd', { text: human(totals.risk[key]) }),
       ]));
     }
@@ -1200,37 +1393,37 @@ async function runClean() {
     body.push(
       el('div', { class: 'warn-box' }, [
         icon('i-alert'),
-        el('p', { text: 'Kalıcı silme seçili. Dosyalar karantinaya alınmayacak ve geri yüklenemeyecek.' }),
+        el('p', { text: t('clean.warnDelete') }),
       ])
     );
   } else {
     body.push(
       el('div', { class: 'safety' }, [
         icon('i-shield'),
-        el('p', { text: 'Dosyalar karantinaya taşınır; istediğiniz an geri yükleyebilirsiniz.' }),
+        el('p', { text: t('clean.safeNote') }),
       ])
     );
   }
 
   const ok = await ask({
-    title: 'Temizlik başlatılsın mı?',
-    text: 'Seçilen dosyalar güvenlik kapısından geçirilerek işlenecek.',
+    title: t('clean.title'),
+    text: t('clean.text'),
     iconName: isDelete ? 'i-alert' : 'i-shield',
     danger: isDelete,
-    confirmLabel: isDelete ? 'Kalıcı olarak sil' : 'Temizle',
+    confirmLabel: isDelete ? t('btn.deletePermanent') : t('btn.clean'),
     body,
   });
   if (!ok) return;
 
   state.cleaning = true;
-  setProgress(0, 'Temizlik hazırlanıyor…');
+  setProgress(0, t('progress.cleanPreparing'));
   renderDock();
 
   const res = await api.clean.run(payload);
   state.cleaning = false;
 
   if (!res || !res.ok) {
-    toast({ kind: 'error', title: 'Temizlik başarısız', text: (res && res.error) || '' });
+    toast({ kind: 'error', title: t('toast.cleanFailed'), text: (res && res.error) || t('err.unknown') });
     renderDock();
     return;
   }
@@ -1240,19 +1433,19 @@ async function runClean() {
 
   const body2 = [
     el('dl', { class: 'summary-list' }, [
-      el('div', {}, [el('dt', { text: 'İşlenen dosya' }), el('dd', { text: fmtNum(report.file_count) })]),
-      el('div', {}, [el('dt', { text: 'Kazanılan alan' }), el('dd', { text: report.bytes_h })]),
-      el('div', {}, [el('dt', { text: 'Yöntem' }), el('dd', { text: report.mode === 'delete' ? 'Kalıcı silme' : 'Karantina' })]),
+      el('div', {}, [el('dt', { text: t('clean.processed') }), el('dd', { text: fmtNum(report.file_count) })]),
+      el('div', {}, [el('dt', { text: t('clean.reclaimed') }), el('dd', { text: human(report.bytes) })]),
+      el('div', {}, [
+        el('dt', { text: t('clean.method') }),
+        el('dd', { text: report.mode === 'delete' ? t('clean.permanent') : t('mode.quarantineShort') }),
+      ]),
     ]),
   ];
   if (report.error_count) {
     body2.push(
       el('div', { class: 'warn-box' }, [
         icon('i-alert'),
-        el('p', {
-          text: `${fmtNum(report.error_count)} dosya atlandı (kilitli veya korunan yol). ` +
-                'Ayrıntı için aşağıdaki listeye bakın.',
-        }),
+        el('p', { text: t('clean.skipped', { count: fmtNum(report.error_count) }) }),
       ]),
       el('div', { class: 'report-list' },
         report.errors.slice(0, 60).map((row) =>
@@ -1263,26 +1456,29 @@ async function runClean() {
     body2.push(
       el('div', { class: 'safety' }, [
         icon('i-shield'),
-        el('p', { text: 'Dosyalar karantinada. Karantina sekmesinden geri yükleyebilirsiniz.' }),
+        el('p', { text: t('clean.restorable') }),
       ])
     );
   }
 
   await ask({
-    title: 'Temizlik tamamlandı',
-    text: `${report.bytes_h} geri kazanıldı.`,
+    title: t('clean.doneTitle'),
+    text: t('clean.doneText', { size: human(report.bytes) }),
     iconName: 'i-check-circle',
-    confirmLabel: 'Kapat',
+    confirmLabel: t('btn.close'),
     body: body2,
   });
 
   await Promise.all([refreshVault(), refreshHistory()]);
   if (state.scan) {
     // Tarama sonucu artık gerçeği yansıtmıyor; kullanıcıyı bilgilendir.
-    $('#heroSummary').textContent =
-      'Temizlik yapıldı. Güncel durumu görmek için yeniden tarama çalıştırın.';
+    $('#heroSummary').textContent = t('dash.afterClean');
   }
-  toast({ kind: 'success', title: 'Temizlik tamamlandı', text: `${report.bytes_h} geri kazanıldı` });
+  toast({
+    kind: 'success',
+    title: t('toast.finishedTitle'),
+    text: t('toast.finishedText', { size: human(report.bytes) }),
+  });
 }
 
 /* --------------------------------------------------------------- akıllı seçim */
@@ -1290,7 +1486,9 @@ function selectRecommended(silent = false) {
   if (!state.analysis || !state.scan) return;
   const ids = state.analysis.recommended_ids || [];
   if (!ids.length) {
-    if (!silent) toast({ kind: 'info', title: 'Öneri yok', text: 'AI güvenli eşiği geçen kategori bulamadı.' });
+    if (!silent) {
+      toast({ kind: 'info', title: t('toast.noSuggestionTitle'), text: t('toast.noSuggestionText') });
+    }
     return;
   }
   state.selectedCategories = new Set(ids);
@@ -1304,7 +1502,11 @@ function selectRecommended(silent = false) {
   renderCategories();
   renderDock();
   if (!silent) {
-    toast({ kind: 'success', title: 'AI önerisi seçildi', text: `${ids.length} kategori · ${human(bytes)}` });
+    toast({
+      kind: 'success',
+      title: t('toast.aiSelectedTitle'),
+      text: t('toast.aiSelectedText', { count: fmtNum(ids.length), size: human(bytes) }),
+    });
   }
 }
 
@@ -1318,27 +1520,25 @@ async function runSmartPick() {
 
   if (!res || !res.ok) {
     box.className = 'pickresult pickresult--short';
-    box.textContent = (res && res.error) || 'Önce tarama yapmalısınız.';
+    box.textContent = (res && res.error) || t('pick.needScan');
     return;
   }
 
   const pick = res.data;
   if (!pick.category_ids.length) {
     box.className = 'pickresult pickresult--short';
-    box.textContent =
-      'AI güvenli eşiği geçen kategori bulamadı. Derin taramayı açıp yeniden deneyin veya ' +
-      'kategorileri elle inceleyin.';
+    box.textContent = t('pick.nothing');
     return;
   }
 
   box.className = `pickresult${pick.reached ? '' : ' pickresult--short'}`;
   box.replaceChildren(
     el('p', {}, [
-      el('strong', { text: `${pick.size_h} seçildi` }),
-      ` (hedef ${pick.target_h}). `,
+      el('strong', { text: t('pick.selected', { size: human(pick.size) }) }),
+      t('pick.targetNote', { size: human(pick.target) }),
       pick.reached
-        ? 'Hedefe ulaşıldı; seçim yalnızca güvenli kategorilerden oluşuyor.'
-        : `Hedefin ${pick.shortfall_h} kadarı karşılanamadı — kalan yer riskli gruplarda.`,
+        ? t('pick.reached')
+        : t('pick.shortfall', { size: human(pick.shortfall) }),
     ]),
     el('div', { class: 'vault__sample' }, pick.category_ids.map((id) => el('span', { text: state.catNames[id] || id })))
   );
@@ -1348,7 +1548,11 @@ async function runSmartPick() {
   state.expanded = new Set(pick.category_ids);
   renderCategories();
   renderDock();
-  toast({ kind: 'success', title: 'AI seçimini yaptı', text: `${pick.category_ids.length} kategori · ${pick.size_h}` });
+  toast({
+    kind: 'success',
+    title: t('toast.aiPickedTitle'),
+    text: t('toast.aiPickedText', { size: human(pick.size), count: fmtNum(pick.category_ids.length) }),
+  });
 }
 
 /* --------------------------------------------------------------- başlangıç */
@@ -1364,7 +1568,7 @@ function bindEvents() {
   });
   api.on('window:maximized', (maximized) => {
     const btn = $('.wbtn[data-win="maximize"]');
-    if (btn) btn.title = maximized ? 'Geri al' : 'Büyüt';
+    if (btn) btn.title = maximized ? t('win.restore') : t('win.maximize');
   });
 
   // gezinme
@@ -1420,7 +1624,7 @@ function bindEvents() {
 
   // asistan
   $('#targetRange').addEventListener('input', (event) => {
-    $('#targetValue').textContent = Number(event.target.value).toFixed(1).replace('.', ',');
+    $('#targetValue').textContent = fmtDec(Number(event.target.value));
   });
   $('#pickBtn').addEventListener('click', runSmartPick);
   $('#chatForm').addEventListener('submit', (event) => {
@@ -1432,7 +1636,7 @@ function bindEvents() {
   });
   $('#chatSuggest').addEventListener('click', (event) => {
     const btn = event.target.closest('button');
-    if (btn) sendQuestion(btn.dataset.q);
+    if (btn) sendQuestion(t(btn.dataset.q));
   });
 
   // ayarlar
@@ -1445,6 +1649,33 @@ function bindEvents() {
   $('#openDataDir').addEventListener('click', () => api.app.openDataDir());
   $('#openDataDir2').addEventListener('click', () => api.app.openDataDir());
 
+  // dil
+  $('#langSelect').addEventListener('change', (event) => changeLanguage(event.target.value));
+
+  // AI sağlayıcısı
+  $('#aiProviderGroup').addEventListener('click', (event) => {
+    const btn = event.target.closest('button[data-provider]');
+    if (!btn) return;
+    state.aiProvider = btn.dataset.provider;
+    markAiProvider(state.aiProvider);
+    saveAiConfig({ silent: true });
+  });
+  $('#aiKeyToggle').addEventListener('click', () => {
+    const input = $('#aiKey');
+    const show = input.type === 'password';
+    input.type = show ? 'text' : 'password';
+    const btn = $('#aiKeyToggle');
+    btn.classList.toggle('is-active', show);
+    btn.title = t(show ? 'set.ai.hideKey' : 'set.ai.showKey');
+    btn.setAttribute('aria-label', btn.title);
+  });
+  $('#aiSave').addEventListener('click', () => saveAiConfig());
+  $('#aiTest').addEventListener('click', testAiConnection);
+  $('#aiModelFetch').addEventListener('click', loadAiModels);
+  $('#aiKeyClear').addEventListener('click', clearAiKey);
+  $('#aiBase').addEventListener('change', () => saveAiConfig({ silent: true }));
+  $('#aiModel').addEventListener('change', () => saveAiConfig({ silent: true }));
+
   // tarama/temizlik ilerlemesi
   api.on('scan:progress', (progress) => {
     if (progress) setProgress(progress.percent, progress.stage);
@@ -1453,7 +1684,7 @@ function bindEvents() {
     if (progress) setProgress(progress.percent, progress.stage);
   });
   api.on('scan:error', (payload) => {
-    toast({ kind: 'error', title: 'Tarama hatası', text: (payload && payload.error) || '' });
+    toast({ kind: 'error', title: t('toast.scanError'), text: (payload && payload.error) || '' });
   });
 
   // klavye
@@ -1467,23 +1698,57 @@ function bindEvents() {
   });
 }
 
+/**
+ * Dil değiştikten sonra bütün görünümü tazeler. Motor metinleri (kategori
+ * adları, içgörüler, özet, sağlayıcı notu) ana süreçte üretildiği için
+ * yeniden istenir — diller arasında geçişte tek bir satır eski dilde kalmaz.
+ */
+async function reloadAll() {
+  const [lastRes, countsRes] = await Promise.all([api.scan.last(), api.scan.counts()]);
+
+  if (countsRes && countsRes.ok) {
+    state.safeIds = countsRes.data.safe_ids || [];
+    state.catNames = Object.fromEntries((countsRes.data.categories || []).map((c) => [c.id, c.name]));
+  }
+  if (lastRes && lastRes.ok && lastRes.data) {
+    state.scan = lastRes.data;
+    const analysisRes = await api.ai.analyze();
+    state.analysis = analysisRes && analysisRes.ok ? analysisRes.data : null;
+  } else {
+    state.scan = null;
+    state.analysis = null;
+  }
+
+  renderDashboard();
+  renderCategories();
+  renderDock();
+  await Promise.all([refreshVault(), refreshHistory(), refreshProvider(true), refreshAiConfig()]);
+}
+
 async function init() {
+  // Önce dil: bütün metinler sözlükten geldiği için diğer her şeyden önce yüklenir.
+  const bundleRes = await api.i18n.bundle();
+  if (bundleRes && bundleRes.ok) applyBundle(bundleRes.data);
+
   bindEvents();
+  applyStaticTranslations();
 
   const infoRes = await api.app.info();
   if (infoRes && infoRes.ok) {
     state.info = infoRes.data;
     const info = infoRes.data;
+    state.locales = info.locales || [];
+    state.systemLocale = info.systemLocale || '';
     $('#versionLabel').textContent = `v${info.version}`;
     $('#dataDirPath').textContent = info.dataDir;
     $('#aboutList').replaceChildren(
-      el('div', {}, [el('dt', { text: 'Ürün' }), el('dd', { text: info.fullName || 'reMona · AICleaner' })]),
-      el('div', {}, [el('dt', { text: 'Sürüm' }), el('dd', { text: info.version })]),
-      el('div', {}, [el('dt', { text: 'Electron' }), el('dd', { text: info.electron })]),
-      el('div', {}, [el('dt', { text: 'Chromium' }), el('dd', { text: info.chrome })]),
-      el('div', {}, [el('dt', { text: 'Node' }), el('dd', { text: info.node })]),
-      el('div', {}, [el('dt', { text: 'Platform' }), el('dd', { text: info.platform })]),
-      el('div', {}, [el('dt', { text: 'Sistem sürücüsü' }), el('dd', { text: info.drive })])
+      el('div', {}, [el('dt', { text: t('set.about.product') }), el('dd', { text: info.fullName || 'reMona · AICleaner' })]),
+      el('div', {}, [el('dt', { text: t('set.about.version') }), el('dd', { text: info.version })]),
+      el('div', {}, [el('dt', { text: t('set.about.electron') }), el('dd', { text: info.electron })]),
+      el('div', {}, [el('dt', { text: t('set.about.chromium') }), el('dd', { text: info.chrome })]),
+      el('div', {}, [el('dt', { text: t('set.about.node') }), el('dd', { text: info.node })]),
+      el('div', {}, [el('dt', { text: t('set.about.platform') }), el('dd', { text: info.platform })]),
+      el('div', {}, [el('dt', { text: t('set.about.drive') }), el('dd', { text: info.drive })])
     );
   }
 
@@ -1508,13 +1773,14 @@ async function init() {
     renderCategories();
   }
 
+  go(state.view);
   await Promise.all([refreshVault(), refreshHistory(), refreshProvider(), refreshAiConfig()]);
 
   if (state.info && state.info.isDev) {
-    toast({ kind: 'info', title: 'Geliştirme modu', text: 'F12 ile DevTools açılır.', timeout: 4000 });
+    toast({ kind: 'info', title: t('toast.devTitle'), text: t('toast.devText'), timeout: 4000 });
   }
 }
 
 init().catch((error) => {
-  toast({ kind: 'error', title: 'Başlatma hatası', text: String(error && error.message) });
+  toast({ kind: 'error', title: t('toast.startupTitle'), text: String(error && error.message) });
 });

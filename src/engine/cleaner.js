@@ -21,6 +21,7 @@ const ai = require('./ai');
 const config = require('./config');
 const store = require('./store');
 const trash = require('./trash');
+const i18n = require('../i18n');
 const {
   expandRoots,
   fmtDateTime,
@@ -92,7 +93,7 @@ async function clean(options = {}) {
   } = options;
 
   if (!scanResult || !Array.isArray(scanResult.categories)) {
-    return { ok: false, error: 'Önce tarama yapmalısınız' };
+    return { ok: false, error: i18n.t('err.noScan') };
   }
 
   const mode = rawMode === 'delete' ? 'delete' : 'quarantine';
@@ -148,7 +149,7 @@ async function clean(options = {}) {
     if (total) {
       onProgress({
         percent: Math.round((index / total) * 96),
-        stage: `${path.basename(target.path).slice(0, 40)} işleniyor…`,
+        stage: i18n.t('progress.processing', { name: path.basename(target.path).slice(0, 40) }),
       });
     }
 
@@ -201,7 +202,7 @@ async function clean(options = {}) {
   // ---------------------------------------------------------- geri dönüşüm
   let recycleReport = null;
   if (recycleNeeded) {
-    onProgress({ percent: 97, stage: 'Geri dönüşüm kutusu boşaltılıyor…' });
+    onProgress({ percent: 97, stage: i18n.t('progress.recycle') });
     const before = await trash.stats({ refresh: true });
 
     if (dryRun) {
@@ -213,13 +214,16 @@ async function clean(options = {}) {
       if (result.ok) {
         totalBytes += before.size || 0;
         deleted.push({
-          path: 'Geri Dönüşüm Kutusu',
+          path: i18n.t('cat.recycle_bin.name'),
           size: before.size || 0,
           category: 'recycle_bin',
           action: 'empty',
         });
       } else if (errors.length < MAX_ERRORS) {
-        errors.push({ path: 'Geri Dönüşüm Kutusu', error: result.error || 'bilinmeyen hata' });
+        errors.push({
+          path: i18n.t('cat.recycle_bin.name'),
+          error: result.error || i18n.t('err.unknown'),
+        });
       }
     }
   }
@@ -264,14 +268,14 @@ async function clean(options = {}) {
     });
   }
 
-  onProgress({ percent: 100, stage: 'Temizlik tamamlandı' });
+  onProgress({ percent: 100, stage: i18n.t('progress.cleanDone') });
   return report;
 }
 
 /** Dosyayı karantinaya taşır; ad çakışmasını önlemek için benzersizleştirir. */
 async function quarantineMove(source, quarantineDir) {
   await fsp.mkdir(quarantineDir, { recursive: true });
-  const name = path.basename(source) || 'dosya';
+  const name = path.basename(source) || i18n.t('common.file');
   const stamp = crypto.randomBytes(4).toString('hex');
   const target = path.join(quarantineDir, `${stamp}__${name}`);
   await moveFile(source, target);
@@ -319,11 +323,11 @@ async function listQuarantine() {
 /** Karantinadaki dosyaları özgün konumlarına geri taşır. */
 async function restoreSession(session, { onProgress = noop } = {}) {
   if (!session || session.includes('..') || /[\\/]/.test(session)) {
-    return { ok: false, error: 'Geçersiz oturum adı', restored: 0 };
+    return { ok: false, error: i18n.t('err.invalidSession'), restored: 0 };
   }
   const sessionDir = path.join(config.QUARANTINE_DIR, session);
   if (!isUnder(sessionDir, config.QUARANTINE_DIR)) {
-    return { ok: false, error: 'Geçersiz oturum yolu', restored: 0 };
+    return { ok: false, error: i18n.t('err.invalidSessionPath'), restored: 0 };
   }
 
   const manifestPath = path.join(sessionDir, 'manifest.json');
@@ -331,7 +335,7 @@ async function restoreSession(session, { onProgress = noop } = {}) {
   try {
     manifest = JSON.parse(await fsp.readFile(manifestPath, 'utf8'));
   } catch {
-    return { ok: false, error: 'Böyle bir karantina oturumu yok', restored: 0 };
+    return { ok: false, error: i18n.t('err.sessionMissing'), restored: 0 };
   }
 
   const rows = Array.isArray(manifest.entries) ? manifest.entries : [];
@@ -343,20 +347,20 @@ async function restoreSession(session, { onProgress = noop } = {}) {
     const row = rows[index];
     onProgress({
       percent: Math.round((index / Math.max(rows.length, 1)) * 100),
-      stage: 'Geri yükleniyor…',
+      stage: i18n.t('progress.restoring'),
     });
 
     const original = row.original || '';
     const stored = path.join(sessionDir, row.stored || '');
     if (!row.stored || !isUnder(stored, sessionDir)) {
-      failed.push({ path: original, error: 'Geçersiz karantina kaydı' });
+      failed.push({ path: original, error: i18n.t('err.invalidRow') });
       continue;
     }
 
     try {
       await fsp.access(stored);
     } catch {
-      failed.push({ path: original, error: 'Karantina dosyası bulunamadı' });
+      failed.push({ path: original, error: i18n.t('err.quarantineFileMissing') });
       continue;
     }
 
@@ -381,7 +385,7 @@ async function restoreSession(session, { onProgress = noop } = {}) {
 
   if (!failed.length) {
     await fsp.rm(sessionDir, { recursive: true, force: true });
-    onProgress({ percent: 100, stage: 'Geri yükleme tamamlandı' });
+    onProgress({ percent: 100, stage: i18n.t('progress.restoreDone') });
     return {
       ok: true,
       restored,
@@ -397,7 +401,7 @@ async function restoreSession(session, { onProgress = noop } = {}) {
   manifest.entries = remaining;
   await store.writeJson(manifestPath, manifest);
 
-  onProgress({ percent: 100, stage: 'Geri yükleme tamamlandı' });
+  onProgress({ percent: 100, stage: i18n.t('progress.restoreDone') });
   return {
     ok: true,
     restored,
@@ -411,16 +415,16 @@ async function restoreSession(session, { onProgress = noop } = {}) {
 /** Karantina oturumunu kalıcı olarak siler. */
 async function purgeSession(session) {
   if (!session || session.includes('..') || /[\\/]/.test(session)) {
-    return { ok: false, error: 'Geçersiz oturum adı' };
+    return { ok: false, error: i18n.t('err.invalidSession') };
   }
   const sessionDir = path.join(config.QUARANTINE_DIR, session);
   if (!isUnder(sessionDir, config.QUARANTINE_DIR)) {
-    return { ok: false, error: 'Geçersiz oturum yolu' };
+    return { ok: false, error: i18n.t('err.invalidSessionPath') };
   }
   try {
     await fsp.access(sessionDir);
   } catch {
-    return { ok: false, error: 'Oturum bulunamadı' };
+    return { ok: false, error: i18n.t('err.sessionNotFound') };
   }
   await fsp.rm(sessionDir, { recursive: true, force: true });
   return { ok: true };
