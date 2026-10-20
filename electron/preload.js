@@ -1,17 +1,17 @@
 'use strict';
 
 /**
- * reMona (AICleaner) — preload köprüsü.
+ * reMona (AICleaner) — preload bridge.
  *
- * Renderer'a yalnızca aşağıdaki sayılı işlevler açılır. `ipcRenderer`ın
- * kendisi, `require`, `fs` veya herhangi bir Node API'si sızdırılmaz.
+ * Only the counted functions below are exposed to the renderer. `ipcRenderer`
+ * itself, `require`, `fs` and any other Node API are not leaked.
  */
 
 const { contextBridge, ipcRenderer } = require('electron');
 
 const invoke = (channel, payload) => ipcRenderer.invoke(channel, payload);
 
-/** Ana süreçten gelen olayları dinler; geriye abonelikten çıkma işlevi döner. */
+/** Subscribes to events from the main process and returns an unsubscribe function. */
 function on(channel, callback) {
   const allowed = ['scan:progress', 'scan:done', 'scan:error', 'clean:progress', 'clean:done', 'window:maximized'];
   if (!allowed.includes(channel)) return () => {};

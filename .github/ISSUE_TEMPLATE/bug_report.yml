@@ -1,21 +1,21 @@
-name: Hata bildirimi
-description: Uygulama beklenmedik davranıyor
+name: Bug report
+description: The application behaves unexpectedly
 labels: [bug]
 body:
   - type: markdown
     attributes:
       value: |
-        **Güvenlik açıkları için bu formu kullanmayın.** Lütfen
-        [SECURITY.md](../SECURITY.md) dosyasındaki özel bildirim yolunu izleyin.
+        **Do not use this form for security vulnerabilities.** Please follow the
+        private reporting path in [SECURITY.md](../SECURITY.md).
 
-        Bildirime API anahtarı, kişisel dosya yolu veya karantina içeriği
-        yapıştırmayın.
+        Do not paste API keys, personal file paths or quarantine contents into a
+        report.
 
   - type: input
-    id: surum
+    id: version
     attributes:
-      label: reMona sürümü
-      description: Uygulama içinde Ayarlar ekranında yazar.
+      label: reMona version
+      description: Shown on the Settings screen inside the application.
       placeholder: 1.0.0
     validations:
       required: true
@@ -23,54 +23,54 @@ body:
   - type: input
     id: windows
     attributes:
-      label: Windows sürümü
+      label: Windows version
       placeholder: Windows 11 24H2 (26100)
     validations:
       required: true
 
   - type: dropdown
-    id: kategori
+    id: area
     attributes:
-      label: Hangi bölümde oldu?
+      label: Where did it happen?
       options:
-        - Tarama
-        - Temizlik / karantina
-        - Yapay zeka paneli
-        - Ayarlar / OpenAI bağlantısı
-        - Arayüz / görünüm
-        - Uygulama açılmıyor
-        - Diğer
+        - Scanning
+        - Cleanup / quarantine
+        - AI panel
+        - Settings / OpenAI connection
+        - Interface / appearance
+        - The application does not open
+        - Other
 
   - type: textarea
-    id: adimlar
+    id: steps
     attributes:
-      label: Yeniden üretme adımları
+      label: Steps to reproduce
       placeholder: |
-        1. Uygulamayı aç
+        1. Open the application
         2. ...
         3. ...
     validations:
       required: true
 
   - type: textarea
-    id: beklenen
+    id: expected
     attributes:
-      label: Beklenen davranış
+      label: Expected behaviour
     validations:
       required: true
 
   - type: textarea
-    id: gerceklesen
+    id: actual
     attributes:
-      label: Gerçekleşen davranış
-      description: Hata mesajı varsa aynen yapıştırın.
+      label: Actual behaviour
+      description: Paste any error message verbatim.
     validations:
       required: true
 
   - type: textarea
-    id: gunluk
+    id: logs
     attributes:
-      label: Günlük çıktısı (isteğe bağlı)
+      label: Log output (optional)
       description: >
-        `npm start` çıktısı. Kişisel bilgileri ve anahtarları ayıklayın.
+        Output of `npm start`. Remove personal information and keys.
       render: shell

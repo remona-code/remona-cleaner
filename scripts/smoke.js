@@ -1,10 +1,10 @@
 'use strict';
 
 /**
- * Motor duman testi — arayüz açmadan gerçek sistemi tarar.
+ * Engine smoke test — scans the real system without opening the interface.
  *
- * Hiçbir dosyayı silmez, taşımaz veya değiştirmez; yalnızca okur.
- * Kullanım: npm run smoke   (derin tarama için: node scripts/smoke.js --deep)
+ * It deletes, moves and changes nothing; it only reads.
+ * Usage: npm run smoke   (for a deep scan: node scripts/smoke.js --deep)
  */
 
 const config = require('../src/engine/config');
@@ -32,107 +32,107 @@ function padLeft(text, width) {
 
 async function main() {
   console.log(line('='));
-  console.log('reMona (AICleaner) motor duman testi');
-  console.log(`Derin tarama: ${DEEP ? 'evet' : 'hayir'}`);
-  console.log(`Veri klasoru: ${config.DATA_DIR}`);
+  console.log('reMona (AICleaner) engine smoke test');
+  console.log(`Deep scan: ${DEEP ? 'yes' : 'no'}`);
+  console.log(`Data folder: ${config.DATA_DIR}`);
   console.log(line('='));
 
   // ---------------------------------------------------------------- disk
   const disk = await scanner.diskInfo();
-  console.log('\nSURUCLER');
+  console.log('\nDRIVES');
   for (const drive of disk.drives) {
     console.log(
-      `  ${pad(drive.drive, 6)} ${padLeft(drive.total_h, 10)} toplam  ` +
-        `${padLeft(drive.free_h, 10)} bos  %${padLeft(drive.percent, 3)} dolu`
+      `  ${pad(drive.drive, 6)} ${padLeft(drive.total_h, 10)} total  ` +
+        `${padLeft(drive.free_h, 10)} free  ${padLeft(drive.percent, 3)}% used`
     );
   }
-  if (!disk.drives.length) console.log('  surucu bilgisi okunamadi');
+  if (!disk.drives.length) console.log('  drive information could not be read');
 
-  // ------------------------------------------------------- geri donusum
-  console.log('\nGERI DONUSUM KUTUSU');
+  // ------------------------------------------------------- recycle bin
+  console.log('\nRECYCLE BIN');
   const bin = await trash.stats({ refresh: true });
   if (bin.ok) {
-    console.log(`  ${bin.count} oge, ${bin.size_h || bin.size + ' B'} (kaynak: ${bin.source || 'shell'})`);
+    console.log(`  ${bin.count} items, ${bin.size_h || bin.size + ' B'} (source: ${bin.source || 'shell'})`);
   } else {
-    console.log(`  okunamadi: ${bin.error}`);
+    console.log(`  could not be read: ${bin.error}`);
   }
 
-  // ---------------------------------------------------------------- tarama
-  console.log('\nTARAMA');
+  // ---------------------------------------------------------------- scan
+  console.log('\nSCAN');
   let lastStage = '';
   const result = await scanner.scan({
     deep: DEEP,
     onProgress: (p) => {
       if (p.stage !== lastStage) {
         lastStage = p.stage;
-        console.log(`  [%${padLeft(p.percent, 3)}] ${p.stage}`);
+        console.log(`  [${padLeft(p.percent, 3)}%] ${p.stage}`);
       }
     },
   });
 
-  console.log(`\n  Sure: ${result.duration} sn`);
-  console.log(`  Toplam atik: ${result.totals.all_h} (${result.totals.file_count} dosya)`);
-  console.log(`  Risksiz: ${result.totals.safe_h} | Dikkatli: ${result.totals.caution_h} | Riskli: ${result.totals.risky_h}`);
+  console.log(`\n  Duration: ${result.duration} s`);
+  console.log(`  Total junk: ${result.totals.all_h} (${result.totals.file_count} files)`);
+  console.log(`  Safe: ${result.totals.safe_h} | Review: ${result.totals.caution_h} | Risky: ${result.totals.risky_h}`);
 
-  console.log('\n  KATEGORILER');
+  console.log('\n  CATEGORIES');
   const ranked = [...result.categories].sort((a, b) => b.size - a.size);
   for (const cat of ranked) {
-    const risk = { safe: 'guvenli', caution: 'dikkatli', risky: 'riskli' }[cat.risk];
+    const risk = { safe: 'safe', caution: 'review', risky: 'risky' }[cat.risk];
     const note = cat.note ? ` (${cat.note})` : '';
     console.log(
       `    ${pad(cat.name, 30)} ${padLeft(cat.size_h, 10)}  ` +
-        `${padLeft(cat.file_count, 6)} dosya  ${pad(risk, 9)}${note}`
+        `${padLeft(cat.file_count, 6)} files  ${pad(risk, 9)}${note}`
     );
   }
 
   // -------------------------------------------------------------------- AI
   const view = scanner.publicView(result);
   const analysis = await ai.analyze(result);
-  console.log('\nAI ANALIZI');
-  console.log(`  Ozet: ${analysis.summary}`);
-  console.log(`  Onerilen kazanc: ${analysis.potential.recommended_h} (${analysis.recommended_ids.length} kategori)`);
+  console.log('\nAI ANALYSIS');
+  console.log(`  Summary: ${analysis.summary}`);
+  console.log(`  Recommended gain: ${analysis.potential.recommended_h} (${analysis.recommended_ids.length} categories)`);
   for (const insight of analysis.insights) {
     console.log(`  [${pad(insight.level, 5)}] ${insight.title}`);
   }
 
   const pick = await ai.smartPick(result, 5 * 1024 ** 3);
-  console.log('\nAKILLI SECIM (hedef 5.0 GB)');
+  console.log('\nSMART SELECTION (target 5.0 GB)');
   console.log(
-    `  Secilen: ${pick.size_h} / ${pick.target_h}  ` +
-      `hedefe ulasildi: ${pick.reached ? 'evet' : 'hayir'}` +
-      (pick.shortfall_h ? `  eksik: ${pick.shortfall_h}` : '')
+    `  Selected: ${pick.size_h} / ${pick.target_h}  ` +
+      `target reached: ${pick.reached ? 'yes' : 'no'}` +
+      (pick.shortfall_h ? `  shortfall: ${pick.shortfall_h}` : '')
   );
-  console.log(`  Kategoriler: ${pick.category_ids.join(', ') || '(yok)'}`);
+  console.log(`  Categories: ${pick.category_ids.join(', ') || '(none)'}`);
 
   const provider = await ai.providerStatus();
-  console.log('\nAI MOTORU');
+  console.log('\nAI ENGINE');
   console.log(`  ${provider.engine}${provider.model ? ':' + provider.model : ''} - ${provider.note || ''}`);
 
-  // ---------------------------------------------------------- diger durum
+  // ---------------------------------------------------------- other state
   const usage = await cleaner.quarantineUsage();
   const history = await store.getHistory();
   const settings = await store.getSettings();
   const roots = await cleaner.allowedDeleteRoots();
 
-  console.log('\nDURUM');
-  console.log(`  Karantina: ${usage.sessions} oturum, ${usage.files} dosya, ${usage.size_h}`);
-  console.log(`  Gecmis temizlik: ${history.length} kayit`);
-  console.log(`  Temizlik modu: ${settings.clean_mode} | derin varsayilan: ${settings.deep_scan}`);
-  console.log(`  Silmeye izinli kok sayisi: ${roots.length}`);
-  console.log(`  Arayuze gonderilen kategori sayisi: ${view.categories.length}`);
+  console.log('\nSTATE');
+  console.log(`  Quarantine: ${usage.sessions} sessions, ${usage.files} files, ${usage.size_h}`);
+  console.log(`  Cleanup history: ${history.length} entries`);
+  console.log(`  Clean mode: ${settings.clean_mode} | deep by default: ${settings.deep_scan}`);
+  console.log(`  Roots allowed for deletion: ${roots.length}`);
+  console.log(`  Categories sent to the interface: ${view.categories.length}`);
 
-  // Arayüzün gördüğü veride tam yollar sızmamalı.
+  // Full paths must not leak into the data the interface sees.
   const leaked = JSON.stringify(view).includes('_full');
-  console.log(`  Gizli dosya listesi sizintisi: ${leaked ? 'VAR (hata)' : 'yok'}`);
+  console.log(`  Hidden file list leak: ${leaked ? 'YES (bug)' : 'none'}`);
 
   console.log(`\n${line('=')}`);
-  console.log(leaked ? 'SONUC: SORUN VAR' : 'SONUC: TAMAM');
+  console.log(leaked ? 'RESULT: PROBLEM FOUND' : 'RESULT: OK');
   console.log(line('='));
 
   if (leaked) process.exitCode = 1;
 }
 
 main().catch((err) => {
-  console.error('\nBEKLENMEYEN HATA:', err && err.stack ? err.stack : err);
+  console.error('\nUNEXPECTED ERROR:', err && err.stack ? err.stack : err);
   process.exitCode = 1;
 });

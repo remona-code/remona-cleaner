@@ -1,16 +1,16 @@
 ﻿'use strict';
 
 /**
- * reMona (AICleaner) — Electron ana süreci.
+ * reMona (AICleaner) — Electron main process.
  *
  * Mimari:
- *   renderer  → yalnızca arayüz. Dosya yolu görmez, dosya sistemine erişemez.
- *   preload   → contextBridge ile sayılan yetkileri açar.
- *   main      → tarama/temizlik/AI işlerini yürütür, tam yolları bellekte tutar.
+ *   renderer  → interface only. It sees no file paths and cannot reach the filesystem.
+ *   preload   → opens a counted set of powers through contextBridge.
+ *   main      → runs scan/clean/AI work and keeps full paths in memory.
  *
- * Temizlenecek dosya listesi hiçbir zaman arayüzden gelmez; seçim yalnızca
- * kategori kimliği ve öğe kimliği olarak iletilir, yollar ana süreçte
- * bellekteki tarama sonucundan çözülür.
+ * The list of files to clean never comes from the interface; a selection is
+ * carried only as category and item identifiers, and paths are resolved in
+ * the main process from the in-memory scan result.
  */
 
 const fs = require('fs');
@@ -18,19 +18,19 @@ const path = require('path');
 const { app, BrowserWindow, ipcMain, shell, nativeTheme, safeStorage } = require('electron');
 
 /**
- * userData yolu ürün adından türetildiği için burada açıkça sabitlenir.
- * Aksi hâlde aynı makinede kurulu başka bir reMona uygulamasıyla (ör. IDE)
- * aynı klasör ve aynı tek örnek kilidi paylaşılır; ikinci süreç sessizce
- * kapanır ve Chromium önbelleği "Erişim engellendi" hatası verir.
+ * The userData path is derived from the product name, so it is pinned here.
+ * Otherwise another reMona application installed on the same machine (an IDE,
+ * for example) would share the same folder and the same single-instance lock;
+ * the second process would close silently with a Chromium cache error.
  */
 const USER_DATA_DIR = path.join(app.getPath('appData'), 'reMona AICleaner');
 app.setPath('userData', USER_DATA_DIR);
 
 /**
- * Marka geçişi: uygulama adı AICleaner iken veri `%APPDATA%\AICleaner\data`
- * altındaydı. Ürün adı reMona olduğu için userData yolu değişti; ilk açılışta
- * eski klasör taşınmazsa ayarlar, geçmiş ve karantinadaki dosyalar erişilemez
- * kalırdı. Kopyalanır (taşınmaz) ki eski sürüm açılırsa verisi yerinde olsun.
+ * Rebranding: while the application was named AICleaner its data lived in
+ * `%APPDATA%\AICleaner\data`. The product name became reMona, so the userData
+ * path changed; without carrying the old folder over, settings, history and
+ * quarantined files would be unreachable. It is copied rather than moved, so an older version still finds its data in place.
  */
 function migrateLegacyData(targetDir) {
   try {
@@ -40,12 +40,12 @@ function migrateLegacyData(targetDir) {
     fs.mkdirSync(path.dirname(targetDir), { recursive: true });
     fs.cpSync(legacyDir, targetDir, { recursive: true });
   } catch {
-    /* taşıma başarısız olsa da uygulama boş veri klasörüyle açılır */
+    /* the app still opens with an empty data folder if the copy fails */
   }
 }
 
-// Motor, veri klasörünü ortam değişkeninden okur; bu yüzden require'dan
-// ÖNCE ayarlanmalıdır.
+// The engine reads its data folder from the environment, so this must run
+// BEFORE the engine is required.
 process.env.AICLEANER_DATA_DIR = path.join(app.getPath('userData'), 'data');
 migrateLegacyData(process.env.AICLEANER_DATA_DIR);
 
@@ -60,9 +60,9 @@ const i18n = require('../src/i18n');
 const IS_DEV = process.argv.includes('--dev') || !app.isPackaged;
 
 /**
- * QA yardımcısı: `electron . --capture=<dosya.png>` arayüzü gerçek bir
- * pencerede çizer, kısa bir beklemeden sonra PNG yazar ve uygulamayı kapatır.
- * Belge ve görsel doğrulama içindir; normal açılışta hiçbir şey yapmaz.
+ * QA helper: `electron . --capture=<file.png>` draws the interface in a real
+ * window, writes a PNG after a short delay and closes the application.
+ * It is for documentation and visual checks; a normal launch does nothing.
  */
 function captureIfRequested() {
   const arg = process.argv.find((value) => value.startsWith('--capture'));
@@ -84,9 +84,9 @@ function captureIfRequested() {
 }
 
 /**
- * API anahtarı settings.json içinde düz metin durmasın diye işletim sisteminin
- * şifreleme kasası kullanılır (Windows'ta DPAPI). Kasa yoksa store düz yazmaya
- * devam eder; davranış farkı yalnızca diskteki biçimdir.
+ * The operating system's encryption vault (DPAPI on Windows) keeps the API
+ * key out of plain text in settings.json. Without a vault the store keeps
+ * writing plain text; the only difference is the on-disk format.
  */
 function wireSecretCipher() {
   try {
@@ -97,12 +97,12 @@ function wireSecretCipher() {
       });
     }
   } catch {
-    /* şifreleme yoksa anahtar düz saklanır */
+    /* without encryption the key is stored in plain text */
   }
 }
 wireSecretCipher();
 
-/** `--locale=tr` gibi bir QA bayrağı verildiyse onu döndürür (ayara yazılmaz). */
+/** Returns a QA flag such as `--locale=tr` when present (never written to settings). */
 function forcedLocale() {
   const arg = process.argv.find((value) => value.startsWith('--locale'));
   if (!arg || !arg.includes('=')) return null;
@@ -110,9 +110,9 @@ function forcedLocale() {
 }
 
 /**
- * Arayüz dilini belirler: ayarda somut bir dil seçiliyse o, "auto" ise
- * Windows'un görüntüleme dili kullanılır. Desteklenmeyen bir dil (ör. Fince)
- * otomatik olarak İngilizce'ye düşer.
+ * Resolves the interface language: a concrete language from settings wins,
+ * "auto" follows the Windows display language, and an unsupported language
+ * (Finnish, for example) falls back to English automatically.
  */
 async function applyLocale() {
   const forced = forcedLocale();
@@ -127,7 +127,7 @@ async function applyLocale() {
 
 /** @type {BrowserWindow|null} */
 let mainWindow = null;
-/** @type {{id: string, result: object}|null} Tam tarama sonucu (tam yollar bellekte kalır). */
+/** @type {{id: string, result: object}|null} Full scan result (full paths stay in memory). */
 let currentScan = null;
 let scanInFlight = false;
 let cleanInFlight = false;
@@ -173,7 +173,7 @@ function createWindow() {
     mainWindow = null;
   });
 
-  // Çerçevesiz pencerede klavye kısayolları (menü yok).
+  // Keyboard shortcuts in a frameless window (there is no menu).
   mainWindow.webContents.on('before-input-event', (event, input) => {
     if (input.type !== 'keyDown') return;
     const key = String(input.key || '').toLowerCase();
@@ -189,7 +189,7 @@ function createWindow() {
     }
   });
 
-  // Dış bağlantılar asla uygulama içinde açılmaz.
+  // External links never open inside the application.
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     if (/^https?:/i.test(url)) shell.openExternal(url);
     return { action: 'deny' };
@@ -197,7 +197,7 @@ function createWindow() {
   mainWindow.webContents.on('will-navigate', (event) => event.preventDefault());
 }
 
-// ------------------------------------------------------------------ yardımcı
+// ------------------------------------------------------------------ helpers
 function requireScan() {
   if (!currentScan) {
     const err = new Error(i18n.t('err.noScan'));
@@ -236,7 +236,7 @@ function registerIpc() {
   // --- uygulama bilgisi
   ipcMain.handle('app:info', () =>
     ok({
-      // Marka reMona; AICleaner ürün adı olarak korunur (uyumluluk ve kimlik).
+      // Brand is reMona; AICleaner is kept as the product name (compatibility and identity).
       name: 'reMona',
       productLine: 'AICleaner',
       fullName: 'reMona · AICleaner',
@@ -263,7 +263,7 @@ function registerIpc() {
   });
 
   ipcMain.handle('app:reveal', async (_event, target) => {
-    // Yalnızca tarama sonucunda geçen yollar açılabilir.
+    // Only paths that appear in a scan result can be opened.
     const known = currentScan
       ? currentScan.result.categories.some((cat) => (cat._full || []).some((r) => r.path === target))
       : false;
@@ -281,7 +281,7 @@ function registerIpc() {
     return ok({ ...i18n.bundle(), settings: saved });
   });
 
-  // --- ayarlar (API anahtarı arayüze asla ham gitmez)
+  // --- settings (the API key never reaches the interface in raw form)
   ipcMain.handle('settings:get', async () => ok(await store.getPublicSettings()));
   ipcMain.handle('settings:set', async (_event, patch) => {
     const saved = await store.saveSettings(patch || {});
@@ -290,7 +290,7 @@ function registerIpc() {
     return ok(saved);
   });
 
-  // --- AI sağlayıcısı
+  // --- AI provider
   ipcMain.handle('ai:config', async () => {
     const cfg = await store.getAiConfig();
     return ok({
@@ -321,10 +321,10 @@ function registerIpc() {
     return ok(result);
   });
 
-  // --- tarama
+  // --- scanning
   ipcMain.handle('scan:status', () => ok({ scanning: scanInFlight, hasScan: Boolean(currentScan) }));
-  // Kaydedilmiş görünüm, tarandığı andaki dilde biçimlenmiş metin taşır;
-  // seçili dilde yeniden üretilip gönderilir.
+  // A saved view carries text formatted in the language of the moment it was
+  // scanned; it is regenerated in the selected language before it is sent.
   ipcMain.handle('scan:last', async () => {
     const view = await store.getLastScan();
     return ok(view ? scanner.localizeView(view) : null);
@@ -401,7 +401,7 @@ function registerIpc() {
     }
   });
 
-  // --- temizlik
+  // --- cleaning
   ipcMain.handle('clean:audit', async (_event, payload = {}) => {
     try {
       return ok(await cleaner.auditSelection(requireScan(), payload.categoryIds || []));
@@ -458,17 +458,17 @@ function registerIpc() {
     return ok(report);
   });
 
-  // --- geçmiş
+  // --- history
   ipcMain.handle('history:list', async () => ok(await store.getHistory()));
   ipcMain.handle('history:clear', async () => ok(await store.clearHistory()));
 
-  // --- geri dönüşüm kutusu
+  // --- recycle bin
   ipcMain.handle('recycle:stats', async (_event, options = {}) =>
     ok(await trash.stats({ refresh: Boolean(options.refresh) }))
   );
 }
 
-// ------------------------------------------------------------------ yaşam
+// ------------------------------------------------------------------ lifecycle
 const gotLock = app.requestSingleInstanceLock();
 if (!gotLock) {
   app.quit();

@@ -1,4 +1,4 @@
-# Satır sonları: depo Windows uygulaması, kabuk betikleri CRLF kalmalı.
+# Line endings: this is a Windows application, shell scripts must stay CRLF.
 * text=auto eol=lf
 
 *.bat text eol=crlf

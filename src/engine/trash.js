@@ -1,11 +1,11 @@
 'use strict';
 
 /**
- * Windows Geri Dönüşüm Kutusu köprüsü.
+ * Windows Recycle Bin bridge.
  *
- * Node'da yerel eklenti (native addon) derlemeye gerek kalmadan çalışsın diye
- * PowerShell üzerinden Shell COM nesnesi kullanılır. Soğuk başlatma maliyeti
- * yüksek olduğundan sonuç kısa süre önbelleğe alınır.
+ * It runs through a PowerShell Shell COM object so that no native addon has
+ * to be compiled for Node. Cold-start cost is high, so the result is cached
+ * for a short while.
  */
 
 const { execFile } = require('child_process');
@@ -47,7 +47,7 @@ const STATS_SCRIPT = [
   '[Console]::OutputEncoding = [System.Text.Encoding]::UTF8',
   '$shell = New-Object -ComObject Shell.Application',
   '$bin = $shell.NameSpace(0xA)',
-  'if ($null -eq $bin) { Write-Output "ERR|NameSpace yok"; exit 0 }',
+  'if ($null -eq $bin) { Write-Output "ERR|NameSpace missing"; exit 0 }',
   '$items = @($bin.Items())',
   '$total = [int64]0',
   'foreach ($item in $items) { try { $s = $item.Size; if ($s) { $total += [int64]$s } } catch { } }',
@@ -60,7 +60,7 @@ const EMPTY_SCRIPT = [
   'Write-Output "OK"',
 ].join('; ');
 
-/** PowerShell erişilemediğinde $Recycle.Bin klasörünü doğrudan toplar. */
+/** Collects the $Recycle.Bin folder directly when PowerShell is unavailable. */
 async function fallbackStats() {
   const root = path.join(config.SYSTEM_DRIVE, '$Recycle.Bin');
   let total = 0;
@@ -93,7 +93,7 @@ async function fallbackStats() {
           total += stat.size;
           count += 1;
         } catch {
-          /* kilitli dosya atlanır */
+          /* locked file skipped */
         }
       }
     }
@@ -109,7 +109,7 @@ async function fallbackStats() {
 }
 
 /**
- * Geri dönüşüm kutusunun boyutu ve öğe sayısı.
+ * Size and item count of the Recycle Bin.
  * @returns {Promise<{ok: boolean, size: number, count: number, size_h: string, error: string, source: string}>}
  */
 async function stats({ refresh = false } = {}) {
@@ -119,7 +119,7 @@ async function stats({ refresh = false } = {}) {
 
   let value;
   if (!IS_WINDOWS) {
-    value = { ok: false, size: 0, count: 0, size_h: humanSize(0), error: 'Yalnızca Windows', source: 'none' };
+    value = { ok: false, size: 0, count: 0, size_h: humanSize(0), error: 'Windows only', source: 'none' };
   } else {
     try {
       const out = await runPowerShell(STATS_SCRIPT, STATS_TIMEOUT_MS);
@@ -148,12 +148,12 @@ async function stats({ refresh = false } = {}) {
 }
 
 /**
- * Geri dönüşüm kutusunu boşaltır.
+ * Empties the Recycle Bin.
  * @returns {Promise<{ok: boolean, error: string}>}
  */
 async function empty() {
   if (!IS_WINDOWS) {
-    return { ok: false, error: 'Yalnızca Windows' };
+    return { ok: false, error: 'Windows only' };
   }
   try {
     const out = await runPowerShell(EMPTY_SCRIPT, EMPTY_TIMEOUT_MS);
@@ -168,7 +168,7 @@ async function empty() {
       cache = { at: 0, value: null };
       return { ok: true, error: '' };
     }
-    return { ok: false, error: `Yönetici izni gerekebilir (${text.split(/\r?\n/)[0].slice(0, 160)})` };
+    return { ok: false, error: `Administrator rights may be required (${text.split(/\r?\n/)[0].slice(0, 160)})` };
   }
 }
 

@@ -1,26 +1,26 @@
 /* ==========================================================================
-   reMona (AICleaner) — arayüz mantığı
-   Renderer hiçbir dosya sistemine erişemez; tüm işler preload köprüsü
-   (window.aicleaner) üzerinden ana süreçte yürütülür.
+   reMona (AICleaner) — interface logic
+   The renderer cannot touch the filesystem; all work runs in the main process
+   through the preload bridge (window.aicleaner).
 
-   Metinler burada sabit değildir: ana süreç İngilizce katalog üzerine seçili
-   dili bindirip tek bir sözlük gönderir. Bir anahtar eksikse sözlükte İngilizce
-   karşılığı durur, hiç yoksa anahtarın kendisi görünür — yani çevrilmemiş bir
-   dil uygulamayı bozmaz, yalnızca İngilizce görünür.
+   Text is never hard-coded here: the main process layers the selected language
+   over the English catalogue and sends a single dictionary. If a key is missing
+   the dictionary holds the English string; if that is missing too the key itself
+   appears — an untranslated language never breaks the app, it only shows English.
    ========================================================================== */
 'use strict';
 
 const api = window.aicleaner;
 
-/* --------------------------------------------------------------- çok dillilik */
-/** Ana süreçten gelen düz sözlük: { 'nav.dashboard': 'Dashboard', ... } */
+/* --------------------------------------------------------------- i18n */
+/** Flat dictionary from the main process: { 'nav.dashboard': 'Dashboard', ... } */
 let dict = {};
-/** Etkin dil kodu (Intl biçimleri için de kullanılır). */
+/** Active language code (also used for Intl formats). */
 let locale = 'en';
-/** Sağdan sola yazılan bir dil mi (ar, fa). */
+/** Is this a right-to-left language (ar, fa). */
 let rtl = false;
 
-/** Anahtarı çevirir; `{ad}` yer tutucuları `vars` ile doldurulur. */
+/** Translates a key; `{name}` placeholders are filled from `vars`. */
 function t(key, vars) {
   const name = String(key || '');
   const text = Object.prototype.hasOwnProperty.call(dict, name) ? dict[name] : name;
@@ -30,7 +30,7 @@ function t(key, vars) {
   );
 }
 
-/** Dile duyarlı ondalık/biçim: tr "1.234,5" · en "1,234.5" */
+/** Language-aware decimal format: tr "1.234,5" · en "1,234.5" */
 function intlNumber(value, fractionDigits) {
   const digits = fractionDigits || 0;
   const n = Number(value) || 0;
@@ -47,7 +47,7 @@ function intlNumber(value, fractionDigits) {
 const fmtNum = (value) => intlNumber(Math.round(Number(value) || 0), 0);
 const fmtDec = (value) => intlNumber(Number(value) || 0, 1);
 
-/** 1536 -> '1.5 KB' (motorun humanSize biçimiyle aynı, dile duyarlı) */
+/** 1536 -> '1.5 KB' (same as the engine's humanSize, but language-aware) */
 function human(bytes) {
   let n = Number(bytes) || 0;
   const units = ['B', 'KB', 'MB', 'GB', 'TB'];
@@ -61,7 +61,7 @@ function human(bytes) {
   return `${fmtDec(n)} TB`;
 }
 
-/** Saniye zaman damgası -> dile uyarlanmış tarih-saat. */
+/** Second timestamp -> date-time formatted for the language. */
 function fmtDate(seconds) {
   const value = Number(seconds);
   if (!value) return '-';
@@ -74,7 +74,7 @@ function fmtDate(seconds) {
   }
 }
 
-/** HTML'deki data-i18n* özniteliklerini sözlükten doldurur. */
+/** Fills the data-i18n* attributes in the HTML from the dictionary. */
 function applyStaticTranslations(root = document) {
   for (const node of $$('[data-i18n]', root)) node.textContent = t(node.dataset.i18n);
   for (const node of $$('[data-i18n-title]', root)) node.title = t(node.dataset.i18nTitle);
@@ -82,7 +82,7 @@ function applyStaticTranslations(root = document) {
   for (const node of $$('[data-i18n-aria]', root)) node.setAttribute('aria-label', t(node.dataset.i18nAria));
 }
 
-/** Sözlük paketini uygular (dil kodu, yön, sözlük). */
+/** Applies the dictionary bundle (language code, direction, dictionary). */
 function applyBundle(data) {
   if (!data) return;
   dict = data.dict || {};
@@ -92,7 +92,7 @@ function applyBundle(data) {
   document.documentElement.dir = rtl ? 'rtl' : 'ltr';
 }
 
-/* --------------------------------------------------------------- yardımcı */
+/* --------------------------------------------------------------- helpers */
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
 
@@ -139,13 +139,13 @@ const CAT_ICON = {
   copy: 'i-copy',
 };
 
-/** Risk anahtarı -> çevrilmiş etiket. */
+/** Risk key -> translated label. */
 const riskLabel = (key) => t(`risk.${key}`);
 
 /**
- * Kategori metni. Tarama sonucu diske yazıldığı için içinde sabitlenmiş bir
- * ad taşıyabilir; anahtar varsa metin seçili dilde yeniden üretilir, yoksa
- * (eski kayıtlarda) saklanan metne düşülür.
+ * Category text. A scan result is written to disk, so it may carry a name
+ * fixed at scan time; when the key is present the text is regenerated in the
+ * selected language, otherwise (old records) the stored text is used.
  */
 function catName(cat) {
   if (cat.name_key && Object.prototype.hasOwnProperty.call(dict, cat.name_key)) return t(cat.name_key);
@@ -265,7 +265,7 @@ function go(view) {
   $('#scroller').scrollTop = 0;
 }
 
-/* --------------------------------------------------------------- seçim */
+/* --------------------------------------------------------------- selection */
 function selectedTotals() {
   const cats = state.scan ? state.scan.categories : [];
   let bytes = 0;
@@ -360,7 +360,7 @@ function renderRing() {
   $('#diskPercent').textContent = fmtNum(percent);
   $('#ringDisk').style.strokeDashoffset = String(CIRC_DISK * (1 - Math.min(1, percent / 100)));
 
-  // İç halka: atığın "boş alana katkısı" — temizlikten sonra boş alan ne kadar büyür?
+  // Inner ring: the trash's "contribution to free space" — how far free space grows after cleanup?
   const reclaimShare = Math.min(1, total / Math.max(1, disk.free + total));
   $('#ringReclaim').style.strokeDashoffset = String(CIRC_RECLAIM * (1 - reclaimShare));
 
@@ -419,7 +419,7 @@ function renderDashboard() {
     $('#heroSummary').textContent = t('dash.readyText');
   }
 
-  // içgörüler
+  // insights
   const insights = analysis ? analysis.insights : [];
   $('#insightCount').textContent = insights.length
     ? t('dash.insightCount', { count: fmtNum(insights.length) })
@@ -443,7 +443,7 @@ function renderDashboard() {
         ])
   );
 
-  // kategori dağılımı
+  // category distribution
   const withSize = scan ? scan.categories.filter((cat) => cat.size > 0).sort((a, b) => b.size - a.size) : [];
   const top = withSize.slice(0, 7);
   const max = top.length ? top[0].size : 1;
@@ -469,7 +469,7 @@ function renderDashboard() {
       : [el('div', { class: 'empty' }, [icon('i-info'), el('p', { text: t('empty.noData') })])])
   );
 
-  // AI öneri kartı
+  // AI suggestion card
   const reclaim = $('#reclaimCard');
   if (analysis && analysis.recommended_ids.length) {
     reclaim.hidden = false;
@@ -692,8 +692,8 @@ function toggleCategory(cat) {
 
 function toggleItem(cat, item) {
   if (state.selectedCategories.has(cat.id)) {
-    // Kategori tamamen seçiliyken tek bir dosya çıkarılıyor:
-    // kalan dosyaları tek tek seçime çevir.
+    // The whole category was selected and one file is removed:
+    // turn the remaining files into individual selections.
     state.selectedCategories.delete(cat.id);
     for (const other of cat.items || []) {
       if (other.id !== item.id) state.selectedItems.add(other.id);
@@ -830,7 +830,7 @@ async function purgeSession(session) {
   await refreshVault();
 }
 
-/* --------------------------------------------------------------- geçmiş */
+/* --------------------------------------------------------------- history */
 function renderHistory() {
   const list = $('#historyList');
   if (!state.history.length) {
@@ -980,8 +980,8 @@ async function patchSettings(patch) {
   if (res && res.ok) applySettings(res.data);
 }
 
-/* --------------------------------------------------------------- dil seçici */
-/** Windows dilinin kendi adı: 'tr-TR' -> 'Türkçe'. */
+/* --------------------------------------------------------------- language picker */
+/** Native name of the Windows language: 'tr-TR' -> 'Türkçe'. */
 function systemLanguageLabel() {
   const raw = String(state.systemLocale || '').toLowerCase().replace(/_/g, '-');
   if (!raw) return localeMetaLabel(locale);
@@ -1004,7 +1004,7 @@ function renderLanguage() {
   const saved = state.language || 'auto';
   const options = [el('option', { value: 'auto', text: t('set.lang.system') })];
   for (const meta of state.locales) {
-    // Kendi dilini arayan kullanıcı için "Türkçe · Turkish" gibi iki ad verilir.
+    // Two names are shown, such as "Türkçe · Turkish", so users can find their own language.
     const label = meta.english && meta.english !== meta.native
       ? `${meta.native} · ${meta.english}`
       : meta.native;
@@ -1020,9 +1020,9 @@ function renderLanguage() {
 }
 
 /**
- * Dil değişimini uygular. Motor metinleri (kategori adları, içgörüler, özet)
- * tarama anında üretildiği için sözlükten ayrı durur; onlar ana süreçten
- * yeniden istenir — böylece arayüz tek bir satırda bile eski dilde kalmaz.
+ * Applies a language change. Engine text (category names, insights, summary)
+ * is produced at scan time and lives outside the dictionary, so it is
+ * requested again from the main process — not a single line stays in the old language.
  */
 async function changeLanguage(code) {
   const res = await api.i18n.set(code || 'auto');
@@ -1032,8 +1032,8 @@ async function changeLanguage(code) {
   state.language = code || 'auto';
   if (res.data.settings) applySettings(res.data.settings);
 
-  // Önce statik metinler, sonra dinamik görünüm: aksi hâlde statik çeviri
-  // tarama sayıları gibi hesaplanmış etiketleri "tarama bekleniyor"a çevirir.
+  // Static text first, then the dynamic view: otherwise the static translation
+  // would turn computed labels such as scan counts into "waiting for a scan".
   applyStaticTranslations();
   await reloadAll();
 
@@ -1041,12 +1041,12 @@ async function changeLanguage(code) {
   go(state.view);
 }
 
-/* --------------------------------------------------------------- AI sağlayıcısı */
+/* --------------------------------------------------------------- AI provider */
 function markAiProvider(provider) {
   $$('#aiProviderGroup button').forEach((btn) => {
     btn.classList.toggle('is-active', btn.dataset.provider === provider);
   });
-  // OpenAI alanları yalnızca bu sağlayıcı seçiliyken (ya da otomatikken) anlamlı.
+  // The OpenAI fields only matter when this provider (or automatic) is selected.
   const panel = $('#aiOpenaiPanel');
   if (panel) panel.hidden = !(provider === 'openai' || provider === 'auto');
 }
@@ -1099,7 +1099,7 @@ async function refreshAiConfig() {
   if (res && res.ok) applyAiConfig(res.data);
 }
 
-/** Formdaki değerleri ayara yazar; `silent` ise bildirim göstermez. */
+/** Writes the form values into settings; `silent` suppresses the notification. */
 async function saveAiConfig({ silent = false } = {}) {
   const patch = {
     ai_provider: state.aiProvider || 'auto',
@@ -1107,7 +1107,7 @@ async function saveAiConfig({ silent = false } = {}) {
     ai_openai_model: $('#aiModel').value.trim(),
   };
   const typedKey = $('#aiKey').value.trim();
-  // Boş alan "değiştirme" demektir; anahtar silme ayrı düğmeyle yapılır.
+  // An empty field means "leave unchanged"; the key is cleared by a separate button.
   if (typedKey) patch.ai_openai_key = typedKey;
 
   if (!silent) setAiStatus('busy', t('status.saving'));
@@ -1140,7 +1140,7 @@ async function loadAiModels() {
   setAiStatus('busy', t('status.fetching'));
 
   try {
-    // Yazılmış ama kaydedilmemiş anahtar varsa önce onu kaydet.
+    // If a key was typed but not saved, save it first.
     if ($('#aiKey').value.trim() && !(await saveAiConfig({ silent: true }))) {
       setAiStatus('error', t('status.keyNotSaved'));
       return;
@@ -1183,7 +1183,7 @@ async function testAiConnection() {
   setAiStatus('busy', t('status.testing'));
 
   try {
-    // Test, kayıtlı anahtarla yapılır; yazılmış yeni anahtar varsa önce kaydedilir.
+    // The test uses the stored key; a newly typed key is saved first.
     if ($('#aiKey').value.trim() && !(await saveAiConfig({ silent: true }))) {
       setAiStatus('error', t('status.keyNotSavedShort'));
       return;
@@ -1237,7 +1237,7 @@ async function clearAiKey() {
   setAiStatus('ok', t('status.keyRemoved'));
 }
 
-/* --------------------------------------------------------------- tarama */
+/* --------------------------------------------------------------- scanning */
 function setProgress(percent, stage) {
   $('#scanProgress').hidden = false;
   $('#progressFill').style.width = `${Math.max(0, Math.min(100, percent))}%`;
@@ -1306,7 +1306,7 @@ function applyScan(view, analysis) {
   renderDock();
 }
 
-/* --------------------------------------------------------------- temizlik */
+/* --------------------------------------------------------------- cleaning */
 function selectionPayload() {
   return {
     categoryIds: [...state.selectedCategories],
@@ -1471,7 +1471,7 @@ async function runClean() {
 
   await Promise.all([refreshVault(), refreshHistory()]);
   if (state.scan) {
-    // Tarama sonucu artık gerçeği yansıtmıyor; kullanıcıyı bilgilendir.
+    // The scan result no longer reflects reality; tell the user.
     $('#heroSummary').textContent = t('dash.afterClean');
   }
   toast({
@@ -1481,7 +1481,7 @@ async function runClean() {
   });
 }
 
-/* --------------------------------------------------------------- akıllı seçim */
+/* --------------------------------------------------------------- smart selection */
 function selectRecommended(silent = false) {
   if (!state.analysis || !state.scan) return;
   const ids = state.analysis.recommended_ids || [];
@@ -1555,7 +1555,7 @@ async function runSmartPick() {
   });
 }
 
-/* --------------------------------------------------------------- başlangıç */
+/* --------------------------------------------------------------- startup */
 function bindEvents() {
   // pencere denetimleri
   $$('.wbtn').forEach((btn) => {
@@ -1611,7 +1611,7 @@ function bindEvents() {
     renderCategories();
   });
 
-  // alt çubuk
+  // bottom bar
   $('#dockMode').addEventListener('click', (event) => {
     const btn = event.target.closest('button');
     if (!btn) return;
@@ -1652,7 +1652,7 @@ function bindEvents() {
   // dil
   $('#langSelect').addEventListener('change', (event) => changeLanguage(event.target.value));
 
-  // AI sağlayıcısı
+  // AI provider
   $('#aiProviderGroup').addEventListener('click', (event) => {
     const btn = event.target.closest('button[data-provider]');
     if (!btn) return;
@@ -1676,7 +1676,7 @@ function bindEvents() {
   $('#aiBase').addEventListener('change', () => saveAiConfig({ silent: true }));
   $('#aiModel').addEventListener('change', () => saveAiConfig({ silent: true }));
 
-  // tarama/temizlik ilerlemesi
+  // scanning/cleaning progress
   api.on('scan:progress', (progress) => {
     if (progress) setProgress(progress.percent, progress.stage);
   });
@@ -1699,9 +1699,9 @@ function bindEvents() {
 }
 
 /**
- * Dil değiştikten sonra bütün görünümü tazeler. Motor metinleri (kategori
- * adları, içgörüler, özet, sağlayıcı notu) ana süreçte üretildiği için
- * yeniden istenir — diller arasında geçişte tek bir satır eski dilde kalmaz.
+ * Refreshes the whole view after a language change. Engine text (category
+ * names, insights, summary, provider note) is produced in the main process, so
+ * it is requested again — no line stays in the old language when switching.
  */
 async function reloadAll() {
   const [lastRes, countsRes] = await Promise.all([api.scan.last(), api.scan.counts()]);
@@ -1726,7 +1726,7 @@ async function reloadAll() {
 }
 
 async function init() {
-  // Önce dil: bütün metinler sözlükten geldiği için diğer her şeyden önce yüklenir.
+  // Language first: every string comes from the dictionary, so it loads before anything else.
   const bundleRes = await api.i18n.bundle();
   if (bundleRes && bundleRes.ok) applyBundle(bundleRes.data);
 
@@ -1761,7 +1761,7 @@ async function init() {
     state.catNames = Object.fromEntries((countsRes.data.categories || []).map((c) => [c.id, c.name]));
   }
 
-  // Son taramayı geri getir (uygulama yeniden açıldığında bağlam korunur).
+  // Restore the last scan (context survives an application restart).
   const lastRes = await api.scan.last();
   if (lastRes && lastRes.ok && lastRes.data) {
     state.scan = lastRes.data;

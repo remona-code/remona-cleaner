@@ -1,11 +1,11 @@
 /* ==========================================================================
-   reMona (AICleaner) — masaüstü arayüz stilleri
-   Koyu, cam yüzeyli, degrade vurgulu premium tema.
+   reMona (AICleaner) — desktop interface styles
+   A dark, glass-surfaced premium theme with gradient accents.
    ========================================================================== */
 
-/* --------------------------------------------------------------- değişkenler */
+/* --------------------------------------------------------------- variables */
 :root {
-  /* yüzeyler */
+  /* surfaces */
   --bg:            #06080d;
   --bg-2:          #080b12;
   --surface:       rgba(255, 255, 255, 0.036);
@@ -34,7 +34,7 @@
   --risky:         #fb7185;
   --danger:        #f43f5e;
 
-  /* ölçüler */
+  /* metrics */
   --r-xs: 7px;
   --r-sm: 10px;
   --r-md: 14px;
@@ -56,7 +56,7 @@
   --glow:     0 0 0 1px rgba(99, 102, 241, .3), 0 18px 48px -18px rgba(99, 102, 241, .55);
 }
 
-/* --------------------------------------------------------------- sıfırlama */
+/* --------------------------------------------------------------- reset */
 *, *::before, *::after { box-sizing: border-box; }
 
 html, body {
@@ -88,7 +88,7 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
 
 ::selection { background: rgba(99, 102, 241, .35); }
 
-/* kaydırma çubuğu */
+/* scrollbar */
 ::-webkit-scrollbar { width: 11px; height: 11px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
@@ -157,7 +157,7 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
   height: 100vh;
 }
 
-/* --------------------------------------------------------------- başlık çubuğu */
+/* --------------------------------------------------------------- title bar */
 .titlebar {
   display: flex;
   align-items: center;
@@ -192,7 +192,7 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
   color: transparent;
 }
 
-/* Marka reMona; AICleaner hemen yanında ürün adı olarak durur. */
+/* Brand is reMona; AICleaner sits right next to it as the product name. */
 .brandbar {
   width: 1px;
   height: 12px;
@@ -222,14 +222,14 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
 .wbtn:hover { background: rgba(255, 255, 255, .07); color: var(--ink); }
 .wbtn--close:hover { background: #e11d48; color: #fff; }
 
-/* --------------------------------------------------------------- gövde */
+/* --------------------------------------------------------------- body */
 .body {
   display: grid;
   grid-template-columns: var(--sidebar-w) 1fr;
   min-height: 0;
 }
 
-/* --------------------------------------------------------------- kenar çubuğu */
+/* --------------------------------------------------------------- sidebar */
 .sidebar {
   display: flex;
   flex-direction: column;
@@ -359,7 +359,7 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
   scroll-behavior: smooth;
 }
 
-/* --------------------------------------------------------------- görünümler */
+/* --------------------------------------------------------------- views */
 .view { display: none; }
 .view.is-active { display: block; animation: view-in var(--slow) var(--ease); }
 @keyframes view-in {
@@ -367,7 +367,7 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
   to   { opacity: 1; transform: none; }
 }
 
-/* --------------------------------------------------------------- düğmeler */
+/* --------------------------------------------------------------- buttons */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -488,7 +488,7 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
 .field input::placeholder { color: var(--ink-4); }
 .field--search { width: 290px; }
 
-/* --------------------------------------------------------------- anahtar */
+/* --------------------------------------------------------------- toggle */
 .switch { display: inline-flex; align-items: center; gap: 9px; cursor: pointer; }
 .switch input { position: absolute; opacity: 0; width: 0; height: 0; }
 
@@ -732,7 +732,7 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
   font-variant-numeric: tabular-nums;
 }
 
-/* --------------------------------------------------------------- içgörüler */
+/* --------------------------------------------------------------- insights */
 .insights { display: flex; flex-direction: column; gap: 9px; }
 
 .insight {
@@ -766,7 +766,7 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
   to   { opacity: 1; transform: none; }
 }
 
-/* --------------------------------------------------------------- dağılım */
+/* --------------------------------------------------------------- distribution */
 .breakdown { display: flex; flex-direction: column; gap: 11px; }
 
 .break {
@@ -809,7 +809,7 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
 .break__fill--caution { background: linear-gradient(90deg, #fbbf24, #f59e0b); }
 .break__fill--risky { background: linear-gradient(90deg, #fb7185, #f43f5e); }
 
-/* --------------------------------------------------------------- geri kazanım */
+/* --------------------------------------------------------------- reclaim */
 .card--reclaim {
   display: flex;
   align-items: center;
@@ -833,7 +833,7 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
 .reclaim__body h3 { font-size: 14px; font-weight: 600; }
 .reclaim__body p { margin-top: 3px; font-size: 12.5px; color: var(--ink-2); }
 
-/* --------------------------------------------------------------- araç çubuğu */
+/* --------------------------------------------------------------- toolbar */
 .toolbar {
   display: flex;
   align-items: center;
@@ -843,7 +843,7 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
 }
 .toolbar__spacer { flex: 1; }
 
-/* --------------------------------------------------------------- kategori listesi */
+/* --------------------------------------------------------------- category list */
 .catlist { display: flex; flex-direction: column; gap: 12px; }
 
 .cat {
@@ -1097,7 +1097,7 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
 }
 .vault__actions { display: flex; gap: 8px; flex: none; }
 
-/* --------------------------------------------------------------- geçmiş */
+/* --------------------------------------------------------------- history */
 .historylist { display: flex; flex-direction: column; gap: 10px; }
 
 .hist {
@@ -1285,7 +1285,7 @@ input[type="range"]:active::-webkit-slider-thumb { cursor: grabbing; }
 .safety svg { width: 17px; height: 17px; color: var(--safe); margin-top: 1px; }
 .safety p { font-size: 11.5px; color: var(--ink-2); }
 
-/* --------------------------------------------------------------- alt çubuk */
+/* --------------------------------------------------------------- bottom bar */
 .dock {
   position: fixed;
   left: calc(var(--sidebar-w) + 30px);
@@ -1509,7 +1509,7 @@ body.reduce-motion * { transition-duration: 80ms !important; }
   .vaulthead__note { grid-column: 1 / -1; border-left: none; border-top: 1px solid var(--hairline); padding: 12px 0 0; }
 }
 
-/* ================================================================ AI sağlayıcısı */
+/* ================================================================ AI provider */
 .card--wide { grid-column: 1 / -1; }
 
 .card__lede {

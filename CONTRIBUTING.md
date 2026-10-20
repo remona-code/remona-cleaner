@@ -1,99 +1,105 @@
-# Katkı rehberi
+# Contributing guide
 
-reMona (AICleaner) katkılara açık. Bu dosya, bir değişikliği hazırlarken
-uymanız gereken ölçütleri anlatır. Küçük bir düzeltme için bile bir issue açmak
-iyi bir başlangıçtır: böylece aynı işi iki kişi yapmaz.
+reMona (AICleaner) welcomes contributions. This file describes the standards a
+change is expected to meet. Opening an issue first is a good start even for a
+small fix: it keeps two people from doing the same work.
 
-## Gereksinimler
+## Requirements
 
-- **Node.js 18 veya üzeri** (geliştirme Node 24 ile yapıldı).
-- **Windows 10/11.** Uygulama Windows'a özgüdür: geri dönüşüm kutusu köprüsü
-  PowerShell/COM kullanır, yol varsayımları Windows'a göredir. Linux/macOS
-  desteği için açılmış bir çalışma yok.
+- **Node.js 18 or newer** (development is done on Node 24).
+- **Windows 10/11.** The application is Windows-specific: the Recycle Bin bridge
+  uses PowerShell/COM and the path assumptions are Windows ones. No work is
+  underway on Linux/macOS support.
 
-## Kurulum
+## Setup
 
 ```bat
-git clone <depo-adresi>
-cd <proje-klasoru>
+git clone <repository-url>
+cd <project-folder>
 npm install
 npm start
 ```
 
-`npm install` Electron ikilisini indirir (yaklaşık 235 MB). Yalnızca testleri
-koşacaksanız ikiliyi indirmeniz gerekmez:
+`npm install` downloads the Electron binary (about 235 MB). If you only want to
+run the tests, you do not need the binary:
 
 ```bat
 npm ci --ignore-scripts
 npm test
 ```
 
-## Geliştirme komutları
+## Development commands
 
-| Komut | İşlev |
+| Command | What it does |
 |---|---|
-| `npm start` | Uygulamayı açar |
-| `npm run dev` | DevTools ve ayrıntılı günlükle açar |
-| `npm test` | Motor testleri (`node:test`) |
-| `npm run smoke` | Gerçek diskte salt okunur tarama; hiçbir şey silmez |
-| `npm run pack` | Taşınabilir klasör üretir |
-| `npm run dist` | NSIS kurulum dosyası üretir |
+| `npm start` | Opens the application |
+| `npm run dev` | Opens with DevTools and verbose logging |
+| `npm test` | Engine tests (`node:test`) |
+| `npm run smoke` | Read-only scan of the real disk; deletes nothing |
+| `npm run pack` | Produces an unpacked folder |
+| `npm run dist` | Produces the NSIS installer and portable executable |
 
-Arayüzü açmadan görsel doğrulama — pencereyi açar, PNG yazar, kapanır:
+Visual verification without opening the app by hand — opens the window, writes a
+PNG, closes:
 
 ```bat
 node_modules\electron\dist\electron.exe . --capture=.remona\ui-check.png
 ```
 
-## Değişiklikten önce
+## Before you change anything
 
-1. **Testleri çalıştırın.** `npm test` temiz geçmiyorsa önce onu düzeltin.
-2. **Motoru değiştirdiyseniz duman testini de koşun.** `npm run smoke` gerçek
-   sistemi tarar ve sayıları raporlar; salt okunurdur.
-3. **Var olan bir hatayı düzeltiyorsanız** hatayı yeniden üreten bir test
-   ekleyin. Testler `tests/` altında, `node:test` ile yazılır.
+1. **Run the tests.** If `npm test` is not clean, fix that first.
+2. **If you changed the engine, run the smoke test too.** `npm run smoke` scans
+   the real system and reports numbers; it is read-only.
+3. **If you are fixing a bug,** add a test that reproduces it. Tests live under
+   `tests/` and are written with `node:test`.
 
-## Dosya silen kodda güvenlik kuralları
+## Security rules for code that deletes files
 
-Bu uygulama gerçekten dosya siler. Motor katmanına dokunan bir katkıda aşağıdaki
-kurallar pazarlık konusu değildir:
+This application really deletes files. In any contribution that touches the
+engine layer the following rules are not negotiable:
 
-- **Yeni bir silme yolu eklemeyin.** Silinebilir kökler yalnızca
-  `src/engine/config.js` içindeki kategori tanımlarıdır. Kullanıcıdan veya
-  arayüzden gelen bir yol asla doğrudan silinmez.
-- **Güvenlik kapısını atlamayın.** Her silme `src/engine/utils.js` içindeki
-  beyaz liste / kara liste / kök koruması denetiminden geçer. Bu denetimi
-  "hız için" devre dışı bırakan bir değişiklik kabul edilmez.
-- **Karantinayı varsayılan bırakın.** Kalıcı silme açık bir kullanıcı seçimidir.
-- **Arayüze dosya sistemi erişimi vermeyin.** `contextIsolation: true` ve
-  `sandbox: true` korunur; `preload.js` yalnızca sayılı yetkiler açar ve
-  `ipcRenderer` nesnesini sızdırmaz.
+- **Do not add a new delete path.** The only deletable roots are the category
+  definitions in `src/engine/config.js`. A path that comes from the user or the
+  interface is never deleted directly.
+- **Do not bypass the security gate.** Every deletion passes the allow list /
+  block list / root protection check in `src/engine/utils.js`. A change that
+  disables that check "for speed" is not accepted.
+- **Leave quarantine as the default.** Permanent deletion is an explicit user
+  choice.
+- **Do not give the interface filesystem access.** `contextIsolation: true` and
+  `sandbox: true` are kept; `preload.js` exposes only a counted set of powers
+  and never leaks the `ipcRenderer` object.
 
-Bir güvenlik açığı bulduysanız lütfen issue açmayın — [SECURITY.md](SECURITY.md)
-dosyasındaki yolu izleyin.
+If you found a security vulnerability, please do not open an issue — follow the
+path in [SECURITY.md](SECURITY.md).
 
-## Kod düzeni
+## Code layout
 
-- **Dil:** kod ve yorumlar Türkçe, tanımlayıcılar İngilizce sözlükte.
-- **Stil:** mevcut dosyaların düzenini izleyin — 2 boşluk girinti, tek tırnak,
-  noktalı virgül. Ayrı bir biçimlendirici yapılandırması yok; çevre dosyaya uyar.
-- **Yorumlar:** yalnızca kodun kendisinin anlatamadığı bir kısıtı yazın
-  ("neden" gerekiyorsa). Ne yaptığını anlatan yorum eklemeyin.
-- **Bağımlılık:** çalışma zamanı bağımlılığı eklemeyin. Uygulama bilinçli olarak
-  sıfır çalışma zamanı bağımlılığıyla yazıldı; `electron` ve `electron-builder`
-  yalnızca geliştirme bağımlılığıdır. Yeni bir bağımlılık gerekiyorsa önce
-  issue'da gerekçelendirin.
+- **Language:** code, comments, documentation and identifiers are English.
+  Translated user-facing strings live in `src/i18n/locales/`.
+- **Style:** follow the layout of the existing files — 2-space indent, single
+  quotes, semicolons. There is no separate formatter configuration; the
+  surrounding file is the standard.
+- **Comments:** write only a constraint the code itself cannot express (the
+  "why", when it is needed). Do not add comments that describe what the code
+  does.
+- **Dependencies:** do not add runtime dependencies. The application is
+  deliberately written with zero runtime dependencies; `electron` and
+  `electron-builder` are development dependencies only. If a new dependency is
+  genuinely required, justify it in an issue first.
 
-## Commit ve pull request
+## Commits and pull requests
 
-- Commit mesajı kısa ve emir kipinde olsun: `karantina geri yükleme hatasını düzelt`.
-- Bir PR tek bir konuya odaklansın; ilgisiz düzenlemeleri ayrı PR'a bölün.
-- PR açıklamasında **ne** değiştiğini ve **nasıl doğruladığınızı** yazın
-  (hangi komut, hangi çıktı).
-- Arayüz değişikliği içeriyorsa önce/sonra ekran görüntüsü ekleyin.
-- CI yeşil olmadan birleştirme yapılmaz.
+- Keep the commit message short and in the imperative mood: `fix quarantine
+  restore failure`.
+- Keep a PR focused on a single topic; split unrelated edits into separate PRs.
+- In the PR description write **what** changed and **how you verified it**
+  (which command, which output).
+- If the change touches the interface, include before/after screenshots.
+- Nothing is merged while CI is red.
 
-## Lisans
+## License
 
-Katkı göndererek, katkınızın deponun [MIT lisansı](LICENSE) altında
-yayınlanmasına izin vermiş olursunuz.
+By submitting a contribution you agree that it may be published under the
+repository's [MIT license](LICENSE).

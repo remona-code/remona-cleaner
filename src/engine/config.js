@@ -1,15 +1,15 @@
 ﻿'use strict';
 
 /**
- * Uygulama yapılandırması, taranacak konumlar ve güvenlik sınırları.
+ * Application configuration, scanned locations and security boundaries.
  *
- * Bu dosya tek doğruluk kaynağıdır: hangi yolların taranabileceği ve
- * silinebileceği burada tanımlanır. Tarayıcı ve temizleyici yalnızca
- * buradaki köklerin altında çalışır.
+ * This file is the single source of truth: which paths may be scanned and
+ * deleted is defined here. The scanner and the cleaner only work beneath the
+ * roots defined here.
  *
- * Kategori adları ve açıklamaları burada tutulmaz: metinler `src/i18n`
- * altındaki kataloglardan gelir (`cat.<id>.name` / `cat.<id>.desc`), böylece
- * arayüz dili değiştiğinde tarama sonucu da aynı dilde üretilir.
+ * Category names and descriptions are not kept here: the text comes from the
+ * catalogues under `src/i18n` (`cat.<id>.name` / `cat.<id>.desc`), so a scan
+ * result is produced in the same language as the interface.
  */
 
 const os = require('os');
@@ -22,8 +22,8 @@ const i18n = require('../i18n');
 const SRC_DIR = path.resolve(__dirname, '..');
 const ROOT_DIR = path.resolve(SRC_DIR, '..');
 
-// Electron ana süreci bunu app.getPath('userData') ile ezer; test ve
-// komut satırı kullanımında proje altındaki data/ klasörü kullanılır.
+// The Electron main process overrides this with app.getPath('userData'); tests
+// and command-line use keep the project-local data/ folder.
 const DATA_DIR = process.env.AICLEANER_DATA_DIR || path.join(ROOT_DIR, 'data');
 const QUARANTINE_DIR = path.join(DATA_DIR, 'quarantine');
 const HISTORY_FILE = path.join(DATA_DIR, 'history.json');
@@ -40,9 +40,9 @@ const TEMP = process.env.TEMP || path.join(LOCALAPPDATA, 'Temp');
 const SYSTEM_DRIVE = (process.env.SystemDrive || 'C:') + '\\';
 
 // ------------------------------------------------------------------ AI
-// Sağlayıcı seçimi ve OpenAI bilgileri arayüzdeki Ayarlar ekranından yönetilir
-// (settings.json). Aşağıdaki ortam değişkenleri yalnızca yedek ilk değerlerdir:
-// ayar dosyasında bir değer varsa o kazanır.
+// Provider choice and OpenAI details are managed from the Settings screen
+// (settings.json). The environment variables below are seed values only:
+// a value present in the settings file wins.
 const OLLAMA_URL = process.env.AICLEANER_OLLAMA_URL || 'http://127.0.0.1:11434';
 const OLLAMA_MODEL = process.env.AICLEANER_OLLAMA_MODEL || '';
 
@@ -56,21 +56,21 @@ const AI_TIMEOUT_MS = Number(process.env.AICLEANER_AI_TIMEOUT || 30) * 1000;
 const AI_TEST_TIMEOUT_MS = 20000;
 const AI_MODELS_TIMEOUT_MS = 15000;
 
-/** Ayarlar ekranında sunulan sağlayıcılar. */
+/** Providers offered on the Settings screen. */
 const AI_PROVIDERS = ['auto', 'openai', 'ollama', 'rules'];
 
-// ------------------------------------------------------------------ tarama
+// ------------------------------------------------------------------ scanning
 const MAX_WALK_DEPTH = 6;
-const MAX_ITEMS_PER_CATEGORY = 400; // arayüzde gösterilen en büyük dosya sayısı
+const MAX_ITEMS_PER_CATEGORY = 400; // largest number of files shown in the interface
 const LARGE_FILE_BYTES = 300 * 1024 * 1024;
 const OLD_FILE_DAYS = 180;
 const DUP_MIN_BYTES = 1024 * 1024;
 const DUP_MAX_FILES = 20000;
 
-/** Metinlerde gösterilecek eşikler (dilden bağımsız birimler). */
+/** Thresholds shown in text (language-independent units). */
 const LARGE_FILE_LABEL = `${Math.round(LARGE_FILE_BYTES / (1024 * 1024))} MB`;
 
-// Silme işlemleri için mutlak yasak: bu parçaları içeren hiçbir yol silinemez.
+// Absolute ban for deletion: no path containing these fragments can be deleted.
 const DENY_FRAGMENTS = [
   '\\system32',
   '\\syswow64',
@@ -88,10 +88,10 @@ const DENY_FRAGMENTS = [
   '\\microsoft\\protect',
 ];
 
-// Kendisi doğrudan silinemeyecek kullanıcı klasörleri (içindeki dosyalar serbest).
+// User folders that cannot be deleted themselves (files inside them are fine).
 const PROTECTED_USER_DIRS = ['desktop', 'documents', 'pictures', 'music', 'videos'];
 
-// Gezinirken hiç girilmeyecek klasör adları: gürültü ve çift sayım önleyici.
+// Folder names never descended into: prevents noise and double counting.
 const SKIP_DIR_NAMES = [
   'node_modules',
   '.git',
@@ -107,9 +107,9 @@ const SKIP_DIR_NAMES = [
 
 // ------------------------------------------------------------------ kategoriler
 // mode:
-//   walk    -> roots altındaki dosyalar taranır (root'lar * içerebilir)
-//   glob    -> yalnızca desene uyan dosyalar
-//   special -> scanner.js içinde özel işleyici
+//   walk    -> files under the roots are scanned (roots may contain *)
+//   glob    -> only files matching the pattern
+//   special -> handled by dedicated code in scanner.js
 const CATEGORIES = [
   {
     id: 'user_temp',
@@ -223,12 +223,12 @@ const CATEGORIES = [
 const CATEGORY_BY_ID = Object.fromEntries(CATEGORIES.map((c) => [c.id, c]));
 const SAFE_CATEGORY_IDS = CATEGORIES.filter((c) => c.risk === 'safe').map((c) => c.id);
 
-/** Kategori adı, seçili arayüz dilinde. */
+/** Category name in the selected interface language. */
 function categoryName(id) {
   return i18n.t(`cat.${id}.name`);
 }
 
-/** Kategori açıklaması, eşik değerleri yerleştirilmiş olarak. */
+/** Category description with the threshold values filled in. */
 const DESC_VARS = { days: OLD_FILE_DAYS, size: LARGE_FILE_LABEL };
 
 function categoryDesc(id) {
@@ -236,12 +236,12 @@ function categoryDesc(id) {
 }
 
 /**
- * Kategori metninin çeviri anahtarları.
+ * Translation keys for the category text.
  *
- * Tarama sonucu diske yazıldığı için içine sabitlenmiş metin koymak yanlış
- * olur: uygulama başka bir dille açıldığında kategori adları eski dilde
- * kalırdı. Bu yüzden görünüm anahtarı ve değişkenleri taşır, metni seçili
- * dilde arayüz üretir.
+ * A scan result is written to disk, so baking fixed text into it would be
+ * wrong: opening the application in another language would leave the category
+ * names in the old language. The view therefore carries the key and its
+ * variables, and the interface produces the text in the selected language.
  */
 function categoryKeys(id) {
   return {
@@ -252,12 +252,12 @@ function categoryKeys(id) {
 }
 
 /**
- * `special` modundaki tarayıcıların kendi kökleri yoktur; temizleyicinin
- * onların dosyalarını silebilmesi için ayrıca izin verilen kök gerekir.
+ * Scanners in `special` mode have no roots of their own; the cleaner needs
+ * separately allowed roots before it can delete their files.
  */
 const EXTRA_DELETE_ROOTS = [USER_HOME];
 
-/** Kopya tarayıcısının gezdiği kullanıcı klasörleri. */
+/** User folders the duplicate scanner walks. */
 const DUPLICATE_ROOTS = ['Downloads', 'Documents', 'Pictures', 'Videos', 'Desktop', 'OneDrive']
   .map((name) => path.join(USER_HOME, name))
   .filter((p) => fs.existsSync(p));
@@ -266,14 +266,14 @@ const DEFAULT_SETTINGS = {
   deep_scan: false,
   clean_mode: 'quarantine', // quarantine | delete
   auto_select_safe: true,
-  language: 'auto', // auto = Windows dili | en | tr | de | …
+  language: 'en', // 'en' is the source language; 'auto' follows the Windows UI language
   reduce_motion: false,
 
-  // --- AI sağlayıcısı (Ayarlar ekranından düzenlenir)
+  // --- AI provider (edited from the Settings screen)
   ai_provider: 'auto', // auto | openai | ollama | rules
-  ai_openai_base: '', // boşsa OPENAI_DEFAULT_BASE
-  ai_openai_model: '', // boşsa OPENAI_DEFAULT_MODEL
-  ai_openai_key: '', // store.js içinde şifrelenerek saklanır
+  ai_openai_base: '', // falls back to OPENAI_DEFAULT_BASE when empty
+  ai_openai_model: '', // falls back to OPENAI_DEFAULT_MODEL when empty
+  ai_openai_key: '', // stored encrypted by store.js
   ai_temperature: 0.3,
   ai_max_tokens: 320,
 };
@@ -283,7 +283,7 @@ function ensureDirs() {
     try {
       fs.mkdirSync(dir, { recursive: true });
     } catch {
-      /* yok sayılır */
+      /* ignored */
     }
   }
 }

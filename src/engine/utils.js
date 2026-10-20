@@ -1,8 +1,8 @@
 'use strict';
 
 /**
- * Küçük yardımcılar: boyut biçimlendirme, güvenli dosya gezme, yol güvenliği.
- * Tüm G/Ç işlemleri asenkron olduğu için arayüz hiçbir zaman donmaz.
+ * Small helpers: size formatting, safe directory walking, path security.
+ * All I/O is asynchronous, so the interface never freezes.
  */
 
 const crypto = require('crypto');
@@ -16,14 +16,14 @@ const i18n = require('../i18n');
 const HOUR = 3600;
 const DAY = 86400;
 
-// ------------------------------------------------------------------ biçim
-/** 1536 -> '1.5 KB' (dile duyarlı ondalık ayracı: 1,5 KB) */
+// ------------------------------------------------------------------ format
+/** 1536 -> '1.5 KB' (the decimal separator follows the language: 1,5 KB) */
 function humanSize(num) {
   return i18n.humanSize(num);
 }
 
 // ------------------------------------------------------------------ yollar
-/** Karşılaştırma için normalleştirilmiş mutlak yol (Windows'ta büyük/küçük harf duyarsız). */
+/** Normalised absolute path for comparison (case-insensitive on Windows). */
 function norm(p) {
   try {
     return path.resolve(String(p)).toLowerCase();
@@ -32,7 +32,7 @@ function norm(p) {
   }
 }
 
-/** `child` yolu `root` klasörünün altında mı (ya da kendisi mi)? */
+/** Is `child` under the `root` folder (or the root itself)? */
 function isUnder(child, root) {
   const c = norm(child);
   const r = norm(root).replace(/[\\/]+$/, '');
@@ -58,9 +58,9 @@ function wildcardToRegExp(pattern) {
 }
 
 /**
- * `a\*\b\*.log` gibi zincirleri adım adım gerçek yollara açar.
- * Python sürümünde yalnızca son parçadaki joker destekleniyordu; burada
- * ortadaki joker de (Chrome profilleri gibi) doğru çözülür.
+ * Expands chains such as `a\*\b\*.log` step by step into real paths.
+ * The Python version only supported a wildcard in the last segment; here a
+ * wildcard in the middle (Chrome profiles, for example) resolves correctly too.
  */
 async function expandChain(pattern) {
   const parsed = path.parse(pattern);
@@ -97,7 +97,7 @@ async function expandChain(pattern) {
   return current;
 }
 
-/** Joker içeren yol desenlerini gerçek klasör yollarına açar, tekrarları atar. */
+/** Expands wildcard path patterns into real folder paths and drops duplicates. */
 async function expandRoots(patterns) {
   const found = [];
   const seen = new Set();
@@ -120,10 +120,10 @@ async function expandRoots(patterns) {
 
 // ------------------------------------------------------------------ gezme
 /**
- * Kök altındaki dosyaları {path, size, mtime} olarak üretir.
+ * Yields the files under the root as {path, size, mtime}.
  *
- * Kilitli/erişilemeyen dizinler sessizce atlanır, sembolik bağlantılar
- * takip edilmez (sonsuz döngü ve yanlış silme koruması).
+ * Locked or unreachable directories are skipped silently and symbolic links
+ * are not followed (guards against infinite loops and wrong deletions).
  */
 async function* walkFiles(root, options = {}) {
   const maxDepth = options.maxDepth ?? config.MAX_WALK_DEPTH;
@@ -182,7 +182,7 @@ async function* walkFiles(root, options = {}) {
   }
 }
 
-/** `*` içerebilen tekil dosya desenlerini üretir. */
+/** Yields single-file patterns that may contain `*`. */
 async function* globFiles(patterns) {
   for (const pattern of patterns) {
     const matches = await expandChain(pattern);
@@ -199,12 +199,12 @@ async function* globFiles(patterns) {
 }
 
 // ------------------------------------------------------------------ kimlik
-/** Bir yol için kararlı kimlik (12 karakter). */
+/** Stable identifier for a path (12 characters). */
 function itemId(target) {
   return crypto.createHash('md5').update(norm(target), 'utf8').digest('hex').slice(0, 12);
 }
 
-/** İlk 128 KB + boyut ile hızlı içerik parmak izi. */
+/** Fast content fingerprint from the first 128 KB plus the size. */
 async function partialHash(target, chunk = 131072) {
   const hash = crypto.createHash('sha1');
   let handle;
@@ -222,15 +222,15 @@ async function partialHash(target, chunk = 131072) {
     const stat = await fsp.stat(target);
     hash.update(String(stat.size));
   } catch {
-    /* yok sayılır */
+    /* ignored */
   }
   return hash.digest('hex');
 }
 
-// ------------------------------------------------------------------ güvenlik
+// ------------------------------------------------------------------ security
 /**
- * Silme güvenlik kapısı.
- * @returns {[boolean, string]} [izin_var_mı, gerekçe]
+ * Deletion security gate.
+ * @returns {[boolean, string]} [allowed, reason]
  */
 function isPathSafeToDelete(target, allowedRoots) {
   let abs;
@@ -285,8 +285,8 @@ function fmtNumber(value) {
   return i18n.number(value);
 }
 
-// ------------------------------------------------------------------ taşıma
-/** Farklı sürücüler arasında da çalışan taşıma. */
+// ------------------------------------------------------------------ moving
+/** A move that also works across different drives. */
 async function moveFile(from, to) {
   await fsp.mkdir(path.dirname(to), { recursive: true });
   try {

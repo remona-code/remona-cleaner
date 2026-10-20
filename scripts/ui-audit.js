@@ -1,13 +1,13 @@
 'use strict';
 
 /**
- * Arayüz tutarlılık denetimi.
+ * Interface consistency audit.
  *
- * `app.js` içindeki `$('#id')` seçicilerinin tamamı `index.html`'de tanımlı mı?
- * Tanımsız bir id `null.textContent` hatası verir ve arayüz sessizce yarım
- * kalır; bu denetim o sınıf hatayı derlemeden önce yakalar.
+ * Is every `$('#id')` selector in `app.js` defined in `index.html`?
+ * An undefined id raises a `null.textContent` error and leaves the interface
+ * half-rendered; this audit catches that class of bug before any build.
  *
- * Kullanım: node scripts/ui-audit.js
+ * Usage: node scripts/ui-audit.js
  */
 
 const fs = require('fs');
@@ -40,9 +40,9 @@ function main() {
   const unused = [...defined].filter((id) => !used.has(id)).sort();
 
   console.log(`html id: ${defined.size}`);
-  console.log(`betikte kullanılan id: ${used.size}`);
-  console.log(missing.length ? `HATA tanımsız id: ${missing.join(', ')}` : 'HATA: yok');
-  if (unused.length) console.log(`bilgi (yalnızca css/html): ${unused.join(', ')}`);
+  console.log(`ids used in scripts: ${used.size}`);
+  console.log(missing.length ? `ERROR undefined id: ${missing.join(', ')}` : 'ERROR: none');
+  if (unused.length) console.log(`info (css/html only): ${unused.join(', ')}`);
 
   if (missing.length) process.exitCode = 1;
 }

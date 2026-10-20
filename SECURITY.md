@@ -1,78 +1,82 @@
-# Güvenlik politikası
+# Security policy
 
-## Desteklenen sürümler
+## Supported versions
 
-| Sürüm | Destek |
+| Version | Support |
 |---|---|
-| 1.x | Destekleniyor |
+| 1.x | Supported |
 
-Depo tek bir geliştirme hattı izler (`main`). Güvenlik düzeltmeleri en son
-sürüme uygulanır.
+The repository follows a single development line (`main`). Security fixes are
+applied to the latest version.
 
-## Açık bildirimi
+## Reporting a vulnerability
 
-**Lütfen güvenlik açıkları için herkese açık issue açmayın.**
+**Please do not open a public issue for security vulnerabilities.**
 
-Bunun yerine deponun **Security → Report a vulnerability** bölümünden özel bir
-bildirim gönderin (GitHub Security Advisories). Bildirimde şunlar olsun:
+Instead send a private report through the repository's
+**Security → Report a vulnerability** section (GitHub Security Advisories).
+Include:
 
-- Etkilenen sürüm ve Windows sürümü,
-- Hatayı yeniden üretme adımları,
-- Beklenen ve gerçekleşen davranış,
-- Varsa kavram kanıtı (PoC) veya günlük çıktısı.
+- The affected version and your Windows version,
+- Steps to reproduce the problem,
+- Expected and actual behaviour,
+- A proof of concept (PoC) or log output where available.
 
-İlk yanıt hedefi **7 gün**, düzeltme için hedef **30 gündür**. Düzeltme
-yayınlandıktan sonra, isterseniz adınızı teşekkür listesine ekleriz.
+The first response target is **7 days** and the fix target is **30 days**. Once
+the fix is released we will add your name to the thanks list, if you want.
 
-### Bildirime API anahtarı koymayın
+### Do not put an API key in a report
 
-OpenAI veya benzeri bir sağlayıcı anahtarını issue'ya, günlüğe ya da ekran
-görüntüsüne **yazmayın**. Anahtar sızdıysa önce sağlayıcı panelinden iptal edin,
-sonra bildirin. Uygulama anahtarı arayüze geri döndürmez; yalnızca `••••abcd`
-maskesini gösterir.
+Do not write an OpenAI or similar provider key into an issue, a log or a
+screenshot. If a key has leaked, revoke it from the provider's dashboard first,
+then report. The application never returns the key to the interface; it only
+shows a `••••abcd` mask.
 
-## Tehdit modeli
+## Threat model
 
-Bu uygulama bilinçli olarak dosya siler. Bu yüzden en önemli güvenlik hedefi
-**kullanıcının sistem dosyalarına ve kişisel verisine zarar vermemektir.**
+This application deliberately deletes files. Its most important security goal is
+therefore **never to harm the user's system files or personal data.**
 
-Kapsam içi:
+In scope:
 
-- Güvenlik kapısını atlatarak kategori beyaz listesi dışındaki bir dosyayı
-  silmek veya karantinaya taşımak,
-- Arayüzden gelen bir yolun doğrulanmadan motor katmanında kullanılması,
-- Karantinadaki bir dosyanın geri yüklenirken hedef yolunun dışına yazması,
-  üzerine yazması veya yol aşımı (path traversal) yapması,
-- `contextIsolation` / `sandbox` sınırını aşan bir IPC yüzeyi: arayüzün Node
-  API'sine, `require`'a veya dosya sistemine erişebilmesi,
-- Kayıtlı API anahtarının düz metin olarak diske yazılması veya arayüze ya da
-  üçüncü bir servise sızması,
-- Zorla indirilen veya doğrulanmadan çalıştırılan bir güncelleme/bileşen.
+- Deleting or quarantining a file outside the category allow list by bypassing
+  the security gate,
+- Using a path that came from the interface in the engine layer without
+  validation,
+- A quarantined file writing outside its target path, overwriting something, or
+  performing path traversal while being restored,
+- An IPC surface that crosses the `contextIsolation` / `sandbox` boundary: the
+  interface being able to reach the Node API, `require`, or the filesystem,
+- A stored API key being written to disk in plain text, or leaking into the
+  interface or a third-party service,
+- An update or component that is force-downloaded or executed without
+  verification.
 
-Kapsam dışı:
+Out of scope:
 
-- **Yönetici olarak çalıştırmanın** kendisi. Uygulama yönetici yetkisi istemez;
-  `C:\Windows\Temp` gibi kategoriler yönetici olmadan kısmen okunur.
-- Dosya silme işleminin geri dönüşü olmaması — **kalıcı silme** açık bir
-  kullanıcı seçimidir ve onay ister. Varsayılan davranış karantinadır.
-- Windows'un kendi geri dönüşüm kutusu `--empty` bayrağıyla boşaltıldığında
-  bunun kullanıcı tarafından istendiği gerçeği. Bu işlem COM/PowerShell köprüsü
-  üzerinden yapılır ve yalnızca açık seçimle çalışır.
-- Üçüncü taraf yapay zeka sağlayıcısının (OpenAI vb.) kendi gizlilik politikası.
-  Sağlayıcıya yalnızca dosya adları ve boyutları gibi **kısa bir özet** gönderilir;
-  dosya içerikleri hiçbir zaman gönderilmez.
+- **Running as administrator** by itself. The application does not request
+  administrator rights; categories such as `C:\Windows\Temp` are partially
+  readable without them.
+- Permanent deletion being irreversible — **permanent delete** is an explicit
+  user choice and asks for confirmation. The default behaviour is quarantine.
+- Windows' own Recycle Bin being emptied through the `--empty` flag being
+  something the user asked for. This runs through the COM/PowerShell bridge and
+  only on an explicit selection.
+- The third-party AI provider's (OpenAI etc.) own privacy policy. Only a **short
+  summary** such as file names and sizes is sent to the provider; file contents
+  are never sent.
 
-## Uygulamadaki güvenlik önlemleri
+## Security measures in the application
 
-Ayrıntılı model README'nin **Güvenlik modeli** bölümündedir. Özet:
+The detailed model is in the **Security model** section of the README. Summary:
 
-- Silinebilir kökler yalnızca `src/engine/config.js` içindeki kategori
-  tanımlarıdır; her silme beyaz liste, kara liste ve kök koruması denetiminden
-  geçer.
-- Temizlik iki aşamalıdır: önce kuru çalıştırma raporu, sonra her dosya için
-  yeniden doğrulama.
-- Arayüz dosya yolu göndermez; yalnızca kategori ve öğe kimliği gönderir.
-- API anahtarı işletim sisteminin şifreleme kasasıyla (Windows'ta DPAPI)
-  şifrelenir ve arayüze geri döndürülmez.
-- Arayüzde Node entegrasyonu kapalıdır (`contextIsolation: true`,
+- Deletable roots are only the category definitions in `src/engine/config.js`;
+  every deletion passes the allow list, block list and root protection check.
+- Cleanup has two stages: a dry-run report first, then re-verification for every
+  file.
+- The interface sends no file paths; it sends only category and item
+  identifiers.
+- The API key is encrypted with the operating system's encryption vault (DPAPI
+  on Windows) and is never returned to the interface.
+- Node integration is disabled in the interface (`contextIsolation: true`,
   `sandbox: true`, `nodeIntegration: false`).

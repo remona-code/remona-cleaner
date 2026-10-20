@@ -1,16 +1,16 @@
 'use strict';
 
 /**
- * AI danışman katmanı.
+ * AI advisor layer.
  *
- * Üç katmanlı çalışır:
+ * It works in three layers:
  *
- * 1. Kural motoru (her zaman açık): kategori riski, dosya yaşı ve boyut
- *    ağırlığından güven skoru üretir, seçili arayüz dilinde içgörüler çıkarır.
- * 2. Akıllı seçim: hedefe (ör. 5 GB) ulaşmak için en güvenli/en verimli
- *    kategorileri sıralar.
- * 3. Yerel LLM (varsa): Ollama ya da OpenAI uyumlu uç nokta üzerinden
- *    doğal dilde soruları yanıtlar. Yoksa kural motoru yanıtlar.
+ * 1. Rule engine (always on): produces a confidence score from category risk,
+ *    file age and size, and writes insights in the selected interface language.
+ * 2. Smart selection: ranks the safest and most effective categories to reach
+ *    a target (5 GB, for example).
+ * 3. Local LLM (when present): answers questions in natural language through
+ *    Ollama or an OpenAI-compatible endpoint. Otherwise the rule engine answers.
  */
 
 const config = require('./config');
@@ -21,28 +21,27 @@ const { humanSize } = require('./utils');
 
 const RISK_WEIGHT = { safe: 1.0, caution: 0.55, risky: 0.2 };
 
-/** İç karar anahtarları katalogdaki kararlı anahtarlara eşlenir. */
-const VERDICT_KEYS = { sil: 'delete', dikkatli: 'review', dokunma: 'avoid', 'boş': 'empty' };
+/* Verdict tokens are also the catalogue keys under "verdict". */
 
-/** Risk etiketi, seçili arayüz dilinde. */
+/** Risk label in the selected interface language. */
 function riskLabel(risk) {
   return i18n.t(`risk.${risk}`);
 }
 
-/** Karar etiketi ("Silinebilir" / "Can be removed" …). */
+/** Verdict label ("Can be removed", "Do not touch", …). */
 function verdictLabel(verdict) {
-  return i18n.t(`verdict.${VERDICT_KEYS[verdict] || 'avoid'}`);
+  return i18n.t(`verdict.${verdict || 'avoid'}`);
 }
 
 const PROVIDER_TTL_MS = 30000;
 let providerCache = { at: 0, value: null };
 
-/** Ayarlar değiştiğinde çağrılır; bir sonraki sorgu yeniden yoklar. */
+/** Called when settings change; the next query probes again. */
 function resetProviderCache() {
   providerCache = { at: 0, value: null };
 }
 
-// ------------------------------------------------------------------ sağlayıcı
+// ------------------------------------------------------------------ provider
 async function fetchWithTimeout(url, options = {}, timeoutMs = config.AI_TIMEOUT_MS) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -71,7 +70,7 @@ async function ollamaModel() {
   }
 }
 
-/** HTTP durum kodlarını kullanıcının anlayacağı cümlelere çevirir. */
+/** Turns HTTP status codes into sentences a user can understand. */
 function httpMessage(status, detail) {
   const text = String(detail || '').trim();
   if (status === 401) return i18n.t('http.e401');
@@ -84,8 +83,8 @@ function httpMessage(status, detail) {
 }
 
 /**
- * OpenAI uyumlu uç noktaya istek atar. Ağ hatalarında fırlatmaz;
- * `{ ok, data, error, status, cfg }` döndürür ki arayüz nedeni gösterebilsin.
+ * Sends a request to an OpenAI-compatible endpoint. It does not throw on
+ * network errors; it returns `{ ok, data, error, status, cfg }` so the interface can show the cause.
  */
 async function openaiRequest(pathname, { method = 'GET', body, timeoutMs } = {}) {
   const cfg = await store.getAiConfig();
@@ -114,7 +113,7 @@ async function openaiRequest(pathname, { method = 'GET', body, timeoutMs } = {})
         const parsed = await res.json();
         detail = parsed?.error?.message || parsed?.message || '';
       } catch {
-        /* gövde JSON değilse ayrıntı boş kalır */
+        /* the detail stays empty when the body is not JSON */
       }
       return { ok: false, status: res.status, cfg, error: httpMessage(res.status, detail) };
     }
@@ -133,7 +132,7 @@ async function openaiRequest(pathname, { method = 'GET', body, timeoutMs } = {})
   }
 }
 
-/** Kullanılabilir sohbet modellerini listeler (`GET /models`). */
+/** Lists the available chat models (`GET /models`). */
 async function listModels() {
   const result = await openaiRequest('/models', { timeoutMs: config.AI_MODELS_TIMEOUT_MS });
   if (!result.ok) {
@@ -146,7 +145,7 @@ async function listModels() {
     .filter(Boolean)
     .filter((id) => !/embed|whisper|tts|dall-e|moderation|audio|realtime|image/i.test(id));
 
-  // Sohbet modelleri listenin başında dursun; gerisi alfabetik.
+  // Chat models come first; the rest is alphabetical.
   const chatLike = /^(gpt|chatgpt|o\d|claude|gemini|llama|mistral|qwen|deepseek|grok|command)/i;
   models.sort((a, b) => {
     const diff = (chatLike.test(a) ? 0 : 1) - (chatLike.test(b) ? 0 : 1);
@@ -156,7 +155,7 @@ async function listModels() {
   return { ok: true, models, base: result.cfg.base, count: models.length };
 }
 
-/** Verilen (ya da kayıtlı) modelle gerçek bir tur atıp gecikmeyi ölçer. */
+/** Runs one real round with the given (or stored) model and measures latency. */
 async function testConnection(model) {
   const cfg = await store.getAiConfig();
   const target = String(model || cfg.model || '').trim();
@@ -195,7 +194,7 @@ async function testConnection(model) {
   return { ok: true, model: target, base: cfg.base, latency_ms: latency, reply };
 }
 
-/** Hangi AI motorunun kullanılabilir olduğunu döndürür (30 sn önbellekli). */
+/** Returns which AI engine is available (cached for 30 seconds). */
 async function providerStatus({ refresh = false } = {}) {
   if (!refresh && providerCache.value && Date.now() - providerCache.at < PROVIDER_TTL_MS) {
     return providerCache.value;
@@ -270,18 +269,18 @@ async function providerStatus({ refresh = false } = {}) {
 // ------------------------------------------------------------------ skorlama
 function confidence(cat, totalSize, diskPercent) {
   const base = { safe: 92, caution: 62, risky: 25 }[cat.risk] ?? 50;
-  if (!cat.size) return { confidence: 0, verdict: 'boş', reason: i18n.t('reason.empty') };
+  if (!cat.size) return { confidence: 0, verdict: 'empty', reason: i18n.t('reason.empty') };
 
   let conf = base;
   const share = totalSize ? cat.size / totalSize : 0;
-  conf += Math.min(8, share * 20); // büyük kazanç daha öncelikli
+    conf += Math.min(8, share * 20); // a bigger win gets priority
   if (diskPercent >= 85) conf += 5; // disk doluysa cesaret artar
 
   const ages = (cat.items || []).slice(0, 50).map((i) => i.age_days || 0);
   if (ages.length) {
     const avgAge = ages.reduce((a, b) => a + b, 0) / ages.length;
     if (avgAge > 60) conf += 4;
-    else if (avgAge < 1) conf -= 6; // az önce oluşan dosyalar risklidir
+        else if (avgAge < 1) conf -= 6; // files created moments ago are risky
   }
 
   let reason = cat.description || '';
@@ -310,14 +309,14 @@ function confidence(cat, totalSize, diskPercent) {
   }
 
   conf = Math.max(0, Math.min(99, conf));
-  let verdict = 'dokunma';
-  if (conf >= 80) verdict = 'sil';
-  else if (conf >= 50) verdict = 'dikkatli';
+  let verdict = 'avoid';
+  if (conf >= 80) verdict = 'delete';
+  else if (conf >= 50) verdict = 'review';
 
   return { confidence: Math.round(conf), verdict, reason };
 }
 
-/** Tarama sonucuna AI değerlendirmesi ekler. */
+/** Adds the AI assessment to a scan result. */
 async function analyze(input) {
   const result = scanner.localizeView(input);
   const categories = result.categories || [];
@@ -478,8 +477,8 @@ function summaryText(result, recommendedIds) {
   });
 }
 
-// ------------------------------------------------------------------ akıllı seçim
-/** Hedeflenen boş alana en güvenli yoldan ulaşan kategori seçimini yapar. */
+// ------------------------------------------------------------------ smart selection
+/** Picks the categories that reach the target free space by the safest route. */
 async function smartPick(result, targetBytes) {
   const analysis = await analyze(result);
   const ranked = result.categories
@@ -491,7 +490,7 @@ async function smartPick(result, targetBytes) {
   let accumulated = 0;
   for (const row of ranked) {
     if (accumulated >= targetBytes) break;
-    if (row.confidence < 50) continue; // riskli gruplar asla otomatik seçilmez
+        if (row.confidence < 50) continue; // risky groups are never selected automatically
     chosen.push(row.cat.id);
     accumulated += row.cat.size;
   }
@@ -509,9 +508,9 @@ async function smartPick(result, targetBytes) {
 
 // ------------------------------------------------------------------ soru-cevap
 /**
- * Kullanıcının sorusunu yanıtlar: LLM varsa LLM, yoksa kural motoru.
- * `intent` arayüzdeki hazır soru düğmelerinden gelir; böylece kural motoru
- * hangi dilde yazıldığından bağımsız olarak doğru yanıtı seçebilir.
+ * Answers the user's question: the LLM when available, the rule engine otherwise.
+ * `intent` comes from the preset question buttons in the interface, so the rule
+ * engine can pick the right answer regardless of the language it was written in.
  */
 async function ask(question, result, options = {}) {
   const text = String(question || '').trim();
@@ -530,14 +529,14 @@ async function ask(question, result, options = {}) {
     const cfg = await store.getAiConfig();
     const reply = await openaiGenerate(text || intent, context, cfg);
     if (reply.text) return { answer: reply.text, engine: `openai:${cfg.model}` };
-    // Anahtar/uç nokta hatası sessizce yutulmaz: kullanıcı nedenini görür.
+    // Key and endpoint errors are not swallowed: the user sees the cause.
     if (reply.error) return { answer: reply.error, engine: 'openai:error' };
   }
 
   return { answer: ruleAnswer(text || intent, result, intent), engine: 'local-rules' };
 }
 
-/** Modele verilen tarama özeti. Girdi veridir; arayüz dilinden bağımsızdır. */
+/** Scan summary given to the model. It is input data, independent of the interface language. */
 function contextText(result) {
   if (!result) return 'No scan has been run yet.';
   const disk = result.disk.primary;
@@ -553,7 +552,7 @@ function contextText(result) {
   return lines.join('\n');
 }
 
-/** Sistem istemi: seçili arayüz dilinde yanıt ister. */
+/** System prompt: asks for the answer in the selected interface language. */
 function systemPrompt() {
   return `${i18n.t('ai.systemPrompt')} ${i18n.t('ai.languageLine', {
     language: i18n.localeMeta().english,
@@ -602,7 +601,7 @@ async function openaiGenerate(question, context, cfg) {
   return { text, error: '' };
 }
 
-/** Yazılı sorular için niyet kalıpları (birden çok dilde anahtar sözcük). */
+/** Intent patterns for typed questions (keywords in several languages). */
 const INTENT_PATTERNS = {
   what: /\b(delete|remove|clean|cleanup|free|junk|what)\b|sil|öner|tavsiye|hangi|temizle|löschen|supprimer|eliminar|eliminare|excluir|удал|削除|삭제|حذف/i,
   disk: /\b(disk|drive|space|storage|full)\b|yer|alan|dolu|espace|espacio|spazio|platz|место|容量|空間|مساحة/i,
@@ -611,8 +610,8 @@ const INTENT_PATTERNS = {
 };
 
 /**
- * Kural motoru yanıtı. `intent` verilmişse anahtar sözcük araması atlanır;
- * böylece arayüzdeki hazır sorular her dilde doğru dalı seçer.
+ * Rule engine answer. When `intent` is given the keyword search is skipped, so
+ * the preset questions in the interface pick the right branch in every language.
  */
 function ruleAnswer(question, result, intent = '') {
   if (!result) return i18n.t('rule.noScan');
@@ -644,7 +643,7 @@ function ruleAnswer(question, result, intent = '') {
     });
   }
 
-  // Kategori adları da çevrildiği için eşleşme her dilde çalışır.
+  // Category names are translated too, so the match works in every language.
   for (const cat of cats) {
     if (cat.size <= 0) continue;
     const words = String(cat.name || '')

@@ -1,26 +1,26 @@
-## Ne değişti
+## What changed
 
-<!-- Kısa özet. Tek bir konuya odaklanın. -->
+<!-- Short summary. Keep it focused on a single topic. -->
 
-## Neden
+## Why
 
-<!-- Hangi sorunu çözüyor? İlgili issue: "Kapatır #12" -->
+<!-- Which problem does it solve? Related issue: "Closes #12" -->
 
-## Nasıl doğrulandı
+## How it was verified
 
-<!-- Hangi komut, hangi çıktı. "Testler geçti" tek başına yeterli değil. -->
+<!-- Which command, which output. "Tests passed" on its own is not enough. -->
 
 ```bat
 npm test
 npm run smoke
 ```
 
-## Kontrol listesi
+## Checklist
 
-- [ ] `npm test` temiz geçiyor
-- [ ] Motor katmanına dokunduysa `npm run smoke` çalıştırıldı (salt okunur)
-- [ ] Yeni silme kökü eklenmedi; silinebilir yollar yalnızca `src/engine/config.js` içinde
-- [ ] `contextIsolation` / `sandbox` korundu, `preload.js` yeni bir dosya sistemi yetkisi açmadı
-- [ ] Arayüz değiştiyse önce/sonra ekran görüntüsü eklendi
-- [ ] Commit mesajı kısa ve emir kipinde
-- [ ] Katkımı MIT lisansı altında yayınlamaya izin veriyorum
+- [ ] `npm test` passes cleanly
+- [ ] `npm run smoke` was run if the engine layer was touched (read-only)
+- [ ] No new delete root was added; deletable paths live only in `src/engine/config.js`
+- [ ] `contextIsolation` / `sandbox` are preserved and `preload.js` exposes no new filesystem power
+- [ ] Before/after screenshots were added if the interface changed
+- [ ] The commit message is short and in the imperative mood
+- [ ] I agree that my contribution may be published under the MIT license

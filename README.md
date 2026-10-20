@@ -1,72 +1,88 @@
 # reMona (AICleaner)
 
-[![Lisans: MIT](https://img.shields.io/badge/lisans-MIT-3da639.svg)](LICENSE)
-[![Platform](https://img.shields.io/badge/platform-Windows%2010%20%7C%2011-0078D6.svg)](#kurulum-ve-çalıştırma)
-[![Node.js](https://img.shields.io/badge/node-%E2%89%A520-3c873a.svg)](#kurulum-ve-çalıştırma)
-[![Çalışma zamanı bağımlılığı](https://img.shields.io/badge/%C3%A7al%C4%B1%C5%9Fma%20zaman%C4%B1%20ba%C4%9F%C4%B1ml%C4%B1l%C4%B1%C4%9F%C4%B1-yok-success.svg)](#mimari)
+[![License: MIT](https://img.shields.io/badge/license-MIT-3da639.svg)](LICENSE)
+[![Platform](https://img.shields.io/badge/platform-Windows%2010%20%7C%2011-0078D6.svg)](#install-and-run)
+[![Node.js](https://img.shields.io/badge/node-%E2%89%A520-3c873a.svg)](#install-and-run)
+[![Runtime dependencies](https://img.shields.io/badge/runtime%20dependencies-none-success.svg)](#architecture)
 
-Yapay zeka destekli Windows disk temizleyici. Electron ile yazılmış gerçek bir
-masaüstü uygulaması: tarayıcıda açılan bir web sayfası değil, kendi penceresi,
-kendi simgesi ve kendi paketleyicisi olan bir uygulama.
+An AI-assisted disk cleaner for Windows. A real desktop application built with
+Electron: not a web page in a browser tab, but an app with its own window, its
+own icon and its own packager.
 
-> **Marka:** ürünün adı **reMona**; **AICleaner** uygulamanın ürün adı ve
-> teknik kimliği olarak korunur (ortam değişkenleri `AICLEANER_*`, arayüz
-> köprüsü `window.aicleaner`). Eski sürümlerin verisi ilk açılışta
-> `%APPDATA%\AICleaner\data` → `%APPDATA%\reMona AICleaner\data` olarak
-> kopyalanır.
+> **Branding:** the product is **reMona**; **AICleaner** is kept as the
+> application's product name and technical identity (environment variables
+> `AICLEANER_*`, renderer bridge `window.aicleaner`). Data from older versions
+> is copied on first launch from `%APPDATA%\AICleaner\data` to
+> `%APPDATA%\reMona AICleaner\data`.
 
-![reMona (AICleaner) arayüzü — disk halkası, kategori kartları ve yapay zeka
-içgörü paneli](docs/screenshot.jpg)
+![reMona (AICleaner) interface: disk ring, category cards and the AI insight
+panel](docs/screenshot.jpg)
 
-## Ne yapar
+## Download
 
-Diskteki gereksiz dosyaları bulur, her grup için bir **güven skoru** üretir,
-güvenli olanları önerir ve temizliği **geri alınabilir** biçimde yapar.
+Grab the latest build from the
+[**Releases page**](https://github.com/remona-code/remona-cleaner/releases/latest):
 
-Taranan kategoriler:
+| File | What it is |
+|---|---|
+| `reMona-<version>-setup.exe` | Installer. Choose the install folder, get Start menu and desktop shortcuts. |
+| `reMona-<version>-portable.exe` | Single portable executable. No installation, no registry writes. |
 
-| Kategori | Risk | Ne bulur |
+Both are unsigned, so Windows SmartScreen may warn on first run: choose
+**More info → Run anyway**. The source of every release is the tag next to it
+on the same page, so you can always build it yourself instead.
+
+## What it does
+
+It finds files on disk that are safe to remove, gives each group a **confidence
+score**, recommends the safe ones, and cleans in a way that can be **undone**.
+
+Categories scanned:
+
+| Category | Risk | What it finds |
 |---|---|---|
-| Kullanıcı Geçici Dosyaları | Güvenli | `%TEMP%` altındaki artıklar |
-| Windows Geçici Klasörü | Dikkatli | `C:\Windows\Temp` |
-| Tarayıcı Önbellekleri | Güvenli | Chrome, Edge, Brave, Opera, Firefox önbellekleri |
-| Windows Update Artıkları | Dikkatli | `SoftwareDistribution\Download` |
-| Küçük Resim Önbelleği | Güvenli | `Explorer\thumbcache_*.db` |
-| Prefetch Dosyaları | Dikkatli | `C:\Windows\Prefetch` |
-| Çökme Dökümleri | Güvenli | WER ve CrashDumps klasörleri |
-| Sistem ve Uygulama Günlükleri | Dikkatli | `.log`, `.etl`, `.dmp` dosyaları |
-| Geri Dönüşüm Kutusu | Dikkatli | Kutunun tamamı |
-| Eski İndirilenler | Riskli | 180 günden eski indirmeler |
-| Büyük Dosyalar | Riskli | > 300 MB dosyalar (derin tarama) |
-| Kopya Dosyalar | Riskli | Aynı içerikli dosyalar (derin tarama) |
+| User temporary files | Safe | Leftovers under `%TEMP%` |
+| Windows temporary folder | Caution | `C:\Windows\Temp` |
+| Browser caches | Safe | Chrome, Edge, Brave, Opera, Firefox caches |
+| Windows Update leftovers | Caution | `SoftwareDistribution\Download` |
+| Thumbnail cache | Safe | `Explorer\thumbcache_*.db` |
+| Prefetch files | Caution | `C:\Windows\Prefetch` |
+| Crash dumps | Safe | WER and CrashDumps folders |
+| System and application logs | Caution | `.log`, `.etl`, `.dmp` files |
+| Recycle Bin | Caution | The whole bin |
+| Old downloads | Risky | Downloads older than 180 days |
+| Large files | Risky | Files over 300 MB (deep scan) |
+| Duplicate files | Risky | Files with identical content (deep scan) |
 
-## Üç katmanlı yapay zeka
+## Three layers of AI
 
-1. **Kural motoru (her zaman açık).** Kategori riski, dosya yaşı, boyut ve disk
-   doluluğundan 0-100 arası bir güven skoru üretir; içgörüleri seçili arayüz
-   dilinde yazar.
-   İnternet gerektirmez, her zaman çalışır.
-2. **Akıllı seçim.** "Şu kadar GB boşalt" hedefi verildiğinde en güvenli ve en
-   verimli kategorileri sıralayıp hedefe ulaşmaya çalışır.
-3. **Dil modeli (varsa).** Yerel Ollama ya da OpenAI uyumlu bir uç nokta
-   bağlanırsa soruları doğal dille yanıtlar. Yoksa 1. katman yanıtlar —
-   uygulama hiçbir zaman modele bağımlı değildir.
+1. **Rule engine (always on).** Produces a 0-100 confidence score from category
+   risk, file age, size and disk fullness; writes its insights in the selected
+   UI language. Needs no internet and always works.
+2. **Smart selection.** Given a target such as "free up this many GB", it ranks
+   the safest and most effective categories and tries to reach the goal.
+3. **Language model (optional).** Connect a local Ollama instance or any
+   OpenAI-compatible endpoint and it answers questions in natural language.
+   Without one, layer 1 answers instead — the app never depends on a model.
 
-### OpenAI bağlama
+### Connecting OpenAI
 
-Model uygulamanın içinden eklenir: **Ayarlar → AI sağlayıcısı**.
+Models are added from inside the application: **Settings → AI provider**.
 
-- **Sağlayıcı:** Otomatik / OpenAI / Yerel (Ollama) / Yalnızca kural motoru.
-  *Otomatik* sırayla yerel modeli, OpenAI'yi ve kural motorunu dener.
-- **API anahtarı** bir kez girilir; `settings.json` içine işletim sisteminin
-  şifreleme kasasıyla (Windows'ta DPAPI) yazılır ve arayüze asla geri
-  döndürülmez — yalnızca `••••abcd` biçiminde maskesi gösterilir.
-- **Uç nokta** boş bırakılırsa `https://api.openai.com/v1` kullanılır. OpenAI
-  uyumlu her sunucu (LM Studio, vLLM, OpenRouter…) aynı alandan bağlanır.
-- **Model** listesi `/models` ucundan okunur; **Bağlantıyı test et** düğmesi
-  seçilen modelle tek bir deneme isteği atıp sonucu bildirir.
+- **Provider:** Automatic / OpenAI / Local (Ollama) / Rule engine only.
+  *Automatic* tries the local model, then OpenAI, then the rule engine.
+- **API key** is entered once, written to `settings.json` through the operating
+  system's encryption vault (DPAPI on Windows) and never returned to the
+  interface — only a mask such as `••••abcd` is shown.
+- **Endpoint** defaults to `https://api.openai.com/v1` when left empty. Any
+  OpenAI-compatible server (LM Studio, vLLM, OpenRouter…) connects through the
+  same field.
+- **Model** list is read from the `/models` endpoint; the **Test connection**
+  button sends a single trial request with the selected model and reports the
+  result.
 
-Ortam değişkenleri desteklenir; ayar dosyasındaki değer önceliklidir:
+Environment variables are supported; a value in the settings file takes
+precedence:
 
 ```bat
 set AICLEANER_OPENAI_BASE=https://api.openai.com/v1
@@ -76,184 +92,199 @@ set AICLEANER_OLLAMA_URL=http://127.0.0.1:11434
 set AICLEANER_OLLAMA_MODEL=llama3.2
 ```
 
-## Diller
+## Languages
 
-Arayüzün kaynak dili **İngilizce**'dir (`src/i18n/locales/en.json`); diğer
-diller onun üzerine yama gibi biner. Hazır gelen çeviriler: **Türkçe, Almanca,
-Fransızca, İspanyolca** — her biri 385 anahtarın tamamını taşır.
+The interface's source language is **English** (`src/i18n/locales/en.json`);
+every other language layers on top like a patch. Shipped translations:
+**Turkish, German, French, Spanish** — each carries all 385 keys.
 
-- **Otomatik seçim.** Dil, Windows'un görüntüleme dilinden okunur
-  (`Ayarlar → Dil → Sistem varsayılanı`). Desteklenmeyen bir Windows dili
-  (ör. Fince) arayüzü tamamen İngilizce açar; hiçbir ekran boş kalmaz.
-- **Elle seçim.** Ayarlar → Dil listesinde yalnızca kataloğu bulunan diller
-  görünür. Seçim `settings.json` içine yazılır.
-- **Eksik anahtar yedeği.** Bir çeviride anahtar yoksa İngilizce karşılığı, o da
-  yoksa anahtarın kendisi gösterilir. Bu yüzden yarım bir çeviri uygulamayı
-  bozmaz; yalnızca o satırlar İngilizce görünür.
-- **Sayı ve tarih** de dile uyar: `1.234,5 GB` (tr) ↔ `1,234.5 GB` (en).
-- **Motor metinleri** (kategori adları, içgörüler, kural yanıtları) de çevrilir;
-  kaydedilmiş bir tarama başka dilde açıldığında adlar yeniden üretilir.
+- **Automatic selection.** The language comes from Windows' display language
+  (`Settings → Language → System default`). An unsupported Windows language
+  (Finnish, for example) opens the interface fully in English; no screen is
+  ever left blank.
+- **Manual selection.** The Settings → Language list shows only languages with
+  a catalogue. The choice is written to `settings.json`.
+- **Missing-key fallback.** If a translation lacks a key, the English string is
+  used; if that is missing too, the key itself is shown. A half-finished
+  translation therefore never breaks the app — only those lines appear in
+  English.
+- **Numbers and dates** follow the language too: `1,234.5 GB` (en) ↔
+  `1.234,5 GB` (tr).
+- **Engine text** (category names, insights, rule answers) is translated as
+  well; a saved scan opened in another language has its names regenerated.
 
-Yeni bir dil eklemek için `src/i18n/locales/en.json` dosyasını
-`<kod>.json` olarak kopyalayıp metinleri çevirin; dil zaten
-`src/i18n/index.js` içindeki listede tanımlıdır (ör. `pl`, `ru`, `zh`, `ja`).
-Katalog yoksa dil listeye girmez ve o dil İngilizce'ye düşer.
+To add a language, copy `src/i18n/locales/en.json` to `<code>.json` and
+translate the strings; the language is already defined in the list inside
+`src/i18n/index.js` (e.g. `pl`, `ru`, `zh`, `ja`). Without a catalogue the
+language does not appear in the list and falls back to English.
 
-Çeviri ve arayüz tutarlılığını doğrulama:
+Verify translations and interface consistency:
 
 ```bat
 npm run check        :: i18n:audit + ui:audit
-npm run i18n:audit   :: eksik anahtar, yer tutucu uyuşmazlığı, dil kapsamı
-npm run ui:audit     :: app.js'in kullandığı her id index.html'de var mı
+npm run i18n:audit   :: missing keys, placeholder mismatches, language coverage
+npm run ui:audit     :: does every id used by app.js exist in index.html
 ```
 
-Bir dili ekran görüntüsüyle doğrulamak için (ayara yazmadan):
+To check a language visually (without writing to settings):
 
 ```bat
-npx electron . --locale=de --capture=ekran.png
+npx electron . --locale=de --capture=screen.png
 ```
 
-## Kurulum ve çalıştırma
+## Install and run
 
-Gereksinim: **Node.js 20 veya üzeri** (test edilen: Node 24).
+Requirement: **Node.js 20 or newer** (tested on Node 24).
 
-En kolay yol: **`baslat.bat`** dosyasına çift tıklayın. Eksik bağımlılıkları
-kendisi kurar ve uygulamayı açar.
+The easiest path: double-click **`start.bat`**. It installs any missing
+dependencies and opens the application.
 
-Komut satırından:
+From the command line:
 
 ```bat
 npm install
 npm start
 ```
 
-Geliştirici modu (DevTools ve ayrıntılı günlük):
+Developer mode (DevTools and verbose logging):
 
 ```bat
 npm run dev
 ```
 
-## Paketleme (kurulum dosyası)
+## Packaging (installer)
 
 ```bat
 npm run dist
 ```
 
-`release\reMona-1.0.0-setup.exe` üretilir. Tek dosyalık, kurulabilir bir
-Windows uygulaması. Yalnızca taşınabilir bir klasör istiyorsanız:
+Produces `release\reMona-1.0.0-setup.exe` (a single-file Windows installer) and
+`release\reMona-1.0.0-portable.exe`. If you only want an unpacked folder:
 
 ```bat
 npm run pack
 ```
 
-## Doğrulama
+The tray icon and the executable icon come from `build/icon.png`, which is
+generated procedurally — regenerate it with:
 
 ```bat
-npm test          :: motor testleri (node:test)
-npm run smoke     :: gerçek diskte salt okunur tarama, hiçbir şey silmez
-node scripts/smoke.js --deep   :: büyük dosya ve kopya taraması dahil
+npm run icon
 ```
 
-Arayüzü açmadan görsel doğrulama (pencereyi açar, PNG yazar, kapanır):
+## Verification
+
+```bat
+npm test          :: engine tests (node:test)
+npm run smoke     :: read-only scan of the real disk, deletes nothing
+node scripts/smoke.js --deep   :: includes large-file and duplicate scanning
+```
+
+Visual verification without opening the app by hand (opens the window, writes a
+PNG, closes):
 
 ```bat
 node_modules\electron\dist\electron.exe . --capture=.remona\ui-check.png
 ```
 
-`npm run smoke` gerçek sistemi tarar ve disk, geri dönüşüm kutusu, kategori
-dağılımı, AI özeti ve güvenlik köklerinin bir dökümünü yazar. Silme yapmaz.
+`npm run smoke` scans the real system and prints a breakdown of disk usage, the
+recycle bin, category distribution, the AI summary and the security roots. It
+performs no deletion.
 
-## Güvenlik modeli
+## Security model
 
-Bu uygulama dosya siler, bu yüzden güvenlik modeli kasıtlı olarak dar tutuldu.
+This application deletes files, so the security model is deliberately narrow.
 
-- **Beyaz liste.** Yalnızca `src/engine/config.js` içinde tanımlı kategori
-  köklerinin altındaki dosyalar silinebilir. Başka hiçbir yol kabul edilmez.
-- **Kara liste.** `System32`, `SysWOW64`, `WinSxS`, `Windows\Fonts`,
-  `Windows\System`, `Windows\servicing`, `config\systemprofile` gibi sistem
-  bileşenleri fragman eşleşmesiyle engellenir.
-- **Kök koruması.** Sürücü kökü, kullanıcı klasörü ve `Desktop`, `Documents`,
-  `Pictures`, `Music`, `Videos` klasörlerinin *kendisi* silinemez (içlerindeki
-  dosyalar silinebilir).
-- **İki aşamalı doğrulama.** Seçim önce `preview` (kuru çalıştırma) ile
-  raporlanır; gerçek temizlikte her dosya yeniden güvenlik kapısından geçer.
-- **Karantina varsayılan.** Dosyalar silinmez, `%APPDATA%\reMona AICleaner\data\
-  quarantine\<oturum>\` altına taşınır ve manifest ile saklanır. Tek tıkla geri
-  yüklenebilir. Kalıcı silme ayrı ve açık bir seçimdir.
-- **Arayüz yolu görmez.** Temizlenecek dosya listesi hiçbir zaman arayüzden
-  gelmez; arayüz yalnızca kategori ve öğe kimliği gönderir, yollar ana süreçte
-  bellekteki tarama sonucundan çözülür. Arayüzde Node API'si, `require` veya
-  dosya sistemi erişimi yoktur (`contextIsolation: true`, `sandbox: true`).
+- **Allow list.** Only files under the category roots defined in
+  `src/engine/config.js` can be deleted. No other path is accepted.
+- **Block list.** System components such as `System32`, `SysWOW64`, `WinSxS`,
+  `Windows\Fonts`, `Windows\System`, `Windows\servicing` and
+  `config\systemprofile` are blocked by fragment matching.
+- **Root protection.** A drive root, the user folder, and the `Desktop`,
+  `Documents`, `Pictures`, `Music`, `Videos` folders *themselves* cannot be
+  deleted (files inside them can be).
+- **Two-stage verification.** A selection is first reported through `preview`
+  (a dry run); during a real cleanup every file passes the security gate again.
+- **Quarantine by default.** Files are not deleted but moved under
+  `%APPDATA%\reMona AICleaner\data\quarantine\<session>\` and kept with a
+  manifest. They can be restored with one click. Permanent deletion is a
+  separate, explicit choice.
+- **The interface never sees paths.** The list of files to clean never comes
+  from the renderer; the renderer sends only category and item identifiers, and
+  paths are resolved in the main process from the in-memory scan result. There
+  is no Node API, no `require` and no filesystem access in the renderer
+  (`contextIsolation: true`, `sandbox: true`).
 
-## Mimari
+## Architecture
 
 ```
 electron/
-  main.js        pencere, IPC kanalları, tarama/temizlik orkestrasyonu
-  preload.js     contextBridge: sayılı yetkiler, ipcRenderer sızdırılmaz
+  main.js        window, IPC channels, scan/clean orchestration
+  preload.js     contextBridge: a counted set of powers, ipcRenderer not leaked
 src/engine/
-  config.js      kategoriler, güvenlik sınırları  <- tek doğruluk kaynağı
-  utils.js       dosya gezme, joker çözme, hash, silme güvenlik kapısı
-  scanner.js     kategori tarayıcıları + disk bilgisi
-  ai.js          güven skoru, içgörü, akıllı seçim, opsiyonel LLM
-  cleaner.js     karantina, geri yükle, kalıcı silme, geçmiş
-  trash.js       Windows Geri Dönüşüm Kutusu köprüsü (PowerShell/COM)
-  store.js       ayar, geçmiş ve son tarama deposu (atomik JSON)
+  config.js      categories, security boundaries  <- single source of truth
+  utils.js       directory walking, globbing, hashing, delete security gate
+  scanner.js     category scanners + disk information
+  ai.js          confidence score, insights, smart selection, optional LLM
+  cleaner.js     quarantine, restore, permanent delete, history
+  trash.js       Windows Recycle Bin bridge (PowerShell/COM)
+  store.js       settings, history and last-scan store (atomic JSON)
 src/renderer/
-  index.html     arayüz iskeleti ve ikon sprite'ı
-  styles.css     koyu, cam yüzeyli tema ve hareket sistemi
-  app.js         görünümler, seçim modeli, IPC çağrıları
-scripts/smoke.js motor duman testi (salt okunur)
-tests/           node:test motor testleri
+  index.html     interface skeleton and icon sprite
+  styles.css     dark, glass-surfaced theme and motion system
+  app.js         views, selection model, IPC calls
+scripts/smoke.js engine smoke test (read-only)
+tests/           node:test engine tests
 ```
 
-Veri klasörü: `%APPDATA%\reMona AICleaner\data`
-(`settings.json`, `history.json`, `last_scan.json`, `quarantine/`).
+Data folder: `%APPDATA%\reMona AICleaner\data` (`settings.json`,
+`history.json`, `last_scan.json`, `quarantine/`).
 
-Bu yol `electron/main.js` içinde `app.setPath('userData', …)` ile açıkça
-sabitlenir: ürün adı değiştiğinde veri yerinde kalsın ve aynı makinede kurulu
-başka bir reMona uygulamasıyla (ör. IDE) klasör/tek örnek kilidi çakışmasın.
+This path is pinned explicitly in `electron/main.js` through
+`app.setPath('userData', …)`: so that data stays put when the product name
+changes, and so that the folder and single-instance lock never collide with
+another reMona application installed on the same machine (an IDE, for example).
 
-## Klavye kısayolları
+## Keyboard shortcuts
 
-| Kısayol | İşlev |
+| Shortcut | Action |
 |---|---|
-| `Ctrl+R` | Arayüzü yenile |
-| `Ctrl+Shift+I` / `F12` | Geliştirici araçları |
+| `Ctrl+R` | Reload the interface |
+| `Ctrl+Shift+I` / `F12` | Developer tools |
 
-## Sorun giderme
+## Troubleshooting
 
-**Pencere açılmıyor.** Komut satırında `npm start` çalıştırıp hata mesajına
-bakın. Electron ikilisi eksikse `node node_modules\electron\install.js` yazın.
+**The window does not open.** Run `npm start` in a terminal and read the error
+message. If the Electron binary is missing, run
+`node node_modules\electron\install.js`.
 
-**Tarama çok yavaş.** Derin tarama kapalıyken (varsayılan) yalnızca hızlı
-kategoriler taranır. Büyük Dosyalar ve Kopya Dosyalar yalnızca derin taramada
-çalışır.
+**Scanning is very slow.** With deep scan off (the default) only the fast
+categories run. Large files and duplicate files only run in a deep scan.
 
-**Geri dönüşüm kutusu okunamıyor.** Bu köprü PowerShell üzerinden çalışır.
-Kurumsal makinelerde ilke (policy) engelliyorsa kategori boş görünür, diğer
-kategoriler etkilenmez.
+**The Recycle Bin cannot be read.** This bridge runs through PowerShell. If
+group policy blocks it on a managed machine the category appears empty and the
+other categories are unaffected.
 
-**Uygulama açılıyor gibi olup hemen kapanıyor.** Konsolda
-`Unable to move the cache: Erişim engellendi` yazıyorsa başka bir süreç aynı
-`userData` klasörünü tutuyordur. `%APPDATA%\reMona AICleaner` klasörünü
-kilitleyen süreci kapatın; yol çakışmaları için `electron/main.js` başındaki
-`USER_DATA_DIR` tanımına bakın.
+**The app seems to start and then closes immediately.** If the console says
+`Unable to move the cache: Access is denied`, another process is holding the
+same `userData` folder. Close the process locking
+`%APPDATA%\reMona AICleaner`; for path conflicts see the `USER_DATA_DIR`
+definition at the top of `electron/main.js`.
 
-## Katkı
+## Contributing
 
-Katkılara açık. Başlamadan önce [CONTRIBUTING.md](CONTRIBUTING.md) dosyasını
-okuyun: geliştirme komutları, kod düzeni ve dosya silen kod için geçerli
-güvenlik kuralları orada.
+Contributions are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) first: it
+covers the development commands, code layout, and the security rules that apply
+to any code that deletes files.
 
-**Güvenlik açıklarını herkese açık issue olarak bildirmeyin.**
-[SECURITY.md](SECURITY.md) dosyasındaki özel bildirim yolunu izleyin.
+**Do not report security vulnerabilities as a public issue.** Follow the
+private reporting path in [SECURITY.md](SECURITY.md).
 
-## Lisans
+## License
 
 [MIT](LICENSE) — Copyright (c) 2026 reMona (AICleaner) contributors.
 
-Yazılımı kullanabilir, değiştirebilir ve dağıtabilirsiniz; tek koşul telif
-bildirimini korumanızdır. Yazılım garanti olmadan sunulur. Bu uygulama dosya
-siler; önemli verinizin yedeğini alın ve ilk çalıştırmada karantina modunu
-koruyun.
+You may use, modify and distribute the software; the only condition is that you
+keep the copyright notice. The software is provided without warranty. It
+deletes files: back up anything important and keep quarantine mode on for the
+first run.

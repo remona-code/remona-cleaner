@@ -11,27 +11,27 @@ permissions:
 
 jobs:
   test:
-    name: Motor testleri (Node ${{ matrix.node }})
+    name: Engine tests (Node ${{ matrix.node }})
     runs-on: windows-latest
     strategy:
       fail-fast: false
       matrix:
         node: ['20', '22', '24']
     steps:
-      - name: Depoyu al
+      - name: Check out the repository
         uses: actions/checkout@v4
 
-      - name: Node.js ${{ matrix.node }} kur
+      - name: Set up Node.js ${{ matrix.node }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
           cache: npm
 
-      - name: Bağımlılıkları kur
-        # Testler Electron ikilisine ihtiyaç duymaz; --ignore-scripts 235 MB indirmeyi atlar.
+      - name: Install dependencies
+        # The tests do not need the Electron binary; --ignore-scripts skips the 235 MB download.
         run: npm ci --ignore-scripts
 
-      - name: Sözdizimi denetimi
+      - name: Syntax check
         run: |
           node --check electron/main.js
           node --check electron/preload.js
@@ -40,12 +40,12 @@ jobs:
           node --check src/engine/cleaner.js
           node --check src/engine/scanner.js
 
-      - name: Çeviri ve arayüz denetimi
-        # Eksik anahtar kullanıcıya ham `cat.foo.name` olarak görünür; tanımsız
-        # bir id ise arayüzü yarıda bırakır. İkisi de burada yakalanır.
+      - name: Translation and interface audit
+        # A missing key reaches the user as a raw `cat.foo.name`; an undefined id
+        # leaves the interface half-rendered. Both are caught here.
         run: |
           node scripts/i18n-audit.js
           node scripts/ui-audit.js
 
-      - name: Testler
+      - name: Tests
         run: npm test

@@ -1,39 +1,39 @@
-name: Özellik önerisi
-description: Yeni bir kategori, davranış veya iyileştirme önerin
+name: Feature request
+description: Suggest a new category, behaviour or improvement
 labels: [enhancement]
 body:
   - type: textarea
-    id: sorun
+    id: problem
     attributes:
-      label: Hangi sorunu çözüyor?
-      description: Öneriyi değil, önce sorunu anlatın.
+      label: What problem does this solve?
+      description: Describe the problem first, not the proposal.
     validations:
       required: true
 
   - type: textarea
-    id: oneri
+    id: proposal
     attributes:
-      label: Önerilen çözüm
+      label: Proposed solution
     validations:
       required: true
 
   - type: dropdown
     id: risk
     attributes:
-      label: Bu öneri dosya siliyor mu?
+      label: Does this proposal delete files?
       description: >
-        Dosya silen bir değişiklikse, silinebilir köklerin yalnızca
-        `src/engine/config.js` içinde tanımlı olabileceğini unutmayın.
+        If the change deletes files, remember that deletable roots can only be
+        defined in `src/engine/config.js`.
       options:
-        - Hayır, yalnızca arayüz veya bilgi
-        - Evet, yeni bir tarama kategorisi
-        - Evet, temizlik davranışını değiştiriyor
+        - No, interface or information only
+        - Yes, a new scan category
+        - Yes, it changes cleanup behaviour
 
   - type: checkboxes
-    id: kurallar
+    id: rules
     attributes:
-      label: Onay
+      label: Confirmation
       options:
         - label: >
-            Bu önerinin kişisel dosyalara (Belgeler, Masaüstü, Resimler)
-            dokunmadığını kontrol ettim.
+            I have checked that this proposal does not touch personal folders
+            (Documents, Desktop, Pictures).

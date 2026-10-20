@@ -2,7 +2,7 @@
   "name": "remona",
   "productName": "reMona",
   "version": "1.0.0",
-  "description": "reMona (AICleaner) — yapay zeka destekli Windows disk temizleyici, Electron masaüstü uygulaması",
+  "description": "reMona (AICleaner) — AI-assisted disk cleaner for Windows, built with Electron",
   "main": "electron/main.js",
   "author": "reMona",
   "license": "MIT",
@@ -15,7 +15,8 @@
     "ai",
     "openai",
     "system-utility",
-    "turkish"
+    "storage",
+    "multilingual"
   ],
   "engines": {
     "node": ">=20"
@@ -28,16 +29,20 @@
     "i18n:audit": "node scripts/i18n-audit.js",
     "ui:audit": "node scripts/ui-audit.js",
     "smoke": "node scripts/smoke.js",
+    "icon": "node scripts/make-icon.js",
     "pack": "electron-builder --dir",
     "dist": "electron-builder"
   },
   "build": {
     "appId": "com.remona.aicleaner",
     "productName": "reMona",
+    "copyright": "Copyright © 2026 reMona (AICleaner) contributors",
+    "compression": "maximum",
     "directories": {
       "output": "release",
       "buildResources": "build"
     },
+    "icon": "build/icon.png",
     "files": [
       "electron/**/*",
       "src/**/*",
@@ -50,15 +55,25 @@
           "arch": [
             "x64"
           ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
         }
       ],
-      "artifactName": "reMona-${version}-setup.${ext}"
+      "icon": "build/icon.png"
     },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
-      "shortcutName": "reMona AICleaner"
+      "shortcutName": "reMona AICleaner",
+      "artifactName": "reMona-${version}-setup.${ext}"
+    },
+    "portable": {
+      "artifactName": "reMona-${version}-portable.${ext}"
     }
   },
   "devDependencies": {

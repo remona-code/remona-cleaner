@@ -1,15 +1,15 @@
 'use strict';
 
 /**
- * Tarama motoru.
+ * Scan engine.
  *
- * Kategorileri dolaşıp dosya envanteri çıkarır. Sonuç iki katmanlıdır:
+ * Walks the categories and builds a file inventory. The result has two layers:
  *
- *   items  - arayüze gönderilen, en büyük N dosya (gösterim için)
- *   _full  - aynı kategorinin tam yol listesi (temizleyici için, bellekte kalır)
+ *   items  - the largest N files sent to the interface (for display)
+ *   _full  - the full path list of the same category (for the cleaner, stays in memory)
  *
- * `_full` listeleri hiçbir zaman arayüze gönderilmez; temizleyici seçimi
- * kategori/kimlik üzerinden alır, yol üzerinden almaz.
+ * `_full` lists are never sent to the interface; the cleaner takes a selection
+ * by category/identifier, never by path.
  */
 
 const path = require('path');
@@ -40,7 +40,7 @@ function yieldToLoop() {
   return new Promise((resolve) => setImmediate(resolve));
 }
 
-/** Sınırlı eşzamanlılıkla eşleme (kopya parmak izi hesabı için). */
+/** Maps with bounded concurrency (used for duplicate fingerprints). */
 async function mapPool(items, limit, worker) {
   const results = new Array(items.length);
   let cursor = 0;
@@ -132,7 +132,7 @@ function finalize(cat, items, full) {
   };
 }
 
-// ------------------------------------------------------------------ tarama
+// ------------------------------------------------------------------ scanning
 async function scan({ deep = false, onProgress = noop } = {}) {
   config.ensureDirs();
   const startedMs = Date.now();
@@ -288,8 +288,8 @@ async function scanRecycle(cat, nowMs) {
 
 async function scanLarge(cat, nowMs) {
   const candidates = [];
-  // AppData/Windows gibi klasörler walkFiles içinde atlanır: gürültü ve
-  // yavaşlık önlenir, zaten diğer kategoriler oraları kapsıyor.
+  // Folders such as AppData/Windows are skipped inside walkFiles: this avoids
+  // noise and slowness, and other categories already cover them.
   for await (const file of walkFiles(config.USER_HOME, { maxDepth: config.MAX_WALK_DEPTH, limit: 250000 })) {
     if (file.size >= config.LARGE_FILE_BYTES) candidates.push(file);
   }
@@ -315,7 +315,7 @@ async function scanDuplicates(cat, nowMs) {
     }
   }
 
-  // Önce boyut eşleşmesi (ucuz), sonra ilk 128 KB parmak izi (pahalı).
+  // Match on size first (cheap), then on the first-128 KB fingerprint (expensive).
   const candidates = [];
   for (const [, entries] of bySize) {
     if (entries.length >= 2) candidates.push(...entries);
@@ -371,8 +371,8 @@ async function scanDuplicates(cat, nowMs) {
   return result;
 }
 
-// ------------------------------------------------------------------ görünüm
-/** Bellekteki tam sonucu arayüze gönderilecek hale getirir (`_full` çıkarılır). */
+// ------------------------------------------------------------------ view
+/** Turns the in-memory result into what is sent to the interface (`_full` removed). */
 function publicView(result) {
   const { categories, ...rest } = result;
   return {
@@ -382,11 +382,11 @@ function publicView(result) {
 }
 
 /**
- * Kategori metinlerini seçili dilde yeniden üretir.
+ * Regenerates the category text in the selected language.
  *
- * Görünüm diske yazıldığı için içinde tarandığı andaki dilde biçimlenmiş adlar
- * durur. Kimlik sabit olduğundan metin her açılışta katalogdan yeniden
- * yazılır; eski kayıtlarda anahtar bulunmasa da doğru dil görünür.
+ * The view is written to disk, so it holds names formatted in the language of
+ * the moment it was scanned. The identifier is stable, so the text is rewritten
+ * from the catalogue on every launch; even old records show the right language.
  */
 function localizeView(view) {
   if (!view || !Array.isArray(view.categories)) return view;
@@ -402,7 +402,7 @@ function localizeView(view) {
   return { ...view, categories };
 }
 
-/** Kategorileri yalnızca kimlikle eşleştirmek için hafif dizin. */
+/** Lightweight index for matching categories by identifier only. */
 function indexCategories(result) {
   const map = new Map();
   for (const cat of result.categories || []) map.set(cat.id, cat);

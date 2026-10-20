@@ -1,20 +1,20 @@
 'use strict';
 
 /**
- * Çeviri denetimi.
+ * Translation audit.
  *
- * Üç şeyi doğrular:
+ * Verifies three things:
  *
- *   1. Kod ve HTML'in kullandığı bütün anahtarlar İngilizce katalogda var mı?
- *      Arayüz (data-i18n* öznitelikleri ve t('...') çağrıları), motor ve ana
- *      süreç (i18n.t('...') çağrıları) birlikte taranır. Eksik anahtar
- *      kullanıcıya ham `cat.foo.name` olarak görünür — bu yüzden hatadır.
- *   2. Her çeviri kataloğunda hangi anahtar eksik? Eksik anahtar İngilizce'ye
- *      düştüğü için bu hata değildir; kapsama oranı olarak raporlanır.
- *   3. Bir katalogda İngilizce'de olmayan (artık) anahtar var mı?
+ *   1. Does every key used by the code and HTML exist in the English catalogue?
+ *      The interface (data-i18n* attributes and t('...') calls), the engine and
+ *      the main process (i18n.t('...') calls) are scanned together. A missing
+ *      key reaches the user as a raw `cat.foo.name`, so it is an error.
+ *   2. Which key is missing in each translation catalogue? A missing key falls
+ *      back to English, so it is not an error; it is reported as coverage.
+ *   3. Does a catalogue contain a key that English no longer has?
  *
- * Kullanım: node scripts/i18n-audit.js [--strict]
- *   --strict  yarım çevrilmiş bir dil varsa da başarısız say (CI için).
+ * Usage: node scripts/i18n-audit.js [--strict]
+ *   --strict  also fail when a language is only partly translated (for CI).
  */
 
 const fs = require('fs');
@@ -34,7 +34,7 @@ function keysFromHtml(file) {
   return keys;
 }
 
-/** t('anahtar') ve t(`anahtar.${x}`) biçimleri; şablonlar sonra çözülür. */
+/** t('key') and t(`key.${x}`) forms; templates are resolved afterwards. */
 function keysFromScript(file) {
   const text = fs.readFileSync(file, 'utf8');
   const keys = [];
@@ -48,7 +48,7 @@ function keysFromScript(file) {
   return keys;
 }
 
-/** `view.${view}.title` gibi şablonları katalogdaki somut anahtarlarla eşler. */
+/** Matches templates such as `view.${view}.title` against concrete catalogue keys. */
 function expandTemplate(key, catalogKeys) {
   if (!key.includes('${')) return [key];
   const escaped = key
@@ -90,13 +90,13 @@ function main() {
   for (const [key, value] of Object.entries(base)) {
     if (typeof value !== 'string') continue;
     for (const token of value.match(/\{\w+\}/g) || []) placeholders.add(token);
-    if (!value.trim()) missing.push(`${key} (boş metin)`);
+    if (!value.trim()) missing.push(`${key} (empty text)`);
   }
 
-  console.log(`diller: ${locales.map((meta) => meta.code).join(', ')}`);
-  console.log(`katalog anahtarı: ${catalogKeys.length}`);
-  console.log(`kodda kullanılan: ${resolved.size}`);
-  console.log(missing.length ? `HATA eksik anahtar: ${missing.join(', ')}` : 'HATA: yok');
+  console.log(`languages: ${locales.map((meta) => meta.code).join(', ')}`);
+  console.log(`catalogue keys: ${catalogKeys.length}`);
+  console.log(`used in code: ${resolved.size}`);
+  console.log(missing.length ? `ERROR missing key: ${missing.join(', ')}` : 'ERROR: none');
 
   let incomplete = 0;
   const badVars = [];
@@ -107,8 +107,8 @@ function main() {
     const extra = Object.keys(dict).filter((key) => !(key in base));
     const percent = ((catalogKeys.length - absent.length) / catalogKeys.length) * 100;
 
-    // Yer tutucu kümesi İngilizce'yle aynı olmalı: {count} düşen bir çeviri
-    // sayıyı sessizce kaybeder, {name} fazlası ekranda ham {name} bırakır.
+      // The placeholder set must match English: a translation that drops {count}
+      // silently loses the number, and an extra {name} leaves raw {name} on screen.
     for (const key of catalogKeys) {
       if (!(key in dict)) continue;
       const want = (String(base[key]).match(/\{\w+\}/g) || []).sort().join(',');
@@ -117,15 +117,15 @@ function main() {
     }
 
     console.log(
-      `${meta.code.padEnd(3)} ${percent.toFixed(1).padStart(5)}%  eksik ${absent.length}` +
+      `${meta.code.padEnd(3)} ${percent.toFixed(1).padStart(5)}%  missing ${absent.length}` +
         (absent.length && absent.length <= 12 ? `  (${absent.join(', ')})` : '') +
-        (extra.length ? `  FAZLA: ${extra.join(', ')}` : '')
+        (extra.length ? `  EXTRA: ${extra.join(', ')}` : '')
     );
     if (absent.length) incomplete += 1;
   }
 
   if (badVars.length) {
-    console.log(`HATA yer tutucu uyuşmazlığı (${badVars.length}):`);
+    console.log(`ERROR placeholder mismatch (${badVars.length}):`);
     for (const line of badVars.slice(0, 40)) console.log(`  ${line}`);
   }
 

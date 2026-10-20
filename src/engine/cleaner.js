@@ -3,14 +3,14 @@
 /**
  * Temizleyici.
  *
- * İki mod vardır:
+ * There are two modes:
  *
- *   quarantine (varsayılan) — dosyalar <data>/quarantine/<oturum>/ altına
- *     taşınır, manifest ile birlikte saklanır ve istenirse geri yüklenebilir.
- *   delete — dosyalar doğrudan silinir. Geri alınamaz.
+ *   quarantine (default) — files are moved under <data>/quarantine/<session>/,
+ *     stored with a manifest, and can be restored on request.
+ *   delete — files are removed directly. This cannot be undone.
  *
- * Her dosya silinmeden önce güvenlik kapısından geçer: yalnızca tarama
- * kategorilerinde tanımlı köklerin altındaki dosyalar silinebilir.
+ * Every file passes the security gate before deletion: only files beneath the
+ * roots defined by the scan categories can be deleted.
  */
 
 const fsp = require('fs/promises');
@@ -47,8 +47,8 @@ function newSessionId() {
   return `${stamp}-${crypto.randomBytes(3).toString('hex')}`;
 }
 
-// ------------------------------------------------------------------ kökler
-/** Silme izni verilen kök klasörler (config'ten türetilir). */
+// ------------------------------------------------------------------ roots
+/** Root folders allowed for deletion (derived from config). */
 async function allowedDeleteRoots() {
   const roots = [...config.EXTRA_DELETE_ROOTS];
 
@@ -74,13 +74,13 @@ async function allowedDeleteRoots() {
   return unique;
 }
 
-// ------------------------------------------------------------------ temizlik
+// ------------------------------------------------------------------ cleaning
 /**
- * Seçilen kategorileri/dosyaları temizler.
+ * Cleans the selected categories/files.
  *
- * `scanResult` bellekteki tam tarama sonucudur (`_full` listelerini içerir).
- * `categoryIds` verilen kategorilerin tamamı, `itemIds` ise yalnızca o
- * kimliğe sahip dosyalar işlenir. Yollar arayüzden değil, buradan gelir.
+ * `scanResult` is the full in-memory scan result (it contains the `_full` lists).
+ * Every category in `categoryIds` is processed; `itemIds` narrows that to the
+ * files with those identifiers. Paths come from here, not from the interface.
  */
 async function clean(options = {}) {
   const {
@@ -130,7 +130,7 @@ async function clean(options = {}) {
     }
   }
 
-  // Aynı dosya iki kategoride birden görünebilir (ör. büyük + eski indirilenler).
+  // The same file can appear in two categories (large + old downloads, for example).
   const deduped = new Map();
   for (const target of targets) deduped.set(norm(target.path), target);
   const uniqueTargets = [...deduped.values()];
@@ -164,7 +164,7 @@ async function clean(options = {}) {
       stat = await fsp.stat(target.path);
       if (!stat.isFile()) continue;
     } catch {
-      continue; // bu arada silinmiş olabilir
+        continue; // it may have been deleted in the meantime
     }
 
     const size = stat.size || target.size || 0;
@@ -199,7 +199,7 @@ async function clean(options = {}) {
     deleted.push({ path: target.path, size, category: target.category, action: mode });
   }
 
-  // ---------------------------------------------------------- geri dönüşüm
+  // ---------------------------------------------------------- recycle bin
   let recycleReport = null;
   if (recycleNeeded) {
     onProgress({ percent: 97, stage: i18n.t('progress.recycle') });
@@ -228,7 +228,7 @@ async function clean(options = {}) {
     }
   }
 
-  // ---------------------------------------------------------- manifest/geçmiş
+  // ---------------------------------------------------------- manifest/history
   let restorable = false;
   if (mode === 'quarantine' && !dryRun && manifest.entries.length) {
     await fsp.mkdir(quarantineDir, { recursive: true });
@@ -272,7 +272,7 @@ async function clean(options = {}) {
   return report;
 }
 
-/** Dosyayı karantinaya taşır; ad çakışmasını önlemek için benzersizleştirir. */
+/** Moves the file to quarantine, making the name unique to avoid collisions. */
 async function quarantineMove(source, quarantineDir) {
   await fsp.mkdir(quarantineDir, { recursive: true });
   const name = path.basename(source) || i18n.t('common.file');
@@ -320,7 +320,7 @@ async function listQuarantine() {
   return sessions;
 }
 
-/** Karantinadaki dosyaları özgün konumlarına geri taşır. */
+/** Moves quarantined files back to their original locations. */
 async function restoreSession(session, { onProgress = noop } = {}) {
   if (!session || session.includes('..') || /[\\/]/.test(session)) {
     return { ok: false, error: i18n.t('err.invalidSession'), restored: 0 };
@@ -366,14 +366,14 @@ async function restoreSession(session, { onProgress = noop } = {}) {
 
     try {
       await fsp.mkdir(path.dirname(original), { recursive: true });
-      // Aynı yolda yeni bir dosya oluşmuşsa üzerine yazmak yerine yanına koy.
+      // If a new file now exists at the same path, place it beside it instead of overwriting.
       let destination = original;
       try {
         await fsp.access(destination);
         const parsed = path.parse(original);
-        destination = path.join(parsed.dir, `${parsed.name} (geri yüklendi)${parsed.ext}`);
+        destination = path.join(parsed.dir, `${parsed.name} (restored)${parsed.ext}`);
       } catch {
-        /* hedef boş, doğrudan yazılabilir */
+        /* the target is free, it can be written directly */
       }
       await moveFile(stored, destination);
       restored += 1;
@@ -396,7 +396,7 @@ async function restoreSession(session, { onProgress = noop } = {}) {
     };
   }
 
-  // Yalnızca başarısız kayıtlar kalsın; kısmi geri yükleme sonrası tutarlılık.
+  // Keep only the failed records; keeps the manifest consistent after a partial restore.
   const remaining = rows.filter((row) => failed.some((f) => f.path === row.original));
   manifest.entries = remaining;
   await store.writeJson(manifestPath, manifest);
@@ -412,7 +412,7 @@ async function restoreSession(session, { onProgress = noop } = {}) {
   };
 }
 
-/** Karantina oturumunu kalıcı olarak siler. */
+/** Permanently deletes a quarantine session. */
 async function purgeSession(session) {
   if (!session || session.includes('..') || /[\\/]/.test(session)) {
     return { ok: false, error: i18n.t('err.invalidSession') };
@@ -430,7 +430,7 @@ async function purgeSession(session) {
   return { ok: true };
 }
 
-/** Karantinanın disk kullanımı. */
+/** Disk usage of the quarantine. */
 async function quarantineUsage() {
   const sessions = await listQuarantine();
   const size = sessions.reduce((sum, s) => sum + s.size, 0);
@@ -439,8 +439,8 @@ async function quarantineUsage() {
 }
 
 /**
- * Temizlik öncesi önizleme: hangi dosyaların kaç bayt kazandıracağını
- * hiçbir şeye dokunmadan hesaplar.
+ * Pre-clean preview: calculates how many bytes each file would free up
+ * without touching anything.
  */
 async function preview(scanResult, categoryIds, itemIds) {
   const report = await clean({ scanResult, categoryIds, itemIds, dryRun: true, mode: 'quarantine' });
@@ -453,7 +453,7 @@ async function preview(scanResult, categoryIds, itemIds) {
   };
 }
 
-/** Seçimin güvenlik kapısından geçen/geçmeyen dosya sayısını raporlar. */
+/** Reports how many selected files pass or fail the security gate. */
 async function auditSelection(scanResult, categoryIds) {
   const allowedRoots = await allowedDeleteRoots();
   const catMap = new Map((scanResult.categories || []).map((c) => [c.id, c]));

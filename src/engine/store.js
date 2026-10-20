@@ -1,6 +1,6 @@
 'use strict';
 
-/** Ayar, geçmiş ve son tarama kaydı için küçük JSON deposu (atomik yazım). */
+/** Small JSON store for settings, history and the last scan (atomic writes). */
 
 const fsp = require('fs/promises');
 const path = require('path');
@@ -19,7 +19,7 @@ async function readJson(file, fallback) {
   }
 }
 
-/** Yarım yazılmış dosya bırakmamak için önce geçici dosyaya yazılır. */
+/** Written to a temporary file first so a half-written file is never left behind. */
 async function writeJson(file, data) {
   const dir = path.dirname(file);
   const tmp = `${file}.${process.pid}.tmp`;
@@ -28,12 +28,12 @@ async function writeJson(file, data) {
   await fsp.rename(tmp, file);
 }
 
-// ------------------------------------------------------------------ sırlar
+// ------------------------------------------------------------------ secrets
 /**
- * API anahtarı diskte düz metin durmasın diye Electron'un `safeStorage`
- * köprüsü kullanılır. Ana süreç `setSecretCipher` ile bağlar; bağlanmazsa
- * (testler, komut satırı) değer düz yazılır ama `enc:` önekli değerler yine
- * de çözülmeye çalışılır.
+ * Electron's `safeStorage` bridge keeps the API key out of plain text on disk.
+ * The main process binds it through `setSecretCipher`; when it is not bound
+ * (tests, command line) the value is written in plain text, but values with
+ * the `enc:` prefix are still decrypted.
  */
 const SECRET_PREFIX = 'enc:';
 let secretCipher = null;
@@ -65,7 +65,7 @@ function decodeSecret(stored) {
   }
 }
 
-/** `sk-…9f2a` benzeri ipucu üretir; anahtarın kendisi arayüze gitmez. */
+/** Produces a hint such as `sk-…9f2a`; the key itself never reaches the interface. */
 function secretHint(secret) {
   const value = String(secret || '');
   if (!value) return '';
@@ -73,7 +73,7 @@ function secretHint(secret) {
   return `${value.slice(0, 3)}…${value.slice(-4)}`;
 }
 
-// ------------------------------------------------------------------ AI ayarları
+// ------------------------------------------------------------------ AI settings
 const TEXT_LIMIT = 300;
 
 function clampNumber(value, min, max, fallback) {
@@ -82,7 +82,7 @@ function clampNumber(value, min, max, fallback) {
   return Math.min(max, Math.max(min, num));
 }
 
-/** Uç nokta yalnızca http(s) olabilir; sondaki eğik çizgiler atılır. */
+/** The endpoint must be http(s); trailing slashes are trimmed. */
 function normalizeBaseUrl(value) {
   const text = String(value || '').trim();
   if (!text) return '';
@@ -105,9 +105,14 @@ async function readSettingsFile() {
   return stored && typeof stored === 'object' ? stored : {};
 }
 
-/** Ayarlar (anahtar düz metin). Yalnızca ana süreçte kullanılır. */
+/** Settings (key in plain text). Used only in the main process. */
 async function getSettings() {
   const stored = await readSettingsFile();
+  // Profiles written before the language choice was tracked carry a language
+  // nobody picked explicitly (the old default was the Windows language). Such a
+  // profile is read as the new default, so existing installations open in
+  // English; picking a language in Settings marks the choice and is kept.
+  if (!stored.language_explicit) stored.language = config.DEFAULT_SETTINGS.language;
   const merged = normalizeAiFields({ ...config.DEFAULT_SETTINGS, ...stored });
   if (merged.clean_mode !== 'delete') merged.clean_mode = 'quarantine';
   merged.ai_openai_key = decodeSecret(stored.ai_openai_key);
@@ -115,8 +120,8 @@ async function getSettings() {
 }
 
 /**
- * Arayüze dönen güvenli kopya: anahtar boşaltılır, yerine yalnızca
- * "tanımlı mı" bilgisi ve okunmaz ipucu konur.
+ * Safe copy returned to the interface: the key is cleared and replaced by
+ * whether it is set plus a non-reversible hint.
  */
 async function getPublicSettings() {
   const settings = await getSettings();
@@ -137,8 +142,8 @@ async function saveSettings(patch) {
   const stored = await readSettingsFile();
   const incoming = { ...(patch || {}) };
 
-  // Anahtar özel işlenir: alan hiç gönderilmezse mevcut değer korunur,
-  // boş gönderilirse silinir.
+  // The key is special-cased: omitting the field keeps the current value,
+  // sending it empty clears it.
   let encodedKey = typeof stored.ai_openai_key === 'string' ? stored.ai_openai_key : '';
   if (Object.prototype.hasOwnProperty.call(incoming, 'ai_openai_key')) {
     const plain = String(incoming.ai_openai_key || '').trim();
@@ -152,14 +157,15 @@ async function saveSettings(patch) {
   next.auto_select_safe = Boolean(next.auto_select_safe);
   next.reduce_motion = Boolean(next.reduce_motion);
   next.ai_openai_key = encodedKey;
+  if (Object.prototype.hasOwnProperty.call(incoming, 'language')) next.language_explicit = true;
 
   await writeJson(config.SETTINGS_FILE, next);
   return getPublicSettings();
 }
 
 /**
- * ai.js için etkin OpenAI yapılandırması. Öncelik: ayar dosyası → ortam
- * değişkeni → gömülü varsayılan.
+ * Effective OpenAI configuration for ai.js. Precedence: settings file →
+ * environment variable → built-in default.
  */
 async function getAiConfig() {
   const settings = await getSettings();
@@ -188,7 +194,7 @@ async function getAiConfig() {
   };
 }
 
-// ------------------------------------------------------------------ geçmiş
+// ------------------------------------------------------------------ history
 async function getHistory() {
   const rows = await readJson(config.HISTORY_FILE, []);
   return Array.isArray(rows) ? rows : [];
@@ -206,7 +212,7 @@ async function clearHistory() {
   return [];
 }
 
-// ------------------------------------------------------------------ son tarama
+// ------------------------------------------------------------------ last scan
 async function saveLastScan(view) {
   await writeJson(config.LAST_SCAN_FILE, view);
   return view;

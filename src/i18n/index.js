@@ -1,22 +1,22 @@
 'use strict';
 
 /**
- * Çok dilli metin katmanı.
+ * Multilingual text layer.
  *
- * Tek doğruluk kaynağı `locales/en.json` dosyasıdır: bütün anahtarlar önce
- * İngilizce yazılır, diğer diller onun üzerine yama gibi biner. Bir dilde
- * anahtar eksikse sırayla şu denenir:
+ * The single source of truth is `locales/en.json`: every key is written in
+ * English first and other languages layer on top like a patch. When a key is
+ * missing in a language, the following are tried in order:
  *
- *   1. seçili dilin kataloğu
- *   2. İngilizce katalog
- *   3. anahtarın kendisi
+ *   1. the catalogue of the selected language
+ *   2. the English catalogue
+ *   3. the key itself
  *
- * Bu yüzden yarım çevrilmiş bir dil bile uygulamayı bozmaz; yalnızca eksik
- * satırlar İngilizce görünür. Desteklenmeyen bir Windows dili seçilirse
- * (ör. Fince) arayüz tamamen İngilizce açılır.
+ * A half-translated language therefore never breaks the app; only the missing
+ * lines appear in English. If an unsupported Windows language is selected
+ * (Finnish, for example) the interface opens fully in English.
  *
- * Katman hem ana süreçte (motor metinleri) hem de arayüzde kullanılır;
- * arayüz kataloğu IPC ile tek seferde alır ve kendi `t()` işlevini kurar.
+ * The layer is used both in the main process (engine text) and in the
+ * interface; the interface fetches the catalogue once over IPC and builds its own `t()`.
  */
 
 const fs = require('fs');
@@ -26,9 +26,9 @@ const LOCALES_DIR = path.join(__dirname, 'locales');
 const BASE_LOCALE = 'en';
 
 /**
- * Arayüzde listelenen diller: kod, kendi dilindeki adı, İngilizce adı, sağdan
- * sola mı. Kataloğu (`locales/<kod>.json`) bulunmayan diller burada dursa bile
- * listeye girmez; böylece yarım bir dil kullanıcıya sunulmaz.
+ * Languages listed in the interface: code, native name, English name and
+ * whether it is right-to-left. A language without a catalogue
+ * (`locales/<code>.json`) is not offered even when defined here, so a half-finished language never reaches users.
  */
 const LOCALE_META = [
   { code: 'en', native: 'English', english: 'English', rtl: false },
@@ -56,7 +56,7 @@ const LOCALE_META = [
 const catalogCache = new Map();
 let currentLocale = BASE_LOCALE;
 
-// ------------------------------------------------------------------ katalog
+// ------------------------------------------------------------------ catalogue
 function catalogPath(code) {
   return path.join(LOCALES_DIR, `${code}.json`);
 }
@@ -69,7 +69,7 @@ function hasCatalog(code) {
   }
 }
 
-/** Kataloğu okur ve düz anahtar sözlüğüne çevirir (bir kez, sonra önbellek). */
+/** Reads the catalogue into a flat key dictionary (once, then cached). */
 function loadCatalog(code) {
   if (catalogCache.has(code)) return catalogCache.get(code);
 
@@ -96,15 +96,15 @@ function flatten(source, prefix = '', out = {}) {
 }
 
 // ------------------------------------------------------------------ dil
-/** Kataloğu olan diller (listeleme sırası korunur). */
+/** Languages that have a catalogue (listing order is preserved). */
 function availableLocales() {
   return LOCALE_META.filter((meta) => hasCatalog(meta.code));
 }
 
 function localeMeta(code) {
-  // Yön ve yerel ad bilgisi kataloğa bağlı değildir: Arapça kataloğu henüz
-  // yoksa bile dil sağdan sola yazılır. Bu yüzden önce istenen kod aranır,
-  // bulunamazsa çözümlenmiş dile düşülür.
+  // Direction and native name do not depend on the catalogue: Arabic is right-
+  // to-left even without a catalogue yet. The requested code is looked up first,
+  // falling back to the resolved language.
   const raw = String(code === undefined ? currentLocale : code || '')
     .trim()
     .toLowerCase()
@@ -121,7 +121,7 @@ function localeMeta(code) {
 
 /**
  * Herhangi bir dil etiketini desteklenen bir koda indirger.
- * 'tr-TR' -> 'tr', 'zh-CN' -> 'zh', 'auto' -> İngilizce, tanınmayan -> 'en'.
+ * 'tr-TR' -> 'tr', 'zh-CN' -> 'zh', 'auto' -> English, anything unknown -> 'en'.
  */
 function resolveLocale(input) {
   const raw = String(input || '')
@@ -135,7 +135,7 @@ function resolveLocale(input) {
   const short = raw.split('-')[0];
   if (hasCatalog(short)) return short;
 
-  // Bölgesel varyantın ana dili varsa onu kullan (ör. 'pt-br' -> 'pt').
+  // Use the base language of a regional variant when available ('pt-br' -> 'pt').
   const regional = availableLocales().find((meta) => meta.code.split('-')[0] === short);
   return regional ? regional.code : BASE_LOCALE;
 }
@@ -153,10 +153,10 @@ function isRtl(code = currentLocale) {
   return Boolean(localeMeta(code).rtl);
 }
 
-// ------------------------------------------------------------------ çeviri
+// ------------------------------------------------------------------ translation
 /**
- * Anahtarı çevirir. `{ad}` yer tutucuları `vars` ile doldurulur.
- * Eksik anahtar zinciri: seçili dil -> İngilizce -> anahtarın kendisi.
+ * Translates a key. `{name}` placeholders are filled from `vars`.
+ * Missing-key chain: selected language -> English -> the key itself.
  */
 function t(key, vars) {
   const name = String(key || '');
@@ -169,7 +169,7 @@ function t(key, vars) {
   return interpolate(String(text), vars);
 }
 
-/** Belirli bir dilde çeviri (kataloğu değiştirmeden). */
+/** Translation for a specific language (does not change the catalogue). */
 function tIn(locale, key, vars) {
   const code = resolveLocale(locale);
   const name = String(key || '');
@@ -195,9 +195,9 @@ function has(key) {
 }
 
 /**
- * Arayüze gönderilen paket: İngilizce katalog üzerine seçili dil bindirilir.
- * Böylece arayüz tek bir `t()` ile çalışır ve eksik anahtar kendiliğinden
- * İngilizce görünür.
+ * Bundle sent to the interface: the selected language is layered over English.
+ * The interface therefore works with a single `t()` and a missing key falls
+ * back to English on its own.
  */
 function bundle(locale = currentLocale) {
   const code = resolveLocale(locale);
@@ -209,8 +209,8 @@ function bundle(locale = currentLocale) {
   };
 }
 
-// ------------------------------------------------------------------ biçim
-/** Dile duyarlı tam sayı: en 1,234,567 · tr 1.234.567 */
+// ------------------------------------------------------------------ format
+/** Language-aware integer: en 1,234,567 · tr 1.234.567 */
 function number(value, locale = currentLocale) {
   const n = Number(value) || 0;
   try {
@@ -268,7 +268,7 @@ function formatDateTime(seconds, locale = currentLocale) {
   }
 }
 
-/** Sistem dilini (ör. 'de-DE') uygulamanın desteklediği koda çevirir. */
+/** Maps the system language ('de-DE', for example) to a code the app supports. */
 function detectLocale(systemLocale) {
   return resolveLocale(systemLocale);
 }
