@@ -67,10 +67,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/remona-code/remona.git"
+    "url": "git+https://github.com/remona-code/remona-cleaner.git"
   },
-  "homepage": "https://github.com/remona-code/remona#readme",
+  "homepage": "https://github.com/remona-code/remona-cleaner#readme",
   "bugs": {
-    "url": "https://github.com/remona-code/remona/issues"
+    "url": "https://github.com/remona-code/remona-cleaner/issues"
   }
 }

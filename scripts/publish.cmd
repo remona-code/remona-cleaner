@@ -1,14 +1,14 @@
 @echo off
 setlocal enabledelayedexpansion
 rem reMona (AICleaner) - GitHub yayin betigi.
-rem Kullanim:  scripts\publish.cmd            (varsayilan hedef: remona-code/remona)
+rem Kullanim:  scripts\publish.cmd            (varsayilan hedef: remona-code/remona-cleaner)
 rem            scripts\publish.cmd kullanici/depo
 rem Onkosul:    gh auth login -h github.com   (remona-code hesabina erisimi olan hesapla)
 
 cd /d "%~dp0.."
 
 set OWNER=remona-code
-set REPO=remona
+set REPO=remona-cleaner
 if not "%~1"=="" (
   set SLUG=%~1
   for /f "tokens=1,2 delims=/" %%a in ("%~1") do (

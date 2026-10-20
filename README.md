@@ -248,7 +248,7 @@ güvenlik kuralları orada.
 
 ## Yayınlama (GitHub)
 
-Depo: **<https://github.com/remona-code/remona>**
+Depo: **<https://github.com/remona-code/remona-cleaner>**
 
 İlk yayın (veya yeni bir makineden yayın) için GitHub CLI ile, `remona-code`
 hesabına yazma yetkisi olan bir hesapla oturum açılması gerekir:
@@ -260,7 +260,7 @@ scripts\publish.cmd
 
 `scripts\login.cmd` bu iki adımı tek komuta indirir. `gh auth login` tarayıcıda
 onaylanacak tek kullanımlık bir kod üretir. `publish.cmd` sonrasında hedef
-depoyu (`remona-code/remona`) yoksa herkese açık olarak oluşturur, `origin`
+depoyu (`remona-code/remona-cleaner`) yoksa herkese açık olarak oluşturur, `origin`
 uzak adresini bağlar, `main` dalını gönderir, `package.json` içindeki
 `repository`/`homepage`/`bugs` alanlarını doldurur ve konu etiketlerini ekler.
 Betik yalnızca çalışma ağacı temizken çalışır; böylece yarım kalan iş

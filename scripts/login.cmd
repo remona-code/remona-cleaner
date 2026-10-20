@@ -2,7 +2,7 @@
 setlocal
 rem reMona (AICleaner) - GitHub girisi + yayin, tek komut.
 rem Kullanim:  scripts\login.cmd
-rem Yaptigi:    gh ile tarayici girisi, sonra depoyu remona-code/remona adresine gonderir.
+rem Yaptigi:    gh ile tarayici girisi, sonra depoyu remona-code/remona-cleaner adresine gonderir.
 rem NOT:       Giris yapilan hesabin remona-code deposuna yazma yetkisi olmali
 rem             (ya remona-code hesabinin kendisi, ya da isbirlikcisi).
 
@@ -12,7 +12,7 @@ echo ============================================
 echo   GitHub girisi
 echo ============================================
 echo.
-echo Hedef depo: https://github.com/remona-code/remona
+echo Hedef depo: https://github.com/remona-code/remona-cleaner
 echo.
 echo Birazdan bir kod ve bir adres yazilacak.
 echo 1) Adresi tarayicida ac:  https://github.com/login/device

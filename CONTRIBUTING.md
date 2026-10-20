@@ -14,8 +14,8 @@ iyi bir başlangıçtır: böylece aynı işi iki kişi yapmaz.
 ## Kurulum
 
 ```bat
-git clone <depo-adresi>
-cd AICleaner
+git clone https://github.com/remona-code/remona-cleaner.git
+cd remona-cleaner
 npm install
 npm start
 ```
