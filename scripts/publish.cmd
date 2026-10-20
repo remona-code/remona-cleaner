@@ -72,7 +72,8 @@ if errorlevel 1 (
   git remote set-url origin "%URL%.git"
 )
 
-echo [2/4] Gonderiliyor: main -> %SLUG%
+rem ">" burada kacislanmali; aksi halde cmd onu yonlendirme sanip adimi yutar.
+echo [2/4] Gonderiliyor: main -^> %SLUG%
 git push -u origin main
 if errorlevel 1 (
   echo HATA: gonderilemedi. Kimlik dogrulamayi kontrol edin: gh auth status
