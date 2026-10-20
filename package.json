@@ -64,13 +64,5 @@
   "devDependencies": {
     "electron": "^44.9.0",
     "electron-builder": "^26.15.3"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/remona-code/remona-cleaner.git"
-  },
-  "homepage": "https://github.com/remona-code/remona-cleaner#readme",
-  "bugs": {
-    "url": "https://github.com/remona-code/remona-cleaner/issues"
   }
 }

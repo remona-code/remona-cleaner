@@ -246,29 +246,6 @@ Katkılara açık. Başlamadan önce [CONTRIBUTING.md](CONTRIBUTING.md) dosyası
 okuyun: geliştirme komutları, kod düzeni ve dosya silen kod için geçerli
 güvenlik kuralları orada.
 
-## Yayınlama (GitHub)
-
-Depo: **<https://github.com/remona-code/remona-cleaner>**
-
-İlk yayın (veya yeni bir makineden yayın) için GitHub CLI ile, `remona-code`
-hesabına yazma yetkisi olan bir hesapla oturum açılması gerekir:
-
-```bat
-gh auth login -h github.com
-scripts\publish.cmd
-```
-
-`scripts\login.cmd` bu iki adımı tek komuta indirir. `gh auth login` tarayıcıda
-onaylanacak tek kullanımlık bir kod üretir. `publish.cmd` sonrasında hedef
-depoyu (`remona-code/remona-cleaner`) yoksa herkese açık olarak oluşturur, `origin`
-uzak adresini bağlar, `main` dalını gönderir, `package.json` içindeki
-`repository`/`homepage`/`bugs` alanlarını doldurur ve konu etiketlerini ekler.
-Betik yalnızca çalışma ağacı temizken çalışır; böylece yarım kalan iş
-yayınlanmaz. Başka bir hedef için: `scripts\publish.cmd kullanici/depo`.
-
-GitHub parola ile göndermeyi kabul etmez; HTTPS üzerinden kişisel erişim
-belirteci (PAT) ya da SSH anahtarı gerekir.
-
 **Güvenlik açıklarını herkese açık issue olarak bildirmeyin.**
 [SECURITY.md](SECURITY.md) dosyasındaki özel bildirim yolunu izleyin.
 
