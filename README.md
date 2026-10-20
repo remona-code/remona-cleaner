@@ -246,6 +246,22 @@ Katkılara açık. Başlamadan önce [CONTRIBUTING.md](CONTRIBUTING.md) dosyası
 okuyun: geliştirme komutları, kod düzeni ve dosya silen kod için geçerli
 güvenlik kuralları orada.
 
+## Yayınlama (GitHub)
+
+Depo ilk kez yayınlanırken GitHub CLI ile oturum açılması gerekir:
+
+```bat
+gh auth login -h github.com
+scripts\publish.cmd
+```
+
+`gh auth login` tarayıcıda onaylanacak tek kullanımlık bir kod üretir.
+`publish.cmd` sonrasında depoyu herkese açık olarak oluşturur, `origin` uzak
+adresini bağlar, `main` dalını gönderir, `package.json` içindeki
+`repository`/`homepage`/`bugs` alanlarını doldurur ve konu etiketlerini ekler.
+Betik yalnızca çalışma ağacı temizken çalışır; böylece yarım kalan iş
+yayınlanmaz.
+
 **Güvenlik açıklarını herkese açık issue olarak bildirmeyin.**
 [SECURITY.md](SECURITY.md) dosyasındaki özel bildirim yolunu izleyin.
 
