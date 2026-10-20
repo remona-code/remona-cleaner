@@ -27,8 +27,11 @@ echo   Hedef depo: %SLUG%
 echo ============================================
 echo.
 
-gh auth status >nul 2>&1
-if errorlevel 1 (
+rem gh auth status, kayitli baska bir hesabin belirteci gecersizse 1 dondurebilir;
+rem bu yuzden aktif hesabi dogrudan soruyoruz.
+set GH_LOGIN=
+for /f "usebackq delims=" %%u in (`gh api user --jq .login 2^>nul`) do set GH_LOGIN=%%u
+if "%GH_LOGIN%"=="" (
   echo OTURUM YOK veya GECERSIZ.
   echo Once giris yap ^(remona-code hesabina erisimi olan hesapla^):
   echo    scripts\login.cmd
@@ -36,6 +39,9 @@ if errorlevel 1 (
   echo    gh auth login -h github.com
   exit /b 1
 )
+echo   Aktif GitHub hesabi: %GH_LOGIN%
+if /i not "%GH_LOGIN%"=="%OWNER%" echo   NOT: "%OWNER%" bir kullanici hesabiysa gonderim reddedilebilir.
+echo.
 
 for /f %%s in ('git status --porcelain') do (
   echo.
@@ -77,9 +83,15 @@ node scripts\set-repo-url.js "%SLUG%"
 if errorlevel 1 exit /b 1
 
 git add package.json
-git commit -q -m "depo baglantilari: %SLUG%"
-git push -q
-if errorlevel 1 exit /b 1
+git diff --cached --quiet
+if errorlevel 1 (
+  git commit -q -m "depo baglantilari: %SLUG%"
+  if errorlevel 1 exit /b 1
+  git push -q
+  if errorlevel 1 exit /b 1
+) else (
+  echo       package.json zaten guncel.
+)
 
 echo [4/4] Konu etiketleri ekleniyor
 gh repo edit "%SLUG%" --add-topic electron --add-topic windows --add-topic disk-cleaner --add-topic openai --add-topic ai --add-topic open-source >nul 2>&1
