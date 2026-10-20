@@ -63,7 +63,8 @@ if errorlevel 1 (
   echo       Depo zaten var.
 )
 
-git remote 2>nul | findstr /x /c:"origin" >nul
+rem "git remote | findstr /x" bu ortamda guvenilir degil; dogrudan adresi soruyoruz.
+git remote get-url origin >nul 2>&1
 if errorlevel 1 (
   git remote add origin "%URL%.git"
   if errorlevel 1 exit /b 1
